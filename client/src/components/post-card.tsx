@@ -32,7 +32,8 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, compact = false, onClick }: PostCardProps) {
-  const ContentIcon = contentTypeIcons[post.contentType];
+  const ContentIcon = contentTypeIcons[post.contentType as ContentType];
+  const categoryColor = categoryColors[post.category as Category];
 
   if (compact) {
     return (
@@ -53,7 +54,7 @@ export default function PostCard({ post, compact = false, onClick }: PostCardPro
 
   return (
     <Card
-      className="p-4 cursor-pointer hover-elevate active-elevate-2 transition-all"
+      className="p-4 cursor-pointer hover-elevate active-elevate-2 transition-all touch-target"
       onClick={onClick}
       data-testid={`post-card-${post.id}`}
     >
@@ -68,7 +69,7 @@ export default function PostCard({ post, compact = false, onClick }: PostCardPro
             </div>
             <Badge
               variant="secondary"
-              className={`text-xs ${categoryColors[post.category]} border-0`}
+              className={`text-xs ${categoryColor} border-0`}
             >
               {post.category}
             </Badge>
@@ -92,7 +93,7 @@ export default function PostCard({ post, compact = false, onClick }: PostCardPro
           <div className="flex items-center gap-2 flex-wrap">
             <Badge
               variant="secondary"
-              className={`text-xs ${categoryColors[post.category]} border-0 hidden sm:inline-flex`}
+              className={`text-xs ${categoryColor} border-0 hidden sm:inline-flex`}
             >
               {post.category}
             </Badge>

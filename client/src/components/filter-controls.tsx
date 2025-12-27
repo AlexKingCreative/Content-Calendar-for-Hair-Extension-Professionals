@@ -34,6 +34,7 @@ interface FilterControlsProps {
   hasActiveFilters: boolean;
   clearFilters: () => void;
   postCount: number;
+  onApply?: () => void;
 }
 
 export default function FilterControls({
@@ -44,6 +45,7 @@ export default function FilterControls({
   hasActiveFilters,
   clearFilters,
   postCount,
+  onApply,
 }: FilterControlsProps) {
   const toggleCategory = (category: Category) => {
     if (selectedCategories.includes(category)) {
@@ -102,7 +104,7 @@ export default function FilterControls({
                 key={type}
                 variant={isSelected ? "default" : "outline"}
                 onClick={() => toggleContentType(type)}
-                className={`flex flex-col items-center gap-1.5 h-auto py-3 ${
+                className={`flex flex-col items-center gap-1.5 h-auto py-3 touch-target ${
                   isSelected ? "" : "text-muted-foreground"
                 }`}
                 data-testid={`filter-content-type-${type.toLowerCase()}`}
@@ -114,6 +116,14 @@ export default function FilterControls({
           })}
         </div>
       </div>
+
+      {onApply && (
+        <div className="pt-4 border-t mt-6">
+          <Button onClick={onApply} className="w-full touch-target" data-testid="button-apply-filters">
+            Show {postCount} post{postCount !== 1 ? "s" : ""}
+          </Button>
+        </div>
+      )}
     </div>
   );
 
