@@ -5,7 +5,16 @@ import { setupAuth, isAuthenticated, registerAuthRoutes } from "./replit_integra
 import { seedPosts } from "./seed";
 import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods } from "@shared/schema";
 import OpenAI from "openai";
+import webpush from "web-push";
 import { z } from "zod";
+
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    "mailto:support@hairextensioncalendar.com",
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -283,6 +292,138 @@ Respond in JSON format with these fields:
     } catch (error) {
       console.error("Error generating post:", error);
       res.status(500).json({ error: "Failed to generate post" });
+    }
+  });
+
+  app.get("/api/push/vapid-public-key", (req, res) => {
+    res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || "" });
+  });
+
+  app.post("/api/push/subscribe", async (req: any, res) => {
+    try {
+      const { subscription, preferredTime, timezone } = req.body;
+      
+      if (!subscription || !subscription.endpoint || !subscription.keys) {
+        return res.status(400).json({ error: "Invalid subscription data" });
+      }
+
+      const userId = req.user?.claims?.sub || null;
+      
+      await storage.createPushSubscription({
+        userId,
+        endpoint: subscription.endpoint,
+        p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth,
+        preferredTime: preferredTime || "09:00",
+        timezone: timezone || "America/New_York",
+        isActive: true,
+      });
+
+      res.status(201).json({ success: true });
+    } catch (error) {
+      console.error("Error saving push subscription:", error);
+      res.status(500).json({ error: "Failed to save subscription" });
+    }
+  });
+
+  app.delete("/api/push/unsubscribe", async (req, res) => {
+    try {
+      const { endpoint } = req.body;
+      
+      if (!endpoint) {
+        return res.status(400).json({ error: "Endpoint required" });
+      }
+
+      await storage.deletePushSubscription(endpoint);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing subscription:", error);
+      res.status(500).json({ error: "Failed to remove subscription" });
+    }
+  });
+
+  app.post("/api/push/test", isAuthenticated, async (req: any, res) => {
+    try {
+      const post = await storage.getPostForToday();
+      
+      if (!post) {
+        return res.status(404).json({ error: "No post for today" });
+      }
+
+      const subscriptions = await storage.getAllActivePushSubscriptions();
+      
+      const payload = JSON.stringify({
+        title: "Today's Content Idea",
+        body: post.title,
+        url: "/",
+        postId: post.id,
+      });
+
+      const results = await Promise.allSettled(
+        subscriptions.map((sub) =>
+          webpush.sendNotification(
+            {
+              endpoint: sub.endpoint,
+              keys: {
+                p256dh: sub.p256dh,
+                auth: sub.auth,
+              },
+            },
+            payload
+          )
+        )
+      );
+
+      const successCount = results.filter((r) => r.status === "fulfilled").length;
+      res.json({ sent: successCount, total: subscriptions.length });
+    } catch (error) {
+      console.error("Error sending test notification:", error);
+      res.status(500).json({ error: "Failed to send notifications" });
+    }
+  });
+
+  app.post("/api/admin/push/send-daily", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const post = await storage.getPostForToday();
+      
+      if (!post) {
+        return res.status(404).json({ error: "No post for today" });
+      }
+
+      const subscriptions = await storage.getAllActivePushSubscriptions();
+      
+      const payload = JSON.stringify({
+        title: "Daily Content Reminder",
+        body: post.title,
+        url: "/",
+        postId: post.id,
+      });
+
+      const results = await Promise.allSettled(
+        subscriptions.map((sub) =>
+          webpush.sendNotification(
+            {
+              endpoint: sub.endpoint,
+              keys: {
+                p256dh: sub.p256dh,
+                auth: sub.auth,
+              },
+            },
+            payload
+          ).catch(async (err) => {
+            if (err.statusCode === 404 || err.statusCode === 410) {
+              await storage.deletePushSubscription(sub.endpoint);
+            }
+            throw err;
+          })
+        )
+      );
+
+      const successCount = results.filter((r) => r.status === "fulfilled").length;
+      res.json({ sent: successCount, total: subscriptions.length, post: post.title });
+    } catch (error) {
+      console.error("Error sending daily notifications:", error);
+      res.status(500).json({ error: "Failed to send notifications" });
     }
   });
 

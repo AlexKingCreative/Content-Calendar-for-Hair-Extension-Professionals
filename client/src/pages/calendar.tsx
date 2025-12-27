@@ -11,6 +11,7 @@ import { type Post, type Category, type ContentType, categories, contentTypes } 
 import PostCard from "@/components/post-card";
 import PostDetailModal from "@/components/post-detail-modal";
 import FilterControls from "@/components/filter-controls";
+import { NotificationBanner } from "@/components/NotificationBanner";
 
 interface User {
   id: string;
@@ -224,6 +225,10 @@ export default function CalendarPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
+        <div className="mb-4">
+          <NotificationBanner />
+        </div>
+        
         <FilterControls
           selectedCategories={selectedCategories}
           setSelectedCategories={setSelectedCategories}
