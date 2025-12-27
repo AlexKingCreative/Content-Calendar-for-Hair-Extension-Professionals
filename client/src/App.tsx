@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import CalendarPage from "@/pages/calendar";
 import OnboardingPage from "@/pages/onboarding";
 import AdminPage from "@/pages/admin";
+import LandingPage from "@/pages/landing";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
@@ -75,7 +76,8 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={CalendarPage} />
+      <Route path="/" component={LandingPage} />
+      <Route path="/calendar" component={CalendarPage} />
       <Route path="/onboarding">
         <ProtectedRoute>
           <OnboardingPage />
