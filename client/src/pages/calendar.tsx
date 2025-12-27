@@ -1,7 +1,9 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
+import { getQueryFn } from "@/lib/queryClient";
 import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List, LogIn, LogOut, Settings, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +11,22 @@ import { type Post, type Category, type ContentType, categories, contentTypes } 
 import PostCard from "@/components/post-card";
 import PostDetailModal from "@/components/post-detail-modal";
 import FilterControls from "@/components/filter-controls";
+
+interface User {
+  id: string;
+  name?: string;
+  username?: string;
+}
+
+interface UserProfile {
+  id: number;
+  userId: string;
+  city: string | null;
+  certifiedBrands: string[];
+  extensionMethods: string[];
+  isAdmin: boolean;
+  onboardingComplete: boolean;
+}
 
 const months = [
   "January", "February", "March", "April", "May", "June",
@@ -26,6 +44,17 @@ export default function CalendarPage() {
 
   const { data: posts = [], isLoading } = useQuery<Post[]>({
     queryKey: ["/api/posts"],
+  });
+
+  const { data: user } = useQuery<User | null>({
+    queryKey: ["/api/auth/user"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
+  const { data: profile } = useQuery<UserProfile | null>({
+    queryKey: ["/api/profile"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!user,
   });
 
   const filteredPosts = useMemo(() => {
@@ -148,6 +177,47 @@ export default function CalendarPage() {
                   <List className="w-4 h-4" />
                 </Button>
               </div>
+
+              {user ? (
+                <div className="flex items-center gap-2 ml-2">
+                  {profile?.isAdmin && (
+                    <Link href="/admin">
+                      <Button variant="outline" size="sm" data-testid="button-admin">
+                        <Settings className="w-4 h-4 mr-1" />
+                        Admin
+                      </Button>
+                    </Link>
+                  )}
+                  {user && !profile?.onboardingComplete && (
+                    <Link href="/onboarding">
+                      <Button variant="outline" size="sm" data-testid="button-setup">
+                        <User className="w-4 h-4 mr-1" />
+                        Setup
+                      </Button>
+                    </Link>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.location.href = "/api/auth/logout"}
+                    data-testid="button-logout"
+                  >
+                    <LogOut className="w-4 h-4 mr-1" />
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => window.location.href = "/api/auth/login"}
+                  data-testid="button-login"
+                  className="ml-2"
+                >
+                  <LogIn className="w-4 h-4 mr-1" />
+                  Sign In
+                </Button>
+              )}
             </div>
           </div>
         </div>

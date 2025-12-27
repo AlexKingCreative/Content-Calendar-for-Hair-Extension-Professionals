@@ -1,4 +1,9 @@
+import { pgTable, serial, text, integer, timestamp, boolean, varchar } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
+
+export * from "./models/auth";
 
 export const contentTypes = ["Photo", "Video", "Reel", "Carousel", "Story", "Live"] as const;
 export type ContentType = typeof contentTypes[number];
@@ -6,7 +11,7 @@ export type ContentType = typeof contentTypes[number];
 export const categories = [
   "Educational",
   "Before & After",
-  "Behind the Scenes", 
+  "Behind the Scenes",
   "Client Spotlight",
   "Product Showcase",
   "Promotional",
@@ -17,19 +22,80 @@ export const categories = [
 ] as const;
 export type Category = typeof categories[number];
 
-export const postSchema = z.object({
-  id: z.string(),
-  date: z.string(),
-  month: z.number().min(1).max(12),
-  day: z.number().min(1).max(31),
-  title: z.string(),
-  description: z.string(),
-  category: z.enum(categories),
-  contentType: z.enum(contentTypes),
-  hashtags: z.array(z.string()),
+export const certifiedBrands = [
+  "Great Lengths",
+  "Bellami",
+  "Hairdreams",
+  "Hotheads",
+  "IBE",
+  "Natural Beaded Rows",
+  "Habit Hand Tied",
+  "Invisible Bead Extensions",
+  "DreamCatchers",
+  "Donna Bella",
+  "Bohyme",
+  "Babe Hair",
+  "Halocouture",
+  "Locks & Bonds"
+] as const;
+export type CertifiedBrand = typeof certifiedBrands[number];
+
+export const extensionMethods = [
+  "Tape-In",
+  "Hand-Tied Weft",
+  "Machine Weft",
+  "Keratin/Fusion",
+  "I-Tip/Micro Links",
+  "Sew-In",
+  "Clip-In",
+  "Halo",
+  "Ponytail",
+  "K-Tip"
+] as const;
+export type ExtensionMethod = typeof extensionMethods[number];
+
+export const posts = pgTable("posts", {
+  id: serial("id").primaryKey(),
+  date: text("date").notNull(),
+  month: integer("month").notNull(),
+  day: integer("day").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(),
+  contentType: text("content_type").notNull(),
+  hashtags: text("hashtags").array().notNull().default(sql`'{}'::text[]`),
+  instagramExampleUrl: text("instagram_example_url"),
+  isAiGenerated: boolean("is_ai_generated").default(false),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
-export type Post = z.infer<typeof postSchema>;
+export const insertPostSchema = createInsertSchema(posts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
-export const insertPostSchema = postSchema.omit({ id: true });
+export type Post = typeof posts.$inferSelect;
 export type InsertPost = z.infer<typeof insertPostSchema>;
+
+export const userProfiles = pgTable("user_profiles", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().unique(),
+  city: text("city"),
+  certifiedBrands: text("certified_brands").array().default(sql`'{}'::text[]`),
+  extensionMethods: text("extension_methods").array().default(sql`'{}'::text[]`),
+  isAdmin: boolean("is_admin").default(false),
+  onboardingComplete: boolean("onboarding_complete").default(false),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;

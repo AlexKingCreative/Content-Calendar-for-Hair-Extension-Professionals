@@ -1,4 +1,4 @@
-import { Camera, Video, Film, Images, Clock, Radio, X, Hash, Copy, Check } from "lucide-react";
+import { Camera, Video, Film, Images, Clock, Radio, X, Hash, Copy, Check, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -165,6 +165,26 @@ export default function PostDetailModal({ post, onClose }: PostDetailModalProps)
               ))}
             </div>
           </div>
+
+          {post.instagramExampleUrl && (
+            <>
+              <Separator />
+              <div>
+                <h4 className="font-heading font-medium text-foreground mb-2">
+                  Example Post
+                </h4>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => window.open(post.instagramExampleUrl!, "_blank")}
+                  data-testid="button-see-example"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  See Post Example on Instagram
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
