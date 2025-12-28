@@ -467,23 +467,61 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8">
+      <footer className="border-t py-12">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-6 h-6 text-primary" />
-              <span className="font-semibold">Content Calendar for Hair Extension Professionals</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="w-6 h-6 text-primary" />
+                <span className="font-semibold">Content Calendar</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Your daily companion for social media success in the hair extension industry.
+              </p>
             </div>
-            <div className="flex gap-6 text-sm text-muted-foreground">
-              <Link href="/calendar" className="hover:text-foreground transition-colors" data-testid="link-footer-calendar">
-                Calendar
-              </Link>
-              <Link href="/onboarding" className="hover:text-foreground transition-colors" data-testid="link-footer-personalize">
-                Personalize
-              </Link>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Product</h4>
+              <div className="space-y-2 text-sm">
+                <Link href="/calendar" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-calendar">
+                  Calendar
+                </Link>
+                <Link href="/onboarding" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-personalize">
+                  Personalize
+                </Link>
+              </div>
             </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <div className="space-y-2 text-sm">
+                <Link href="/terms" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-terms">
+                  Terms & Conditions
+                </Link>
+                <Link href="/privacy" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-privacy">
+                  Privacy Policy
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4">Support</h4>
+              <div className="space-y-2 text-sm">
+                <Link href="/contact" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-contact">
+                  Contact Us
+                </Link>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-muted-foreground">
-              Made with love for hair professionals
+              2025 Content Calendar for Hair Extension Professionals. All rights reserved.
+            </div>
+            <div className="flex gap-4 text-sm text-muted-foreground">
+              <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
             </div>
           </div>
         </div>

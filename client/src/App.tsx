@@ -14,6 +14,9 @@ import AccountPage from "@/pages/account";
 import TodayPage from "@/pages/today";
 import StreaksPage from "@/pages/streaks";
 import PostPage from "@/pages/post";
+import TermsPage from "@/pages/terms";
+import PrivacyPage from "@/pages/privacy";
+import ContactPage from "@/pages/contact";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
@@ -106,6 +109,9 @@ function Router() {
       <Route path="/today" component={TodayPage} />
       <Route path="/streaks" component={StreaksPage} />
       <Route path="/post/:id" component={PostPage} />
+      <Route path="/terms" component={TermsPage} />
+      <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/contact" component={ContactPage} />
       <Route component={NotFound} />
     </Switch>
   );
