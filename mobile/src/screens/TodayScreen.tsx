@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   View,
   Text,
@@ -7,9 +8,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Share,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { postsApi } from '../services/api';
+import { postsApi, streakApi } from '../services/api';
 
 interface Post {
   id: number;
@@ -22,10 +24,37 @@ interface Post {
   serviceCategory: string;
 }
 
+interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  totalPosts: number;
+  postingGoal: string;
+}
+
 export default function TodayScreen() {
+  const queryClient = useQueryClient();
+  const [markedToday, setMarkedToday] = useState(false);
+
   const { data: posts, isLoading, error } = useQuery({
     queryKey: ['posts', 'today'],
     queryFn: postsApi.getToday,
+  });
+
+  const { data: streakData } = useQuery<StreakData>({
+    queryKey: ['streak'],
+    queryFn: streakApi.get,
+  });
+
+  const markCompleteMutation = useMutation({
+    mutationFn: (postId: number) => streakApi.logPost(postId),
+    onSuccess: () => {
+      setMarkedToday(true);
+      queryClient.invalidateQueries({ queryKey: ['streak'] });
+      Alert.alert('Great job!', 'Your post has been logged. Keep up the streak!');
+    },
+    onError: () => {
+      Alert.alert('Error', 'Could not log your post. Please try again.');
+    },
   });
 
   const handleShare = async (post: Post) => {
@@ -66,6 +95,31 @@ export default function TodayScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {streakData && (
+        <View style={styles.streakCard}>
+          <View style={styles.streakHeader}>
+            <Ionicons name="flame" size={24} color="#D4A574" />
+            <Text style={styles.streakTitle}>Your Streak</Text>
+          </View>
+          <View style={styles.streakStats}>
+            <View style={styles.streakStat}>
+              <Text style={styles.streakNumber}>{streakData.currentStreak}</Text>
+              <Text style={styles.streakLabel}>Current</Text>
+            </View>
+            <View style={styles.streakDivider} />
+            <View style={styles.streakStat}>
+              <Text style={styles.streakNumber}>{streakData.longestStreak}</Text>
+              <Text style={styles.streakLabel}>Best</Text>
+            </View>
+            <View style={styles.streakDivider} />
+            <View style={styles.streakStat}>
+              <Text style={styles.streakNumber}>{streakData.totalPosts}</Text>
+              <Text style={styles.streakLabel}>Total</Text>
+            </View>
+          </View>
+        </View>
+      )}
+
       <View style={styles.card}>
         <View style={styles.header}>
           <View style={styles.badge}>
@@ -104,6 +158,21 @@ export default function TodayScreen() {
             <Text style={styles.actionText}>Share</Text>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity
+          style={[styles.markCompleteButton, markedToday && styles.markCompleteButtonDone]}
+          onPress={() => markCompleteMutation.mutate(todayPost.id)}
+          disabled={markedToday || markCompleteMutation.isPending}
+        >
+          <Ionicons 
+            name={markedToday ? "checkmark-circle" : "checkmark-circle-outline"} 
+            size={24} 
+            color={markedToday ? "#FFFFFF" : "#D4A574"} 
+          />
+          <Text style={[styles.markCompleteText, markedToday && styles.markCompleteTextDone]}>
+            {markedToday ? "Posted Today!" : markCompleteMutation.isPending ? "Logging..." : "Mark as Posted"}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.tipCard}>
@@ -243,6 +312,76 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 16,
     gap: 12,
+  },
+  streakCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  streakHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  streakTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#5D4E3C',
+  },
+  streakStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  streakStat: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  streakNumber: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#D4A574',
+  },
+  streakLabel: {
+    fontSize: 12,
+    color: '#8B7355',
+    marginTop: 4,
+  },
+  streakDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#F5EDE4',
+  },
+  markCompleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#FFF8F0',
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#D4A574',
+    marginTop: 16,
+  },
+  markCompleteButtonDone: {
+    backgroundColor: '#22C55E',
+    borderColor: '#22C55E',
+  },
+  markCompleteText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#D4A574',
+  },
+  markCompleteTextDone: {
+    color: '#FFFFFF',
   },
   tipContent: {
     flex: 1,

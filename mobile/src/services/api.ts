@@ -71,6 +71,25 @@ export const profileApi = {
     const response = await api.get('/api/mobile/profile');
     return response.data;
   },
+  update: async (data: any) => {
+    const response = await api.put('/api/profile', data);
+    return response.data;
+  },
+  getOptions: async () => {
+    const response = await api.get('/api/options');
+    return response.data;
+  },
+};
+
+export const streakApi = {
+  get: async () => {
+    const response = await api.get('/api/streak');
+    return response.data;
+  },
+  logPost: async (postId?: number) => {
+    const response = await api.post('/api/streak/log', { postId });
+    return response.data;
+  },
 };
 
 export const stripeApi = {
