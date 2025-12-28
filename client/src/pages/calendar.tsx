@@ -380,7 +380,7 @@ export default function CalendarPage() {
       </header>
 
       <main 
-        className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 mobile-scroll"
+        className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 mobile-scroll animate-page-enter"
         {...swipeHandlers}
       >
         <div className="mb-4">
@@ -592,12 +592,16 @@ export default function CalendarPage() {
                 </p>
               </div>
             ) : (
-              filteredPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onClick={() => handlePostClick(post)}
-                />
+              filteredPosts.map((post, index) => (
+                <div 
+                  key={post.id} 
+                  className={`animate-fade-in-up stagger-${Math.min(index + 1, 8)}`}
+                >
+                  <PostCard
+                    post={post}
+                    onClick={() => handlePostClick(post)}
+                  />
+                </div>
               ))
             )}
           </div>

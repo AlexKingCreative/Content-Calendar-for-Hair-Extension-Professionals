@@ -268,8 +268,8 @@ export default function PostPage() {
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-6 space-y-4">
-        <div className="glass-card rounded-2xl p-4">
+      <main className="max-w-lg mx-auto px-4 py-6 space-y-4 animate-page-enter">
+        <div className="glass-card rounded-2xl p-4 animate-fade-in-up stagger-1">
           <div className="flex items-start gap-3 mb-4">
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
               <ContentIcon className="w-6 h-6 text-primary" />
@@ -298,7 +298,7 @@ export default function PostPage() {
           </p>
         </div>
 
-        <div className="glass-card rounded-2xl p-4">
+        <div className="glass-card rounded-2xl p-4 animate-fade-in-up stagger-2">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-heading font-medium text-foreground text-sm">Suggested Hashtags</h3>
             <Button
@@ -324,7 +324,7 @@ export default function PostPage() {
           </div>
         </div>
 
-        <div className="glass-card rounded-2xl p-4">
+        <div className="glass-card rounded-2xl p-4 animate-fade-in-up stagger-3">
           <h3 className="font-heading font-medium text-foreground text-sm mb-3">AI Caption Generator</h3>
           {!generatedCaption ? (
             <Button

@@ -156,8 +156,8 @@ export default function StreaksPage() {
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-6 space-y-4">
-        <div className="glass-card rounded-2xl p-5">
+      <main className="max-w-lg mx-auto px-4 py-6 space-y-4 animate-page-enter">
+        <div className="glass-card rounded-2xl p-5 animate-fade-in-up stagger-1">
           <div className="flex items-center justify-center mb-4">
             <div className="relative">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
@@ -197,7 +197,7 @@ export default function StreaksPage() {
           )}
         </div>
 
-        <div className="glass-card rounded-2xl p-4">
+        <div className="glass-card rounded-2xl p-4 animate-fade-in-up stagger-2">
           <h3 className="font-heading font-medium text-foreground mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-primary" />
             Stats
@@ -225,7 +225,7 @@ export default function StreaksPage() {
         </div>
 
         {nextMilestone && (
-          <div className="glass-card rounded-2xl p-4">
+          <div className="glass-card rounded-2xl p-4 animate-fade-in-up stagger-3">
             <h3 className="font-heading font-medium text-foreground mb-3 flex items-center gap-2">
               <Target className="w-5 h-5 text-primary" />
               Next Milestone
@@ -249,7 +249,7 @@ export default function StreaksPage() {
           </div>
         )}
 
-        <div className="glass-card rounded-2xl p-4">
+        <div className="glass-card rounded-2xl p-4 animate-fade-in-up stagger-4">
           <h3 className="font-heading font-medium text-foreground mb-4 flex items-center gap-2">
             <Award className="w-5 h-5 text-primary" />
             Achievements
