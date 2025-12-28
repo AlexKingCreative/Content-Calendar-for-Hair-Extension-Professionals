@@ -12,7 +12,7 @@ export function MobileNav({ isLoggedIn }: MobileNavProps) {
   return (
     <nav className="fixed bottom-4 left-4 right-4 z-50 sm:hidden">
       <div className="glass-pill rounded-3xl mx-auto max-w-sm">
-        <div className="flex items-center justify-around h-14 px-2">
+        <div className="flex items-center h-14 px-2">
           <button
             onClick={() => setLocation("/today")}
             className={cn(
@@ -27,10 +27,10 @@ export function MobileNav({ isLoggedIn }: MobileNavProps) {
             <span className="text-[10px] font-medium">Today</span>
           </button>
 
-          <Link href="/calendar">
+          <Link href="/calendar" className="flex-1">
             <div
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 h-full px-4 rounded-2xl fluid-transition active:scale-95",
+                "flex flex-col items-center justify-center gap-0.5 h-full rounded-2xl fluid-transition active:scale-95",
                 location === "/calendar" 
                   ? "text-primary" 
                   : "text-muted-foreground"
@@ -42,10 +42,10 @@ export function MobileNav({ isLoggedIn }: MobileNavProps) {
             </div>
           </Link>
 
-          <Link href="/streaks">
+          <Link href="/streaks" className="flex-1">
             <div
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 h-full px-4 rounded-2xl fluid-transition active:scale-95",
+                "flex flex-col items-center justify-center gap-0.5 h-full rounded-2xl fluid-transition active:scale-95",
                 location === "/streaks" 
                   ? "text-primary" 
                   : "text-muted-foreground"
@@ -57,10 +57,10 @@ export function MobileNav({ isLoggedIn }: MobileNavProps) {
             </div>
           </Link>
 
-          <Link href={isLoggedIn ? "/settings" : "/api/login"}>
+          <Link href={isLoggedIn ? "/settings" : "/api/login"} className="flex-1">
             <div
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 h-full px-4 rounded-2xl fluid-transition active:scale-95",
+                "flex flex-col items-center justify-center gap-0.5 h-full rounded-2xl fluid-transition active:scale-95",
                 location === "/settings" || location === "/account"
                   ? "text-primary" 
                   : "text-muted-foreground"
