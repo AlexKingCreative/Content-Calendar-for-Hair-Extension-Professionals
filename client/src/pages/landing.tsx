@@ -550,6 +550,9 @@ export default function LandingPage() {
                 <Link href="/calendar" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-calendar">
                   Calendar
                 </Link>
+                <Link href="/pricing" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-pricing">
+                  Pricing
+                </Link>
                 <Link href="/onboarding" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-personalize">
                   Personalize
                 </Link>
