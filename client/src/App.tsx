@@ -93,6 +93,23 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 function HomePage() {
   const isNative = Capacitor.isNativePlatform();
+  const [, setLocation] = useLocation();
+  const { data: user } = useQuery({
+    queryKey: ["/api/auth/user"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+  const { data: profile } = useQuery<UserProfile | null>({
+    queryKey: ["/api/profile"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!user,
+  });
+
+  // Redirect admins to admin dashboard
+  if (user && profile?.isAdmin) {
+    setLocation("/admin");
+    return null;
+  }
+
   return isNative ? <WelcomePage /> : <LandingPage />;
 }
 
