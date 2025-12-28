@@ -406,6 +406,18 @@ export default function LandingPage() {
           <div className="space-y-4">
             {[
               {
+                q: "What exactly does this app do?",
+                a: "This app gives you 365 days of ready-to-use social media post ideas specifically for hair extension professionals. Each day includes a post title, description, content type suggestion, category, and personalized hashtags. Plus, AI writes your captions so you never have to stare at a blank screen again."
+              },
+              {
+                q: "Why do I need this app?",
+                a: "Coming up with fresh content ideas every day is exhausting. This app eliminates that stress by telling you exactly what to post, when to post it, and how to write it. It keeps you consistent, saves you hours of planning, and helps you show up professionally on social media every single day."
+              },
+              {
+                q: "Will this get me more followers?",
+                a: "Consistent, quality content is the number one way to grow your following. This app helps you post regularly with strategic content that showcases your expertise, engages your audience, and attracts new clients. Many stylists see significant growth within the first few months of staying consistent."
+              },
+              {
                 q: "Is this app free to try?",
                 a: "Yes! You get 3 days of free access to the current and next month's content. Subscribe for $10/month to unlock all 12 months of content and never miss key dates like National Hairstylist Appreciation Day."
               },
