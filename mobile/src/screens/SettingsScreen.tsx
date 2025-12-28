@@ -19,10 +19,14 @@ export default function SettingsScreen() {
 
   const handleUpgrade = async () => {
     try {
-      const { url } = await stripeApi.createCheckoutSession('price_individual');
-      await WebBrowser.openBrowserAsync(url);
-    } catch (error) {
-      Alert.alert('Error', 'Could not open payment page. Please try again.');
+      const { url } = await stripeApi.createCheckoutSession();
+      if (url) {
+        await WebBrowser.openBrowserAsync(url);
+      } else {
+        Alert.alert('Error', 'Could not create checkout session.');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.message || 'Could not open payment page. Please try again.');
     }
   };
 

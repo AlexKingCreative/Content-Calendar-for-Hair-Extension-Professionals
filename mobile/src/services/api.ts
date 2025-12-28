@@ -68,18 +68,14 @@ export const postsApi = {
 
 export const profileApi = {
   get: async () => {
-    const response = await api.get('/api/profile');
-    return response.data;
-  },
-  update: async (data: any) => {
-    const response = await api.patch('/api/profile', data);
+    const response = await api.get('/api/mobile/profile');
     return response.data;
   },
 };
 
 export const stripeApi = {
-  createCheckoutSession: async (priceId: string) => {
-    const response = await api.post('/api/stripe/create-checkout-session', { priceId });
+  createCheckoutSession: async () => {
+    const response = await api.post('/api/mobile/stripe/checkout');
     return response.data;
   },
 };

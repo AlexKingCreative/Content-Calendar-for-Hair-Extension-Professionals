@@ -140,4 +140,47 @@ router.get('/user', authenticateMobile, async (req: any, res) => {
   }
 });
 
+router.get('/profile', authenticateMobile, async (req: any, res) => {
+  try {
+    const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, req.mobileUserId));
+    res.json(profile || { userId: req.mobileUserId, subscriptionTier: 'free' });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ message: 'Failed to get profile' });
+  }
+});
+
+router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
+  try {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      return res.status(503).json({ message: 'Payment service not configured' });
+    }
+    
+    const Stripe = (await import('stripe')).default;
+    const stripe = new Stripe(stripeSecretKey, { apiVersion: '2025-04-30.basil' });
+    
+    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+      : 'https://content-calendar-hair-pro.replit.app';
+    
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{
+        price: 'price_pro_monthly',
+        quantity: 1,
+      }],
+      success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/subscription/cancel`,
+      client_reference_id: req.mobileUserId,
+    });
+
+    res.json({ url: session.url });
+  } catch (error: any) {
+    console.error('Stripe checkout error:', error);
+    res.status(500).json({ message: error.message || 'Failed to create checkout session' });
+  }
+});
+
 export default router;
