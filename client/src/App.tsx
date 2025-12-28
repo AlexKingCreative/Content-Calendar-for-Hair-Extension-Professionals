@@ -94,16 +94,6 @@ function HomePage() {
 function Router() {
   return (
     <Switch>
-      <div
-        style={{
-          background: "#00ff00",
-          padding: "10px",
-          textAlign: "center",
-          fontWeight: "bold",
-        }}
-      >
-        🚀 CAPGO LIVE UPDATE TEST - v1.0.2 🚀
-      </div>
       <Route path="/" component={HomePage} />
       <Route path="/welcome" component={WelcomePage} />
       <Route path="/signup" component={SignupPage} />
