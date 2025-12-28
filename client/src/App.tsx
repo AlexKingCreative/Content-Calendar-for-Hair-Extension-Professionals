@@ -10,6 +10,7 @@ import OnboardingPage from "@/pages/onboarding";
 import AdminPage from "@/pages/admin";
 import LandingPage from "@/pages/landing";
 import SettingsPage from "@/pages/settings";
+import AccountPage from "@/pages/account";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
@@ -92,6 +93,11 @@ function Router() {
       <Route path="/settings">
         <ProtectedRoute>
           <SettingsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/account">
+        <ProtectedRoute>
+          <AccountPage />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />
