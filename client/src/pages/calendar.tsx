@@ -16,6 +16,7 @@ import FilterControls from "@/components/filter-controls";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { MobileNav } from "@/components/MobileNav";
+import { StreakWidget } from "@/components/streak-widget";
 import { useSwipe } from "@/hooks/useSwipe";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
@@ -542,6 +543,12 @@ export default function CalendarPage() {
             Swipe left or right to change months
           </p>
         </div>
+
+        {user && profile?.onboardingComplete && (
+          <div className="mb-20 sm:mb-4">
+            <StreakWidget />
+          </div>
+        )}
       </main>
 
       <MobileNav
