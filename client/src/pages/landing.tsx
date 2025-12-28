@@ -23,6 +23,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import { LandingAnimation } from "@/components/LandingAnimation";
 
 const testimonials = [
   {
@@ -204,8 +205,13 @@ export default function LandingPage() {
             </div>
           </div>
           
+          {/* App Demo Animation */}
+          <div className="mt-16 mb-8" data-testid="landing-animation">
+            <LandingAnimation />
+          </div>
+          
           {/* Scroll Indicator */}
-          <div className="flex justify-center mt-12">
+          <div className="flex justify-center">
             <ArrowDown className="w-6 h-6 text-muted-foreground animate-bounce" />
           </div>
         </div>

@@ -327,4 +327,67 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+
+  /* Landing Page Animations */
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slide-in-left {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes slide-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes card-flow {
+    0% { opacity: 0; transform: translateX(50px) scale(0.9); }
+    15% { opacity: 1; transform: translateX(0) scale(1); }
+    85% { opacity: 1; transform: translateX(0) scale(1); }
+    100% { opacity: 0; transform: translateX(-50px) scale(0.9); }
+  }
+
+  @keyframes float {
+    0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
+    10% { opacity: 1; transform: translateY(-10px) scale(1); }
+    90% { opacity: 1; transform: translateY(10px) scale(1); }
+  }
+
+  @keyframes pop-in {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.8s ease-out forwards;
+  }
+
+  .animate-slide-in-left {
+    animation: slide-in-left 0.6s ease-out forwards;
+    animation-delay: 0.5s;
+    opacity: 0;
+  }
+
+  .animate-slide-in-up {
+    animation: slide-in-up 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  .animate-card-flow {
+    animation: card-flow 6s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 5s ease-in-out infinite;
+    opacity: 0;
+  }
+
+  .animate-pop-in {
+    animation: pop-in 0.4s ease-out forwards;
+    opacity: 0;
+  }
 }
