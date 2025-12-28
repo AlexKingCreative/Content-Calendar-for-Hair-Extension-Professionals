@@ -239,6 +239,7 @@ export default function SettingsPage() {
                   <div>
                     <div className="font-medium">Solo Stylist</div>
                     <div className="text-sm text-muted-foreground">Individual professional</div>
+                    <div className="text-xs text-muted-foreground/70 mt-1 italic">"I love creating seamless blends..."</div>
                   </div>
                 </Label>
                 <Label
@@ -253,6 +254,7 @@ export default function SettingsPage() {
                   <div>
                     <div className="font-medium">Salon</div>
                     <div className="text-sm text-muted-foreground">Team or business</div>
+                    <div className="text-xs text-muted-foreground/70 mt-1 italic">"We love creating seamless blends..."</div>
                   </div>
                 </Label>
               </RadioGroup>
