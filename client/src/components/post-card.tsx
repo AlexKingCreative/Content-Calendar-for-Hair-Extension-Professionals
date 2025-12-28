@@ -1,4 +1,4 @@
-import { Camera, Video, Film, Images, Clock, Radio } from "lucide-react";
+import { Camera, Video, Film, Images, Clock, Radio, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Sparkles, Lightbulb, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { type Post, type ContentType, type Category } from "@shared/schema";
@@ -10,6 +10,19 @@ const contentTypeIcons: Record<ContentType, typeof Camera> = {
   Carousel: Images,
   Story: Clock,
   Live: Radio,
+};
+
+const categoryIcons: Record<Category, typeof Camera> = {
+  Educational: GraduationCap,
+  "Before & After": ArrowLeftRight,
+  "Behind the Scenes": Clapperboard,
+  "Client Spotlight": Star,
+  "Product Showcase": ShoppingBag,
+  Promotional: Megaphone,
+  Engagement: MessageCircle,
+  Inspiration: Sparkles,
+  "Tips & Tricks": Lightbulb,
+  Trending: TrendingUp,
 };
 
 const categoryColors: Record<Category, string> = {
@@ -33,6 +46,7 @@ interface PostCardProps {
 
 export default function PostCard({ post, compact = false, onClick }: PostCardProps) {
   const ContentIcon = contentTypeIcons[post.contentType as ContentType];
+  const CategoryIcon = categoryIcons[post.category as Category];
   const categoryColor = categoryColors[post.category as Category];
 
   if (compact) {
@@ -69,8 +83,9 @@ export default function PostCard({ post, compact = false, onClick }: PostCardPro
             </div>
             <Badge
               variant="secondary"
-              className={`text-xs ${categoryColor} border-0`}
+              className={`text-xs ${categoryColor} border-0 gap-1`}
             >
+              <CategoryIcon className="w-3 h-3" />
               {post.category}
             </Badge>
           </div>
@@ -93,8 +108,9 @@ export default function PostCard({ post, compact = false, onClick }: PostCardPro
           <div className="flex items-center gap-2 flex-wrap">
             <Badge
               variant="secondary"
-              className={`text-xs ${categoryColor} border-0 hidden sm:inline-flex`}
+              className={`text-xs ${categoryColor} border-0 hidden sm:inline-flex gap-1`}
             >
+              <CategoryIcon className="w-3 h-3" />
               {post.category}
             </Badge>
             <Badge variant="outline" className="text-xs">

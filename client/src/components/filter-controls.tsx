@@ -1,4 +1,4 @@
-import { Camera, Video, Film, Images, Clock, Radio, X, Filter, SlidersHorizontal } from "lucide-react";
+import { Camera, Video, Film, Images, Clock, Radio, X, Filter, SlidersHorizontal, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Sparkles, Lightbulb, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -11,6 +11,19 @@ const contentTypeIcons: Record<ContentType, typeof Camera> = {
   Carousel: Images,
   Story: Clock,
   Live: Radio,
+};
+
+const categoryIcons: Record<Category, typeof Camera> = {
+  Educational: GraduationCap,
+  "Before & After": ArrowLeftRight,
+  "Behind the Scenes": Clapperboard,
+  "Client Spotlight": Star,
+  "Product Showcase": ShoppingBag,
+  Promotional: Megaphone,
+  Engagement: MessageCircle,
+  Inspiration: Sparkles,
+  "Tips & Tricks": Lightbulb,
+  Trending: TrendingUp,
 };
 
 const categoryColors: Record<Category, string> = {
@@ -72,18 +85,20 @@ export default function FilterControls({
         <div className="flex flex-wrap gap-2">
           {categories.map((category) => {
             const isSelected = selectedCategories.includes(category);
+            const CategoryIcon = categoryIcons[category];
             return (
               <Badge
                 key={category}
                 variant={isSelected ? "default" : "secondary"}
                 onClick={() => toggleCategory(category)}
-                className={`cursor-pointer px-3 py-1.5 text-sm font-medium ${
+                className={`cursor-pointer px-3 py-1.5 text-sm font-medium gap-1.5 ${
                   isSelected
                     ? categoryColors[category]
                     : "hover:bg-accent"
                 }`}
                 data-testid={`filter-category-${category.toLowerCase().replace(/\s+/g, "-")}`}
               >
+                <CategoryIcon className="w-3.5 h-3.5" />
                 {category}
               </Badge>
             );
