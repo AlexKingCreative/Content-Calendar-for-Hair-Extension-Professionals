@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Filter, Settings, User } from "lucide-react";
+import { Calendar, Filter, Settings, User, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MobileNavProps {
@@ -7,9 +7,11 @@ interface MobileNavProps {
   isLoggedIn?: boolean;
   onFilterClick?: () => void;
   hasActiveFilters?: boolean;
+  onTodayClick?: () => void;
+  hasTodayPost?: boolean;
 }
 
-export function MobileNav({ isAdmin, isLoggedIn, onFilterClick, hasActiveFilters }: MobileNavProps) {
+export function MobileNav({ isAdmin, isLoggedIn, onFilterClick, hasActiveFilters, onTodayClick, hasTodayPost }: MobileNavProps) {
   const [location] = useLocation();
 
   const navItems = [
@@ -19,6 +21,17 @@ export function MobileNav({ isAdmin, isLoggedIn, onFilterClick, hasActiveFilters
       href: "/calendar",
       active: location === "/calendar",
     },
+    ...(hasTodayPost
+      ? [
+          {
+            icon: Sparkles,
+            label: "Today",
+            onClick: onTodayClick,
+            active: false,
+            highlight: true,
+          },
+        ]
+      : []),
     {
       icon: Filter,
       label: "Filters",
@@ -54,6 +67,7 @@ export function MobileNav({ isAdmin, isLoggedIn, onFilterClick, hasActiveFilters
           const Icon = item.icon;
           
           if (item.onClick) {
+            const isHighlight = 'highlight' in item && item.highlight;
             return (
               <button
                 key={index}
@@ -61,17 +75,18 @@ export function MobileNav({ isAdmin, isLoggedIn, onFilterClick, hasActiveFilters
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 w-full h-full px-2",
                   "text-muted-foreground active:text-foreground transition-colors",
-                  item.active && "text-primary"
+                  item.active && "text-primary",
+                  isHighlight && "text-primary"
                 )}
                 data-testid={`nav-${item.label.toLowerCase()}`}
               >
                 <div className="relative">
-                  <Icon className="w-5 h-5" />
+                  <Icon className={cn("w-5 h-5", isHighlight && "text-primary")} />
                   {item.active && (
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
                   )}
                 </div>
-                <span className="text-xs font-medium">{item.label}</span>
+                <span className={cn("text-xs font-medium", isHighlight && "text-primary")}>{item.label}</span>
               </button>
             );
           }

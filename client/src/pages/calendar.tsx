@@ -348,7 +348,7 @@ export default function CalendarPage() {
         </div>
 
         {todayPost && selectedMonth === new Date().getMonth() + 1 && (
-          <div className="mb-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
+          <div className="mb-4 p-4 bg-primary/10 rounded-lg border border-primary/20 hidden sm:block">
             <div className="flex items-center justify-between gap-2 mb-2">
               <div className="flex items-center gap-2">
                 <CalendarIcon className="w-4 h-4 text-primary" />
@@ -554,6 +554,8 @@ export default function CalendarPage() {
         isLoggedIn={!!user}
         onFilterClick={() => setFilterSheetOpen(true)}
         hasActiveFilters={hasActiveFilters}
+        onTodayClick={() => todayPost && setSelectedPost(todayPost)}
+        hasTodayPost={!!todayPost && selectedMonth === new Date().getMonth() + 1}
       />
 
       <InstallPrompt />
