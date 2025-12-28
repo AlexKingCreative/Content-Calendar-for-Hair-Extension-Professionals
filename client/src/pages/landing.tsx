@@ -18,8 +18,10 @@ import {
   Clock,
   TrendingUp,
   LogIn,
-  UserPlus
+  UserPlus,
+  Download
 } from "lucide-react";
+import { SiApple, SiGoogleplay } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -110,7 +112,7 @@ const stats = [
 
 export default function LandingPage() {
   const [showIOSModal, setShowIOSModal] = useState(false);
-  const { isInstallable, isInstalled, isIOS, promptInstall, platform } = useInstallPrompt();
+  const { isInstallable, isInstalled, isIOS, isAndroid, promptInstall, platform } = useInstallPrompt();
 
   const handleInstallClick = async () => {
     if (isIOS) {
@@ -186,7 +188,7 @@ export default function LandingPage() {
               </p>
               
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mb-8">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mb-6">
                 {isInstalled ? (
                   <Link href="/calendar">
                     <Button size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-open-app">
@@ -194,18 +196,8 @@ export default function LandingPage() {
                       Open App
                     </Button>
                   </Link>
-                ) : showInstallButton ? (
-                  <Button 
-                    size="lg" 
-                    className="text-lg px-8 py-6 gap-2"
-                    onClick={handleInstallClick}
-                    data-testid="button-install-app"
-                  >
-                    <Smartphone className="w-5 h-5" />
-                    {isIOS ? "Install on iPhone" : platform === "android" ? "Install on Android" : "Install Free App"}
-                  </Button>
                 ) : (
-                  <Link href="/calendar">
+                  <Link href="/signup">
                     <Button size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-get-started">
                       <Play className="w-5 h-5" />
                       Get Started Free
@@ -213,6 +205,47 @@ export default function LandingPage() {
                   </Link>
                 )}
               </div>
+
+              {/* App Store Buttons */}
+              {!isInstalled && (
+                <div className="mb-8">
+                  <p className="text-sm text-muted-foreground mb-3 text-center lg:text-left">Download the app:</p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+                    {(isIOS || (!isIOS && !isAndroid)) && (
+                      <a 
+                        href="https://apps.apple.com/app/content-calendar-hair-pro/id123456789" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        data-testid="button-app-store"
+                      >
+                        <Button variant="outline" size="lg" className="gap-2 min-w-[180px]">
+                          <SiApple className="w-5 h-5" />
+                          <div className="text-left">
+                            <div className="text-[10px] leading-tight opacity-70">Download on the</div>
+                            <div className="text-sm font-semibold leading-tight">App Store</div>
+                          </div>
+                        </Button>
+                      </a>
+                    )}
+                    {(isAndroid || (!isIOS && !isAndroid)) && (
+                      <a 
+                        href="https://play.google.com/store/apps/details?id=com.hairpro360.contentcalendar" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        data-testid="button-play-store"
+                      >
+                        <Button variant="outline" size="lg" className="gap-2 min-w-[180px]">
+                          <SiGoogleplay className="w-5 h-5" />
+                          <div className="text-left">
+                            <div className="text-[10px] leading-tight opacity-70">Get it on</div>
+                            <div className="text-sm font-semibold leading-tight">Google Play</div>
+                          </div>
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
               
               {/* Trust Indicators */}
               <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-sm text-muted-foreground">
