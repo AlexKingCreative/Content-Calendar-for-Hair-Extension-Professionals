@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  ArrowLeft, MapPin, Award, Scissors, Check, X 
+  ArrowLeft, MapPin, Award, Scissors, Check, X, Crown, CreditCard, ExternalLink 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { certifiedBrands, extensionMethods, postingGoals, postingGoalDescriptions, type VoiceOption, type ToneOption, type PostingGoal } from "@shared/schema";
+
+interface AccessStatus {
+  hasAccess: boolean;
+  accessibleMonths: number[];
+  subscriptionStatus?: string;
+  freeAccessEndsAt?: string;
+}
 
 interface UserProfile {
   id: number;
@@ -62,6 +69,44 @@ export default function AccountPage() {
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!user,
   });
+
+  const { data: accessStatus } = useQuery<AccessStatus | null>({
+    queryKey: ["/api/billing/access-status"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!user,
+  });
+
+  const portalMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/billing/portal", {});
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Could not open billing portal.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const isSuccess = searchParams.get("success") === "true";
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast({
+        title: "Subscription activated!",
+        description: "You now have full access to all content.",
+      });
+      window.history.replaceState({}, "", "/account");
+    }
+  }, [isSuccess, toast]);
 
   useEffect(() => {
     if (profile) {
@@ -375,6 +420,56 @@ export default function AccountPage() {
               );
             })}
           </div>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 space-y-4">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <CreditCard className="w-4 h-4" />
+            Subscription
+          </Label>
+          
+          {accessStatus?.subscriptionStatus === "active" || accessStatus?.subscriptionStatus === "trialing" ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Badge variant="default" className="bg-primary">
+                  <Crown className="w-3 h-3 mr-1" />
+                  {accessStatus.subscriptionStatus === "trialing" ? "Trial Active" : "Pro Member"}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                You have full access to all 12 months of content.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => portalMutation.mutate()}
+                disabled={portalMutation.isPending}
+                data-testid="button-manage-billing"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                {portalMutation.isPending ? "Loading..." : "Manage Billing"}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">
+                  {accessStatus?.subscriptionStatus === "free" ? "Free Trial" : "No Subscription"}
+                </Badge>
+              </div>
+              {accessStatus?.freeAccessEndsAt && (
+                <p className="text-sm text-muted-foreground">
+                  Free access ends {new Date(accessStatus.freeAccessEndsAt).toLocaleDateString()}
+                </p>
+              )}
+              <Button
+                onClick={() => setLocation("/subscribe")}
+                data-testid="button-upgrade"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                Upgrade to Pro
+              </Button>
+            </div>
+          )}
         </div>
       </main>
     </div>

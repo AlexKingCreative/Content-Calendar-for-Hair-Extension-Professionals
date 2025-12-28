@@ -43,6 +43,13 @@ interface UserProfile {
   onboardingComplete: boolean;
 }
 
+interface AccessStatus {
+  hasAccess: boolean;
+  accessibleMonths: number[];
+  subscriptionStatus?: string;
+  freeAccessEndsAt?: string;
+}
+
 const months = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
@@ -50,10 +57,10 @@ const months = [
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function isMonthAccessible(month: number): boolean {
+function getDefaultAccessibleMonths(): number[] {
   const currentMonth = new Date().getMonth() + 1;
   const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-  return month === currentMonth || month === nextMonth;
+  return [currentMonth, nextMonth];
 }
 
 function getUnlockMonth(selectedMonth: number): string {
@@ -149,6 +156,27 @@ export default function CalendarPage() {
     queryKey: ["/api/streak"],
     enabled: !!user && !!profile?.onboardingComplete,
   });
+
+  const { data: accessStatus } = useQuery<AccessStatus | null>({
+    queryKey: ["/api/billing/access-status"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!user,
+  });
+
+  const accessibleMonths = useMemo(() => {
+    if (!user) return getDefaultAccessibleMonths();
+    if (accessStatus?.accessibleMonths && accessStatus.accessibleMonths.length > 0) {
+      return accessStatus.accessibleMonths;
+    }
+    if (accessStatus?.hasAccess) {
+      return getDefaultAccessibleMonths();
+    }
+    return [];
+  }, [user, accessStatus]);
+
+  const isMonthAccessible = useCallback((month: number) => {
+    return accessibleMonths.includes(month);
+  }, [accessibleMonths]);
 
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -490,17 +518,30 @@ export default function CalendarPage() {
             <h3 className="font-heading text-xl font-semibold text-foreground mb-2 text-center">
               {months[selectedMonth - 1]} is Locked
             </h3>
-            <p className="text-muted-foreground text-center max-w-sm">
-              This month's content will be unlocked on the 1st of {getUnlockMonth(selectedMonth)}.
+            <p className="text-muted-foreground text-center max-w-sm mb-4">
+              {user 
+                ? "Subscribe to unlock all 12 months of content and never miss a special day."
+                : `This month's content will be unlocked on the 1st of ${getUnlockMonth(selectedMonth)}.`
+              }
             </p>
-            <Button
-              variant="outline"
-              className="mt-6"
-              onClick={() => setSelectedMonth(new Date().getMonth() + 1)}
-              data-testid="button-go-to-current-month"
-            >
-              Go to {months[new Date().getMonth()]}
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {user && (
+                <Button
+                  onClick={() => setLocation("/subscribe")}
+                  data-testid="button-unlock-subscribe"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Unlock All Months
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => setSelectedMonth(new Date().getMonth() + 1)}
+                data-testid="button-go-to-current-month"
+              >
+                Go to {months[new Date().getMonth()]}
+              </Button>
+            </div>
           </div>
         ) : viewMode === "grid" ? (
           <div className="mt-4 sm:mt-6">

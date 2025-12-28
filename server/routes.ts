@@ -7,6 +7,8 @@ import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionM
 import OpenAI from "openai";
 import webpush from "web-push";
 import { z } from "zod";
+import { stripeService } from "./stripeService";
+import { getStripePublishableKey } from "./stripeClient";
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(
@@ -639,6 +641,139 @@ Respond in JSON format with these fields:
     } catch (error) {
       console.error("Error sending daily notifications:", error);
       res.status(500).json({ error: "Failed to send notifications" });
+    }
+  });
+
+  app.get("/api/stripe/publishable-key", async (req, res) => {
+    try {
+      const publishableKey = await getStripePublishableKey();
+      res.json({ publishableKey });
+    } catch (error) {
+      console.error("Error getting Stripe key:", error);
+      res.status(500).json({ error: "Failed to get Stripe key" });
+    }
+  });
+
+  app.get("/api/billing/subscription-price", async (req, res) => {
+    try {
+      const priceInfo = await stripeService.getActiveSubscriptionPrice();
+      res.json(priceInfo);
+    } catch (error) {
+      console.error("Error getting subscription price:", error);
+      res.status(500).json({ error: "Failed to get subscription price" });
+    }
+  });
+
+  app.get("/api/billing/access-status", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const profile = await storage.getUserProfile(userId);
+      if (!profile) {
+        return res.json({ hasAccess: false, reason: "no_profile" });
+      }
+
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+
+      if (profile.subscriptionStatus === "active" || profile.subscriptionStatus === "trialing") {
+        return res.json({ 
+          hasAccess: true, 
+          accessibleMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+          subscriptionStatus: profile.subscriptionStatus 
+        });
+      }
+
+      if (profile.freeAccessEndsAt && new Date(profile.freeAccessEndsAt) > now) {
+        return res.json({ 
+          hasAccess: true, 
+          accessibleMonths: [currentMonth, nextMonth],
+          freeAccessEndsAt: profile.freeAccessEndsAt,
+          subscriptionStatus: "free" 
+        });
+      }
+
+      return res.json({ 
+        hasAccess: false, 
+        accessibleMonths: [],
+        subscriptionStatus: profile.subscriptionStatus || "expired",
+        reason: "subscription_required" 
+      });
+    } catch (error) {
+      console.error("Error checking access status:", error);
+      res.status(500).json({ error: "Failed to check access status" });
+    }
+  });
+
+  app.post("/api/billing/checkout", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const userEmail = req.user?.claims?.email || `${userId}@user.replit.app`;
+      const { withTrial } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      let profile = await storage.getUserProfile(userId);
+      if (!profile) {
+        return res.status(400).json({ error: "Profile not found" });
+      }
+
+      let customerId = profile.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripeService.createCustomer(userEmail, userId);
+        await storage.updateUserStripeInfo(userId, { stripeCustomerId: customer.id });
+        customerId = customer.id;
+      }
+
+      const priceInfo = await stripeService.getActiveSubscriptionPrice();
+      if (!priceInfo?.price_id) {
+        return res.status(500).json({ error: "No subscription product available" });
+      }
+
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const session = await stripeService.createCheckoutSession(
+        customerId,
+        priceInfo.price_id,
+        `${baseUrl}/account?success=true`,
+        `${baseUrl}/subscribe?canceled=true`,
+        withTrial === true
+      );
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
+  app.post("/api/billing/portal", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const profile = await storage.getUserProfile(userId);
+      if (!profile?.stripeCustomerId) {
+        return res.status(400).json({ error: "No billing account found" });
+      }
+
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const session = await stripeService.createCustomerPortalSession(
+        profile.stripeCustomerId,
+        `${baseUrl}/account`
+      );
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Error creating portal session:", error);
+      res.status(500).json({ error: "Failed to create portal session" });
     }
   });
 

@@ -14,6 +14,7 @@ export interface IStorage {
   getUserProfile(userId: string): Promise<UserProfile | undefined>;
   upsertUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
   setUserAdmin(userId: string, isAdmin: boolean): Promise<void>;
+  updateUserStripeInfo(userId: string, info: { stripeCustomerId?: string; subscriptionStatus?: string }): Promise<UserProfile>;
   
   createPushSubscription(sub: InsertPushSubscription): Promise<PushSubscription>;
   getPushSubscription(endpoint: string): Promise<PushSubscription | undefined>;
@@ -81,13 +82,29 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return updated;
     } else {
-      const [created] = await db.insert(userProfiles).values(profile).returning();
+      const freeAccessEndsAt = new Date();
+      freeAccessEndsAt.setDate(freeAccessEndsAt.getDate() + 3);
+      
+      const [created] = await db.insert(userProfiles).values({
+        ...profile,
+        freeAccessEndsAt,
+        subscriptionStatus: "free",
+      }).returning();
       return created;
     }
   }
 
   async setUserAdmin(userId: string, isAdmin: boolean): Promise<void> {
     await db.update(userProfiles).set({ isAdmin, updatedAt: new Date() }).where(eq(userProfiles.userId, userId));
+  }
+
+  async updateUserStripeInfo(userId: string, info: { stripeCustomerId?: string; subscriptionStatus?: string }): Promise<UserProfile> {
+    const [updated] = await db
+      .update(userProfiles)
+      .set({ ...info, updatedAt: new Date() })
+      .where(eq(userProfiles.userId, userId))
+      .returning();
+    return updated;
   }
 
   async getPostForToday(): Promise<Post | undefined> {
