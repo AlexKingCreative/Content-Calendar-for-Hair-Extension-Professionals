@@ -11,12 +11,10 @@ interface StreakData {
 
 interface MobileNavProps {
   isLoggedIn?: boolean;
-  onTodayClick?: () => void;
-  hasTodayPost?: boolean;
 }
 
-export function MobileNav({ isLoggedIn, onTodayClick, hasTodayPost }: MobileNavProps) {
-  const [location] = useLocation();
+export function MobileNav({ isLoggedIn }: MobileNavProps) {
+  const [location, setLocation] = useLocation();
 
   const { data: streak } = useQuery<StreakData>({
     queryKey: ["/api/streak"],
@@ -45,13 +43,12 @@ export function MobileNav({ isLoggedIn, onTodayClick, hasTodayPost }: MobileNavP
       <div className="glass-pill rounded-3xl mx-auto max-w-xs">
         <div className="flex items-center justify-around h-14 px-4">
           <button
-            onClick={onTodayClick}
-            disabled={!hasTodayPost}
+            onClick={() => setLocation("/today")}
             className={cn(
-              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full rounded-2xl fluid-transition",
-              hasTodayPost 
-                ? "text-primary active:scale-95" 
-                : "text-muted-foreground/40"
+              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full rounded-2xl fluid-transition active:scale-95",
+              location === "/today" 
+                ? "text-primary" 
+                : "text-muted-foreground"
             )}
             data-testid="nav-today"
           >

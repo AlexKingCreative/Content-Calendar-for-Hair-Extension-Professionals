@@ -11,6 +11,7 @@ import AdminPage from "@/pages/admin";
 import LandingPage from "@/pages/landing";
 import SettingsPage from "@/pages/settings";
 import AccountPage from "@/pages/account";
+import TodayPage from "@/pages/today";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
@@ -100,6 +101,7 @@ function Router() {
           <AccountPage />
         </ProtectedRoute>
       </Route>
+      <Route path="/today" component={TodayPage} />
       <Route component={NotFound} />
     </Switch>
   );

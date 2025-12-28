@@ -604,11 +604,7 @@ export default function CalendarPage() {
         )}
       </main>
 
-      <MobileNav
-        isLoggedIn={!!user}
-        onTodayClick={() => todayPost && setSelectedPost(todayPost)}
-        hasTodayPost={!!todayPost && selectedMonth === new Date().getMonth() + 1}
-      />
+      <MobileNav isLoggedIn={!!user} />
 
       <InstallPrompt />
 
