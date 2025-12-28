@@ -26,6 +26,8 @@ import SalonSetupPage from "@/pages/salon-setup";
 import SalonDashboardPage from "@/pages/salon-dashboard";
 import JoinSalonPage from "@/pages/join-salon";
 import PricingPage from "@/pages/pricing";
+import LoginPage from "@/pages/login";
+import RegisterPage from "@/pages/register";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
@@ -149,6 +151,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
+      <Route path="/login" component={LoginPage} />
+      <Route path="/register" component={RegisterPage} />
       <Route path="/welcome" component={WelcomePage} />
       <Route path="/signup" component={SignupPage} />
       <Route path="/calendar" component={CalendarPage} />

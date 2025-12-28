@@ -24,9 +24,20 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
+// Helper to get userId from either Replit OAuth or session-based auth
+function getUserId(req: any): string | null {
+  if (req.user?.claims?.sub) {
+    return req.user.claims.sub;
+  }
+  if (req.session?.userId) {
+    return req.session.userId;
+  }
+  return null;
+}
+
 const requireAdmin: RequestHandler = async (req: any, res, next) => {
   try {
-    const userId = req.user?.claims?.sub;
+    const userId = getUserId(req);
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -50,6 +61,116 @@ export async function registerRoutes(
   registerAuthRoutes(app);
   
   app.use('/api/mobile', mobileAuthRoutes);
+  
+  // Web email/password authentication routes
+  app.post("/api/auth/register", async (req: any, res) => {
+    try {
+      const { email, password, name } = req.body;
+      
+      if (!email || !password || !name) {
+        return res.status(400).json({ message: "Email, password, and name are required" });
+      }
+      
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+      
+      const bcrypt = await import("bcryptjs");
+      const { db } = await import("./db");
+      const { users } = await import("@shared/models/auth");
+      const { eq } = await import("drizzle-orm");
+      
+      const existingUser = await db.select().from(users).where(eq(users.email, email));
+      if (existingUser.length > 0) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+      
+      const passwordHash = await bcrypt.default.hash(password, 10);
+      const nameParts = name.split(" ");
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(" ") || null;
+      
+      const [newUser] = await db.insert(users).values({
+        email,
+        passwordHash,
+        firstName,
+        lastName,
+      }).returning();
+      
+      await storage.createUserProfile(newUser.id, {
+        userId: newUser.id,
+        onboardingComplete: false,
+      });
+      
+      req.session.userId = newUser.id;
+      req.session.userEmail = newUser.email;
+      req.session.userName = `${firstName}${lastName ? " " + lastName : ""}`;
+      
+      res.json({ 
+        success: true,
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          name: req.session.userName,
+        }
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+  
+  app.post("/api/auth/login", async (req: any, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+      
+      const bcrypt = await import("bcryptjs");
+      const { db } = await import("./db");
+      const { users } = await import("@shared/models/auth");
+      const { eq } = await import("drizzle-orm");
+      
+      const [user] = await db.select().from(users).where(eq(users.email, email));
+      if (!user || !user.passwordHash) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      const isValid = await bcrypt.default.compare(password, user.passwordHash);
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      const userName = `${user.firstName}${user.lastName ? " " + user.lastName : ""}`;
+      
+      req.session.userId = user.id;
+      req.session.userEmail = user.email;
+      req.session.userName = userName;
+      
+      res.json({
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: userName,
+        }
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+  
+  app.post("/api/auth/logout", (req: any, res) => {
+    req.session.destroy((err: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ success: true });
+    });
+  });
   
   await seedPosts();
 
@@ -257,7 +378,10 @@ export async function registerRoutes(
 
   app.get("/api/profile", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       let profile = await storage.getUserProfile(userId);
       
       if (!profile) {
@@ -280,7 +404,10 @@ export async function registerRoutes(
 
   app.put("/api/profile", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const { 
         city, 
         certifiedBrands, 
@@ -323,7 +450,10 @@ export async function registerRoutes(
 
   app.get("/api/profile/hashtags", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const profile = await storage.getUserProfile(userId);
       
       if (!profile || !profile.onboardingComplete) {
@@ -365,7 +495,10 @@ export async function registerRoutes(
 
   app.put("/api/profile/posting-goal", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const { postingGoal } = req.body;
       
       if (!["daily", "casual", "occasional"].includes(postingGoal)) {
@@ -386,7 +519,10 @@ export async function registerRoutes(
 
   app.get("/api/streak", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const profile = await storage.getUserProfile(userId);
       const today = new Date().toISOString().split('T')[0];
       const hasPostedToday = await storage.hasPostedToday(userId, today);
@@ -408,7 +544,10 @@ export async function registerRoutes(
 
   app.post("/api/streak/log", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const today = new Date().toISOString().split('T')[0];
       const { postId } = req.body;
       

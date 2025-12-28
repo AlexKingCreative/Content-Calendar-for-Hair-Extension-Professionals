@@ -1,11 +1,9 @@
-const PROD_WEB_URL = import.meta.env.VITE_APP_URL || window.location.origin;
-
 export function isUnauthorizedError(error: Error): boolean {
   return /^401: .*Unauthorized/.test(error.message);
 }
 
 export function getLoginUrl(): string {
-  return "/api/login";
+  return "/login";
 }
 
 export async function navigateToLogin() {
