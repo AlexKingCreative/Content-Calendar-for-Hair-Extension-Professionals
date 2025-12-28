@@ -132,86 +132,94 @@ export default function LandingPage() {
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         
         <div className="relative max-w-6xl mx-auto px-4 py-16 sm:py-24">
-          <div className="text-center">
-            {/* Badge */}
-            <Badge variant="secondary" className="mb-6 px-4 py-1.5 text-sm font-medium">
-              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-              The #1 Content Calendar for Hair Stylists
-            </Badge>
-            
-            {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
-              <span className="block">Never Run Out of</span>
-              <span className="block bg-gradient-to-r from-primary via-rose-500 to-amber-500 bg-clip-text text-transparent">
-                Instagram Content Again
-              </span>
-            </h1>
-            
-            {/* Subheadline */}
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              365 days of professionally crafted social media post ideas designed specifically for hair extension professionals. Personalized hashtags, daily reminders, and AI-powered content generation.
-            </p>
-            
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              {isInstalled ? (
-                <Link href="/calendar">
-                  <Button size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-open-app">
-                    <Play className="w-5 h-5" />
-                    Open App
-                  </Button>
-                </Link>
-              ) : showInstallButton ? (
-                <Button 
-                  size="lg" 
-                  className="text-lg px-8 py-6 gap-2"
-                  onClick={handleInstallClick}
-                  data-testid="button-install-app"
-                >
-                  <Smartphone className="w-5 h-5" />
-                  {isIOS ? "Install on iPhone" : platform === "android" ? "Install on Android" : "Install Free App"}
-                </Button>
-              ) : (
-                <Link href="/calendar">
-                  <Button size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-get-started">
-                    <Play className="w-5 h-5" />
-                    Get Started Free
-                  </Button>
-                </Link>
-              )}
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Column - Info */}
+            <div className="text-center lg:text-left">
+              {/* Badge */}
+              <Badge variant="secondary" className="mb-6 px-4 py-1.5 text-sm font-medium">
+                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                The #1 Content Calendar for Hair Stylists
+              </Badge>
               
-              <Link href="/calendar">
-                <Button variant="outline" size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-try-now">
-                  Try It Now
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
-              </Link>
+              {/* Headline */}
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
+                <span className="block">Never Run Out of</span>
+                <span className="block bg-gradient-to-r from-primary via-rose-500 to-amber-500 bg-clip-text text-transparent">
+                  Instagram Content Again
+                </span>
+              </h1>
+              
+              {/* Subheadline */}
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl lg:max-w-none mb-8">
+                365 days of professionally crafted social media post ideas designed specifically for hair extension professionals. Personalized hashtags, daily reminders, and AI-powered content generation.
+              </p>
+              
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mb-8">
+                {isInstalled ? (
+                  <Link href="/calendar">
+                    <Button size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-open-app">
+                      <Play className="w-5 h-5" />
+                      Open App
+                    </Button>
+                  </Link>
+                ) : showInstallButton ? (
+                  <Button 
+                    size="lg" 
+                    className="text-lg px-8 py-6 gap-2"
+                    onClick={handleInstallClick}
+                    data-testid="button-install-app"
+                  >
+                    <Smartphone className="w-5 h-5" />
+                    {isIOS ? "Install on iPhone" : platform === "android" ? "Install on Android" : "Install Free App"}
+                  </Button>
+                ) : (
+                  <Link href="/calendar">
+                    <Button size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-get-started">
+                      <Play className="w-5 h-5" />
+                      Get Started Free
+                    </Button>
+                  </Link>
+                )}
+                
+                <Link href="/calendar">
+                  <Button variant="outline" size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-try-now">
+                    Try It Now
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+                </Link>
+              </div>
+              
+              {/* Trust Indicators */}
+              <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  No credit card required
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  Works offline
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  Install on any device
+                </span>
+              </div>
             </div>
             
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Check className="w-4 h-4 text-emerald-500" />
-                No credit card required
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Check className="w-4 h-4 text-emerald-500" />
-                Works offline
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Check className="w-4 h-4 text-emerald-500" />
-                Install on any device
-              </span>
+            {/* Right Column - App Demo Animation */}
+            <div className="hidden lg:block" data-testid="landing-animation">
+              <LandingAnimation />
             </div>
           </div>
           
-          {/* App Demo Animation */}
-          <div className="mt-16 mb-8" data-testid="landing-animation">
+          {/* Mobile Animation - shown below on smaller screens */}
+          <div className="lg:hidden mt-12 mb-8" data-testid="landing-animation-mobile">
             <LandingAnimation />
           </div>
           
           {/* Scroll Indicator */}
-          <div className="flex justify-center">
+          <div className="flex justify-center mt-8">
             <ArrowDown className="w-6 h-6 text-muted-foreground animate-bounce" />
           </div>
         </div>
