@@ -908,5 +908,369 @@ Respond in JSON format with these fields:
     }
   });
 
+  // ==================== POST SUBMISSIONS ====================
+  
+  // Submit an Instagram post to be featured
+  app.post("/api/posts/:id/submissions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const postId = parseInt(req.params.id);
+      if (isNaN(postId)) {
+        return res.status(400).json({ error: "Invalid post ID" });
+      }
+      
+      const { instagramUrl } = req.body;
+      if (!instagramUrl || typeof instagramUrl !== "string") {
+        return res.status(400).json({ error: "Instagram URL is required" });
+      }
+      
+      // Validate Instagram URL format
+      const instagramRegex = /^https?:\/\/(www\.)?instagram\.com\/(p|reel)\/[\w-]+\/?/;
+      if (!instagramRegex.test(instagramUrl)) {
+        return res.status(400).json({ error: "Invalid Instagram URL format" });
+      }
+      
+      // Check if user already has a pending submission for this post
+      const existingSubmission = await storage.getPendingSubmissionForPost(userId, postId);
+      if (existingSubmission) {
+        return res.status(400).json({ error: "You already have a pending submission for this post" });
+      }
+      
+      const submission = await storage.createPostSubmission({
+        userId,
+        postId,
+        instagramUrl,
+        status: "pending",
+      });
+      
+      res.json(submission);
+    } catch (error) {
+      console.error("Error creating submission:", error);
+      res.status(500).json({ error: "Failed to create submission" });
+    }
+  });
+
+  // Get all submissions (admin only)
+  app.get("/api/submissions", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const submissions = await storage.getPostSubmissions(status);
+      res.json(submissions);
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
+      res.status(500).json({ error: "Failed to fetch submissions" });
+    }
+  });
+
+  // Approve or reject a submission (admin only)
+  app.patch("/api/submissions/:id/status", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid submission ID" });
+      }
+      
+      const { status, reviewNote } = req.body;
+      if (!status || !["approved", "rejected"].includes(status)) {
+        return res.status(400).json({ error: "Invalid status. Must be 'approved' or 'rejected'" });
+      }
+      
+      const submission = await storage.updatePostSubmissionStatus(id, status, userId, reviewNote);
+      if (!submission) {
+        return res.status(404).json({ error: "Submission not found" });
+      }
+      
+      // If approved, update the post's Instagram example URL
+      if (status === "approved") {
+        await storage.updatePost(submission.postId, {
+          instagramExampleUrl: submission.instagramUrl,
+        });
+      }
+      
+      res.json(submission);
+    } catch (error) {
+      console.error("Error updating submission:", error);
+      res.status(500).json({ error: "Failed to update submission" });
+    }
+  });
+
+  // Get user's own submissions
+  app.get("/api/users/me/submissions", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const submissions = await storage.getPostSubmissionsByUser(userId);
+      res.json(submissions);
+    } catch (error) {
+      console.error("Error fetching user submissions:", error);
+      res.status(500).json({ error: "Failed to fetch submissions" });
+    }
+  });
+
+  // ==================== SALONS ====================
+  
+  // Create a salon (during owner onboarding)
+  app.post("/api/salons", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Check if user already owns a salon
+      const existingSalon = await storage.getSalonByOwner(userId);
+      if (existingSalon) {
+        return res.status(400).json({ error: "You already own a salon" });
+      }
+      
+      const { name, instagramHandle, seatTier } = req.body;
+      if (!name || typeof name !== "string" || name.trim().length === 0) {
+        return res.status(400).json({ error: "Salon name is required" });
+      }
+      
+      // Determine seat limit based on tier
+      const seatLimit = seatTier === "10-plus-seats" ? 10 : 5;
+      
+      const salon = await storage.createSalon({
+        ownerUserId: userId,
+        name: name.trim(),
+        instagramHandle: instagramHandle?.trim() || null,
+        seatTier: seatTier || "5-seats",
+        seatLimit,
+      });
+      
+      // Update user profile to be salon owner
+      await storage.upsertUserProfile({
+        userId,
+        salonId: salon.id,
+        salonRole: "owner",
+      });
+      
+      res.json(salon);
+    } catch (error) {
+      console.error("Error creating salon:", error);
+      res.status(500).json({ error: "Failed to create salon" });
+    }
+  });
+
+  // Get current user's salon
+  app.get("/api/salons/me", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const salon = await storage.getSalonByOwner(userId);
+      if (!salon) {
+        return res.status(404).json({ error: "No salon found" });
+      }
+      
+      // Get members for this salon
+      const members = await storage.getSalonMembers(salon.id);
+      const acceptedMembers = members.filter(m => m.invitationStatus === "accepted");
+      
+      // Get streak info for each accepted member
+      const membersWithStreaks = await Promise.all(
+        acceptedMembers.map(async (member) => {
+          if (member.stylistUserId) {
+            const profile = await storage.getUserProfile(member.stylistUserId);
+            return {
+              ...member,
+              currentStreak: profile?.currentStreak || 0,
+              totalPosts: profile?.totalPosts || 0,
+            };
+          }
+          return { ...member, currentStreak: 0, totalPosts: 0 };
+        })
+      );
+      
+      res.json({
+        ...salon,
+        members,
+        membersWithStreaks,
+        seatCount: acceptedMembers.length,
+      });
+    } catch (error) {
+      console.error("Error fetching salon:", error);
+      res.status(500).json({ error: "Failed to fetch salon" });
+    }
+  });
+
+  // Update salon
+  app.put("/api/salons/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid salon ID" });
+      }
+      
+      const salon = await storage.getSalon(id);
+      if (!salon || salon.ownerUserId !== userId) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const { name, instagramHandle } = req.body;
+      const updated = await storage.updateSalon(id, {
+        name: name?.trim() || salon.name,
+        instagramHandle: instagramHandle?.trim() || salon.instagramHandle,
+      });
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating salon:", error);
+      res.status(500).json({ error: "Failed to update salon" });
+    }
+  });
+
+  // Invite a stylist to the salon
+  app.post("/api/salons/:id/invitations", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const salonId = parseInt(req.params.id);
+      if (isNaN(salonId)) {
+        return res.status(400).json({ error: "Invalid salon ID" });
+      }
+      
+      const salon = await storage.getSalon(salonId);
+      if (!salon || salon.ownerUserId !== userId) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const { email } = req.body;
+      if (!email || typeof email !== "string" || !email.includes("@")) {
+        return res.status(400).json({ error: "Valid email is required" });
+      }
+      
+      // Check seat limit
+      const members = await storage.getSalonMembers(salonId);
+      const activeMembers = members.filter(m => m.invitationStatus !== "revoked");
+      if (activeMembers.length >= (salon.seatLimit || 5)) {
+        return res.status(400).json({ error: "Seat limit reached. Please upgrade your plan." });
+      }
+      
+      // Check for existing invitation
+      const existingMember = await storage.getSalonMemberByEmail(salonId, email.toLowerCase());
+      if (existingMember) {
+        return res.status(400).json({ error: "This email has already been invited" });
+      }
+      
+      // Generate invitation token
+      const invitationToken = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      
+      const member = await storage.createSalonMember({
+        salonId,
+        email: email.toLowerCase(),
+        invitationToken,
+        invitationStatus: "pending",
+      });
+      
+      res.json(member);
+    } catch (error) {
+      console.error("Error inviting stylist:", error);
+      res.status(500).json({ error: "Failed to invite stylist" });
+    }
+  });
+
+  // Accept a salon invitation
+  app.patch("/api/salon-invitations/:token", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const { token } = req.params;
+      const member = await storage.acceptSalonInvitation(token, userId);
+      if (!member) {
+        return res.status(404).json({ error: "Invalid or expired invitation" });
+      }
+      
+      res.json(member);
+    } catch (error) {
+      console.error("Error accepting invitation:", error);
+      res.status(500).json({ error: "Failed to accept invitation" });
+    }
+  });
+
+  // Get invitation details (for preview before accepting)
+  app.get("/api/salon-invitations/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const member = await storage.getSalonMemberByToken(token);
+      if (!member || member.invitationStatus !== "pending") {
+        return res.status(404).json({ error: "Invalid or expired invitation" });
+      }
+      
+      const salon = await storage.getSalon(member.salonId);
+      res.json({
+        salonName: salon?.name,
+        salonInstagram: salon?.instagramHandle,
+        email: member.email,
+      });
+    } catch (error) {
+      console.error("Error fetching invitation:", error);
+      res.status(500).json({ error: "Failed to fetch invitation" });
+    }
+  });
+
+  // Revoke a salon member
+  app.delete("/api/salons/:salonId/members/:memberId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const salonId = parseInt(req.params.salonId);
+      const memberId = parseInt(req.params.memberId);
+      
+      if (isNaN(salonId) || isNaN(memberId)) {
+        return res.status(400).json({ error: "Invalid IDs" });
+      }
+      
+      const salon = await storage.getSalon(salonId);
+      if (!salon || salon.ownerUserId !== userId) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      const success = await storage.revokeSalonMember(memberId);
+      if (!success) {
+        return res.status(404).json({ error: "Member not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error revoking member:", error);
+      res.status(500).json({ error: "Failed to revoke member" });
+    }
+  });
+
+  // Get user's salon info (for stylists to know their salon)
+  app.get("/api/users/me/salon", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const profile = await storage.getUserProfile(userId);
+      if (!profile?.salonId) {
+        return res.status(404).json({ error: "Not a salon member" });
+      }
+      
+      const salon = await storage.getSalon(profile.salonId);
+      res.json(salon);
+    } catch (error) {
+      console.error("Error fetching user salon:", error);
+      res.status(500).json({ error: "Failed to fetch salon" });
+    }
+  });
+
   return httpServer;
 }
