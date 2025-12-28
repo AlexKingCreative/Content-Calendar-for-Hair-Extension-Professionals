@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient, getQueryFn } from "./lib/queryClient";
@@ -44,6 +45,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
+  useEffect(() => {
+    if (!userLoading && !user) {
+      setLocation("/");
+    }
+  }, [userLoading, user, setLocation]);
+
   if (userLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -53,7 +60,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    setLocation("/");
     return null;
   }
 
@@ -74,7 +80,16 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
       enabled: !!user,
     });
 
-  if (userLoading || (user && profileLoading)) {
+  const isLoading = userLoading || (user && profileLoading);
+  const isUnauthorized = !isLoading && (!user || !profile?.isAdmin);
+
+  useEffect(() => {
+    if (isUnauthorized) {
+      setLocation("/");
+    }
+  }, [isUnauthorized, setLocation]);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Skeleton className="h-12 w-48" />
@@ -82,8 +97,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user || !profile?.isAdmin) {
-    setLocation("/");
+  if (isUnauthorized) {
     return null;
   }
 
@@ -102,8 +116,21 @@ function HomePage() {
     enabled: !!user,
   });
 
-  // Show loading while checking auth status
-  if (userLoading || (user && profileLoading)) {
+  const isLoading = userLoading || (user && profileLoading);
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      if (profile?.isAdmin) {
+        setLocation("/admin");
+      } else if (profile?.onboardingComplete) {
+        setLocation("/today");
+      } else {
+        setLocation("/onboarding");
+      }
+    }
+  }, [isLoading, user, profile, setLocation]);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Skeleton className="h-12 w-48" />
@@ -111,15 +138,7 @@ function HomePage() {
     );
   }
 
-  // Redirect logged-in users
   if (user) {
-    if (profile?.isAdmin) {
-      setLocation("/admin");
-    } else if (profile?.onboardingComplete) {
-      setLocation("/today");
-    } else {
-      setLocation("/onboarding");
-    }
     return null;
   }
 
