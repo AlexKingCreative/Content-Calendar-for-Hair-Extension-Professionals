@@ -149,26 +149,31 @@ export async function registerRoutes(
       
       const hashtags: string[] = [];
       
+      // Always add city + hairextensions first (priority)
       if (profile.city) {
         const cityTag = profile.city.replace(/\s+/g, "");
-        hashtags.push(`#${cityTag}Hair`, `#${cityTag}Extensions`, `#${cityTag}Stylist`);
+        hashtags.push(`#${cityTag}HairExtensions`);
       }
       
+      // Add brand + hairextensions for each brand (priority)
       if (profile.certifiedBrands && profile.certifiedBrands.length > 0) {
         profile.certifiedBrands.forEach((brand: string) => {
           const brandTag = brand.replace(/\s+/g, "");
-          hashtags.push(`#${brandTag}Certified`, `#${brandTag}Extensions`);
+          hashtags.push(`#${brandTag}HairExtensions`);
         });
       }
       
+      // Add a general extension method hashtag if we have room
       if (profile.extensionMethods && profile.extensionMethods.length > 0) {
-        profile.extensionMethods.forEach((method: string) => {
-          const methodTag = method.replace(/[^a-zA-Z]/g, "");
-          hashtags.push(`#${methodTag}Extensions`, `#${methodTag}Specialist`);
-        });
+        const method = profile.extensionMethods[0];
+        const methodTag = method.replace(/[^a-zA-Z]/g, "");
+        hashtags.push(`#${methodTag}Extensions`);
       }
       
-      res.json({ hashtags: Array.from(new Set(hashtags)) });
+      // Limit to 5 unique hashtags
+      const uniqueHashtags = Array.from(new Set(hashtags)).slice(0, 5);
+      
+      res.json({ hashtags: uniqueHashtags });
     } catch (error) {
       console.error("Error generating hashtags:", error);
       res.status(500).json({ error: "Failed to generate hashtags" });

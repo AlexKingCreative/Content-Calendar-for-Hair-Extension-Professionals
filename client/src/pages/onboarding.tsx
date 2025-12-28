@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, MapPin, Award, Scissors, ChevronRight, ChevronLeft, Check } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Sparkles, MapPin, Award, Scissors, ChevronRight, ChevronLeft, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest } from "@/lib/queryClient";
 import { certifiedBrands, extensionMethods } from "@shared/schema";
 
@@ -17,6 +19,8 @@ export default function OnboardingPage() {
   const [city, setCity] = useState("");
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
+  const [brandSearch, setBrandSearch] = useState("");
+  const [brandPopoverOpen, setBrandPopoverOpen] = useState(false);
 
   const totalSteps = 3;
   const progress = (step / totalSteps) * 100;
@@ -35,11 +39,23 @@ export default function OnboardingPage() {
     },
   });
 
-  const toggleBrand = (brand: string) => {
-    setSelectedBrands((prev) =>
-      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
-    );
+  const addBrand = (brand: string) => {
+    if (brand && !selectedBrands.includes(brand)) {
+      setSelectedBrands((prev) => [...prev, brand]);
+    }
+    setBrandSearch("");
+    setBrandPopoverOpen(false);
   };
+
+  const removeBrand = (brand: string) => {
+    setSelectedBrands((prev) => prev.filter((b) => b !== brand));
+  };
+
+  const filteredBrands = certifiedBrands.filter(
+    (brand) =>
+      brand.toLowerCase().includes(brandSearch.toLowerCase()) &&
+      !selectedBrands.includes(brand)
+  );
 
   const toggleMethod = (method: string) => {
     setSelectedMethods((prev) =>
@@ -112,22 +128,80 @@ export default function OnboardingPage() {
                 <h3 className="font-heading font-semibold text-lg">Certified Brands</h3>
               </div>
               <p className="text-muted-foreground">
-                Select the hair extension brands you're certified in
+                Search and select the hair extension brands you're certified in
               </p>
-              <div className="flex flex-wrap gap-2">
-                {certifiedBrands.map((brand) => (
-                  <Badge
-                    key={brand}
-                    variant={selectedBrands.includes(brand) ? "default" : "outline"}
-                    className="cursor-pointer py-2 px-3"
-                    onClick={() => toggleBrand(brand)}
-                    data-testid={`badge-brand-${brand.toLowerCase().replace(/\s+/g, "-")}`}
+              
+              <Popover open={brandPopoverOpen} onOpenChange={setBrandPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={brandPopoverOpen}
+                    className="w-full justify-start text-muted-foreground"
+                    data-testid="button-add-brand"
                   >
-                    {selectedBrands.includes(brand) && <Check className="w-3 h-3 mr-1" />}
-                    {brand}
-                  </Badge>
-                ))}
-              </div>
+                    <Award className="w-4 h-4 mr-2" />
+                    Search brands to add...
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput
+                      placeholder="Type to search brands..."
+                      value={brandSearch}
+                      onValueChange={setBrandSearch}
+                      data-testid="input-brand-search"
+                    />
+                    <CommandList>
+                      <CommandEmpty>
+                        {brandSearch.length > 0 && (
+                          <div
+                            className="p-2 cursor-pointer hover:bg-accent rounded-sm"
+                            onClick={() => addBrand(brandSearch)}
+                            data-testid="button-add-custom-brand"
+                          >
+                            Add "{brandSearch}" as custom brand
+                          </div>
+                        )}
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {filteredBrands.map((brand) => (
+                          <CommandItem
+                            key={brand}
+                            value={brand}
+                            onSelect={() => addBrand(brand)}
+                            data-testid={`option-brand-${brand.toLowerCase().replace(/\s+/g, "-")}`}
+                          >
+                            {brand}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+
+              {selectedBrands.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {selectedBrands.map((brand) => (
+                    <Badge
+                      key={brand}
+                      variant="default"
+                      className="py-1.5 px-3 gap-1"
+                      data-testid={`badge-selected-brand-${brand.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      {brand}
+                      <button
+                        onClick={() => removeBrand(brand)}
+                        className="ml-1 hover:bg-primary-foreground/20 rounded-full p-0.5"
+                        data-testid={`button-remove-brand-${brand.toLowerCase().replace(/\s+/g, "-")}`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
