@@ -20,7 +20,12 @@ import {
   X,
   PartyPopper,
   Heart,
-  Star
+  Star,
+  Zap,
+  Clock,
+  TrendingUp,
+  Hash,
+  Wand2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LandingAnimation } from "@/components/LandingAnimation";
@@ -455,73 +460,113 @@ export default function WelcomePage() {
               exit={{ opacity: 0, x: -20 }}
               className="flex-1 flex flex-col"
             >
-              <div className="text-center mb-6">
+              <div className="text-center mb-4">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-rose-400 flex items-center justify-center mx-auto mb-4"
+                  className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-rose-400 flex items-center justify-center mx-auto mb-3"
                 >
-                  <PartyPopper className="w-8 h-8 text-white" />
+                  <PartyPopper className="w-7 h-7 text-white" />
                 </motion.div>
-                <h2 className="text-xl font-heading font-semibold mb-2">You're all set!</h2>
+                <h2 className="text-xl font-heading font-semibold mb-1">You're ready to grow!</h2>
                 <p className="text-muted-foreground text-sm">
-                  Create your account to unlock 365 days of personalized content
+                  Here's what you're about to unlock
                 </p>
               </div>
 
-              <div className="flex-1 space-y-4">
-                <div className="bg-card border rounded-lg p-4 space-y-3">
-                  <h3 className="font-medium text-sm">Your personalized profile:</h3>
-                  <div className="space-y-2 text-sm">
-                    {city && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-primary" />
-                        <span>{city}</span>
-                      </div>
-                    )}
-                    {selectedBrands.length > 0 && (
-                      <div className="flex items-start gap-2">
-                        <Award className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                        <span>{selectedBrands.join(", ")}</span>
-                      </div>
-                    )}
-                    {selectedMethods.length > 0 && (
-                      <div className="flex items-start gap-2">
-                        <Scissors className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                        <span>{selectedMethods.join(", ")}</span>
-                      </div>
-                    )}
-                    {!city && selectedBrands.length === 0 && selectedMethods.length === 0 && (
-                      <p className="text-muted-foreground">You can customize these later in settings</p>
-                    )}
-                  </div>
+              <div className="flex-1 space-y-3 overflow-y-auto">
+                <div className="space-y-2">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="flex items-start gap-3 bg-card border rounded-lg p-3"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center shrink-0">
+                      <Calendar className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-sm">365 Days of Content Ideas</h3>
+                      <p className="text-xs text-muted-foreground">Never stare at a blank screen again</p>
+                    </div>
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex items-start gap-3 bg-card border rounded-lg p-3"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center shrink-0">
+                      <Wand2 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-sm">AI-Powered Captions</h3>
+                      <p className="text-xs text-muted-foreground">One tap to generate scroll-stopping copy</p>
+                    </div>
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex items-start gap-3 bg-card border rounded-lg p-3"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                      <Hash className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-sm">Personalized Hashtags</h3>
+                      <p className="text-xs text-muted-foreground">Tailored to your city, brands & methods</p>
+                    </div>
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="flex items-start gap-3 bg-card border rounded-lg p-3"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+                      <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-sm">Build Your Streak</h3>
+                      <p className="text-xs text-muted-foreground">Stay consistent and watch your followers grow</p>
+                    </div>
+                  </motion.div>
                 </div>
 
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Gift className="w-5 h-5 text-primary" />
-                    <span className="font-medium">7-Day Free Trial</span>
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-gradient-to-r from-primary/10 to-rose-400/10 border border-primary/20 rounded-lg p-3"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <Gift className="w-4 h-4 text-primary" />
+                    <span className="font-medium text-sm">Start with 7 Days Free</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Full access to all features. No credit card required.
+                  <p className="text-xs text-muted-foreground">
+                    Full access to everything. No credit card needed.
                   </p>
-                </div>
+                </motion.div>
               </div>
 
-              <div className="space-y-3 pt-6">
+              <div className="space-y-2 pt-4">
                 <Button 
                   size="lg" 
                   className="w-full py-6" 
                   onClick={handleSignup}
                   data-testid="button-create-account"
                 >
-                  <Heart className="w-5 h-5 mr-2" />
-                  Create My Account
+                  <Zap className="w-5 h-5 mr-2" />
+                  Start My Free Trial
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
 
-                <div className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground pt-2">
+                <div className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Check className="w-3 h-3 text-emerald-500" />
                     Cancel anytime
