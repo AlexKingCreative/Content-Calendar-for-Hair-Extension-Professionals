@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ArrowLeft, Calendar, Flame, Check, Copy, Hash, Sparkles, Loader2, ExternalLink, Camera, Video, Film, Images, Clock, Radio, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Lightbulb, TrendingUp } from "lucide-react";
+import { ArrowLeft, Calendar, Flame, Check, Copy, Hash, Sparkles, Loader2, Camera, Video, Film, Images, Clock, Radio, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Lightbulb, TrendingUp } from "lucide-react";
+import { SiInstagram } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -370,7 +371,7 @@ export default function TodayPage() {
             onClick={() => window.open(todayPost.instagramExampleUrl!, "_blank")}
             data-testid="button-see-example"
           >
-            <ExternalLink className="w-4 h-4" />
+            <SiInstagram className="w-4 h-4" />
             See Example on Instagram
           </Button>
         )}
