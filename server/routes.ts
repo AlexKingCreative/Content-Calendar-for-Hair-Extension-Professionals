@@ -255,6 +255,75 @@ export async function registerRoutes(
     }
   });
 
+  app.put("/api/profile/posting-goal", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { postingGoal } = req.body;
+      
+      if (!["daily", "casual", "occasional"].includes(postingGoal)) {
+        return res.status(400).json({ error: "Invalid posting goal" });
+      }
+      
+      const profile = await storage.upsertUserProfile({
+        userId,
+        postingGoal,
+      });
+      
+      res.json(profile);
+    } catch (error) {
+      console.error("Error updating posting goal:", error);
+      res.status(500).json({ error: "Failed to update posting goal" });
+    }
+  });
+
+  app.get("/api/streak", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profile = await storage.getUserProfile(userId);
+      const today = new Date().toISOString().split('T')[0];
+      const hasPostedToday = await storage.hasPostedToday(userId, today);
+      const logs = await storage.getPostingLogs(userId, 30);
+      
+      res.json({
+        currentStreak: profile?.currentStreak || 0,
+        longestStreak: profile?.longestStreak || 0,
+        totalPosts: profile?.totalPosts || 0,
+        postingGoal: profile?.postingGoal || "casual",
+        hasPostedToday,
+        recentLogs: logs.map(l => l.date),
+      });
+    } catch (error) {
+      console.error("Error fetching streak:", error);
+      res.status(500).json({ error: "Failed to fetch streak data" });
+    }
+  });
+
+  app.post("/api/streak/log", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const today = new Date().toISOString().split('T')[0];
+      const { postId } = req.body;
+      
+      const hasPosted = await storage.hasPostedToday(userId, today);
+      if (hasPosted) {
+        return res.status(400).json({ error: "Already logged a post today" });
+      }
+      
+      await storage.logPost(userId, today, postId);
+      const profile = await storage.updateStreak(userId);
+      
+      res.json({
+        currentStreak: profile.currentStreak,
+        longestStreak: profile.longestStreak,
+        totalPosts: profile.totalPosts,
+        hasPostedToday: true,
+      });
+    } catch (error) {
+      console.error("Error logging post:", error);
+      res.status(500).json({ error: "Failed to log post" });
+    }
+  });
+
   // Generate caption for a post using AI
   app.post("/api/posts/:id/generate-caption", async (req, res) => {
     try {

@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { posts, userProfiles, pushSubscriptions, brands, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand } from "@shared/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { posts, userProfiles, pushSubscriptions, brands, postingLogs, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type PostingLog, type InsertPostingLog } from "@shared/schema";
+import { eq, and, sql, desc } from "drizzle-orm";
 
 export interface IStorage {
   getAllPosts(): Promise<Post[]>;
@@ -25,6 +25,11 @@ export interface IStorage {
   createBrand(brand: InsertBrand): Promise<Brand>;
   updateBrand(id: number, brand: Partial<InsertBrand>): Promise<Brand | undefined>;
   deleteBrand(id: number): Promise<boolean>;
+  
+  logPost(userId: string, date: string, postId?: number): Promise<PostingLog>;
+  getPostingLogs(userId: string, limit?: number): Promise<PostingLog[]>;
+  hasPostedToday(userId: string, date: string): Promise<boolean>;
+  updateStreak(userId: string): Promise<UserProfile>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -148,6 +153,55 @@ export class DatabaseStorage implements IStorage {
   async deleteBrand(id: number): Promise<boolean> {
     const result = await db.delete(brands).where(eq(brands.id, id)).returning();
     return result.length > 0;
+  }
+
+  async logPost(userId: string, date: string, postId?: number): Promise<PostingLog> {
+    const [log] = await db.insert(postingLogs).values({ userId, date, postId }).returning();
+    return log;
+  }
+
+  async getPostingLogs(userId: string, limit: number = 30): Promise<PostingLog[]> {
+    return db.select().from(postingLogs).where(eq(postingLogs.userId, userId)).orderBy(desc(postingLogs.date)).limit(limit);
+  }
+
+  async hasPostedToday(userId: string, date: string): Promise<boolean> {
+    const [log] = await db.select().from(postingLogs).where(and(eq(postingLogs.userId, userId), eq(postingLogs.date, date)));
+    return !!log;
+  }
+
+  async updateStreak(userId: string): Promise<UserProfile> {
+    const logs = await this.getPostingLogs(userId, 365);
+    const profile = await this.getUserProfile(userId);
+    if (!profile) throw new Error("Profile not found");
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let currentStreak = 0;
+    let checkDate = new Date(today);
+    
+    const logDates = new Set(logs.map(l => l.date));
+    
+    while (true) {
+      const dateStr = checkDate.toISOString().split('T')[0];
+      if (logDates.has(dateStr)) {
+        currentStreak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    
+    const longestStreak = Math.max(profile.longestStreak || 0, currentStreak);
+    const totalPosts = logs.length;
+    
+    const [updated] = await db
+      .update(userProfiles)
+      .set({ currentStreak, longestStreak, totalPosts, updatedAt: new Date() })
+      .where(eq(userProfiles.userId, userId))
+      .returning();
+    
+    return updated;
   }
 }
 
