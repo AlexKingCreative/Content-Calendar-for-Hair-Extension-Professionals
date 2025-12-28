@@ -212,13 +212,6 @@ export default function LandingPage() {
                     </Button>
                   </Link>
                 )}
-                
-                <Link href="/calendar">
-                  <Button variant="outline" size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-try-now">
-                    Try It Now
-                    <ChevronRight className="w-5 h-5" />
-                  </Button>
-                </Link>
               </div>
               
               {/* Trust Indicators */}
