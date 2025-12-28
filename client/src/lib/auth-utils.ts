@@ -1,7 +1,15 @@
-import { Capacitor } from '@capacitor/core';
-
 // Production web URL for authentication - uses env var or falls back to current origin
 const PROD_WEB_URL = import.meta.env.VITE_APP_URL || window.location.origin;
+
+// Check if running as a native app (Capacitor)
+function isNativePlatform(): boolean {
+  try {
+    // Check for Capacitor native platform indicators
+    return !!(window as any).Capacitor?.isNativePlatform?.();
+  } catch {
+    return false;
+  }
+}
 
 export function isUnauthorizedError(error: Error): boolean {
   return /^401: .*Unauthorized/.test(error.message);
@@ -9,7 +17,7 @@ export function isUnauthorizedError(error: Error): boolean {
 
 // Get the login URL based on platform
 export function getLoginUrl(): string {
-  if (Capacitor.isNativePlatform()) {
+  if (isNativePlatform()) {
     return `${PROD_WEB_URL}/api/login`;
   }
   return "/api/login";
@@ -19,7 +27,7 @@ export function getLoginUrl(): string {
 export function navigateToLogin() {
   const loginUrl = getLoginUrl();
   
-  if (Capacitor.isNativePlatform()) {
+  if (isNativePlatform()) {
     // For native apps, open in system browser
     window.open(loginUrl, '_system');
   } else {
