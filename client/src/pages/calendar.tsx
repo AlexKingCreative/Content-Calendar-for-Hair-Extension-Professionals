@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { getQueryFn } from "@/lib/queryClient";
 import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List, LogIn, LogOut, Settings, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List, LogIn, LogOut, Settings, User, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Sparkles, Lightbulb, TrendingUp, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,6 +39,45 @@ const months = [
 ];
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const categoryIcons: Record<Category, LucideIcon> = {
+  Educational: GraduationCap,
+  "Before & After": ArrowLeftRight,
+  "Behind the Scenes": Clapperboard,
+  "Client Spotlight": Star,
+  "Product Showcase": ShoppingBag,
+  Promotional: Megaphone,
+  Engagement: MessageCircle,
+  Inspiration: Sparkles,
+  "Tips & Tricks": Lightbulb,
+  Trending: TrendingUp,
+};
+
+const categoryBgColors: Record<Category, string> = {
+  Educational: "bg-blue-50 dark:bg-blue-950/30",
+  "Before & After": "bg-purple-50 dark:bg-purple-950/30",
+  "Behind the Scenes": "bg-amber-50 dark:bg-amber-950/30",
+  "Client Spotlight": "bg-pink-50 dark:bg-pink-950/30",
+  "Product Showcase": "bg-emerald-50 dark:bg-emerald-950/30",
+  Promotional: "bg-red-50 dark:bg-red-950/30",
+  Engagement: "bg-cyan-50 dark:bg-cyan-950/30",
+  Inspiration: "bg-indigo-50 dark:bg-indigo-950/30",
+  "Tips & Tricks": "bg-orange-50 dark:bg-orange-950/30",
+  Trending: "bg-rose-50 dark:bg-rose-950/30",
+};
+
+const categoryIconColors: Record<Category, string> = {
+  Educational: "text-blue-600 dark:text-blue-400",
+  "Before & After": "text-purple-600 dark:text-purple-400",
+  "Behind the Scenes": "text-amber-600 dark:text-amber-400",
+  "Client Spotlight": "text-pink-600 dark:text-pink-400",
+  "Product Showcase": "text-emerald-600 dark:text-emerald-400",
+  Promotional: "text-red-600 dark:text-red-400",
+  Engagement: "text-cyan-600 dark:text-cyan-400",
+  Inspiration: "text-indigo-600 dark:text-indigo-400",
+  "Tips & Tricks": "text-orange-600 dark:text-orange-400",
+  Trending: "text-rose-600 dark:text-rose-400",
+};
 
 export default function CalendarPage() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -347,20 +386,30 @@ export default function CalendarPage() {
                 const dayPosts = getPostsForDay(day);
                 const isToday = day === new Date().getDate() && selectedMonth === new Date().getMonth() + 1;
 
+                const firstPost = dayPosts[0];
+                const CategoryIcon = firstPost ? categoryIcons[firstPost.category as Category] : null;
+                const bgColor = firstPost ? categoryBgColors[firstPost.category as Category] : "";
+                const iconColor = firstPost ? categoryIconColors[firstPost.category as Category] : "";
+
                 return (
                   <button
                     key={day}
                     onClick={() => dayPosts.length > 0 && setSelectedPost(dayPosts[0])}
-                    className={`min-h-16 sm:min-h-24 bg-card border border-card-border rounded-md p-1 sm:p-2 hover-elevate transition-all text-left ${
+                    className={`min-h-16 sm:min-h-24 border border-card-border rounded-md p-1 sm:p-2 hover-elevate transition-all text-left ${
                       isToday ? "ring-2 ring-primary" : ""
-                    }`}
+                    } ${firstPost ? bgColor : "bg-card"}`}
                     data-testid={`calendar-day-${day}`}
                     disabled={dayPosts.length === 0}
                   >
-                    <div className={`text-xs sm:text-sm font-medium mb-1 ${
-                      isToday ? "text-primary" : "text-muted-foreground"
-                    }`}>
-                      {day}
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-xs sm:text-sm font-medium ${
+                        isToday ? "text-primary" : "text-muted-foreground"
+                      }`}>
+                        {day}
+                      </span>
+                      {CategoryIcon && (
+                        <CategoryIcon className={`w-3 h-3 sm:w-4 sm:h-4 ${iconColor}`} />
+                      )}
                     </div>
                     <div className="space-y-0.5 sm:space-y-1">
                       {dayPosts.slice(0, 1).map((post) => (
