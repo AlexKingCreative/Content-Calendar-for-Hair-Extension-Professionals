@@ -249,6 +249,10 @@ export default function WelcomePage() {
                 <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
                 <Link href="/contact" className="hover:text-foreground">Contact</Link>
               </div>
+              
+              <div className="text-center pt-2">
+                <span className="text-[10px] text-muted-foreground/60">v1.0.4</span>
+              </div>
             </motion.div>
           )}
 
