@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, registerAuthRoutes } from "./replit_integrations/auth";
 import { seedPosts } from "./seed";
-import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods } from "@shared/schema";
+import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories } from "@shared/schema";
 import OpenAI from "openai";
 import webpush from "web-push";
 import { z } from "zod";
@@ -104,6 +104,7 @@ export async function registerRoutes(
         contentTypes,
         certifiedBrands: brandNames,
         extensionMethods: methodNames,
+        serviceCategories: [...serviceCategories],
       });
     } catch (error) {
       res.json({
@@ -111,6 +112,7 @@ export async function registerRoutes(
         contentTypes,
         certifiedBrands,
         extensionMethods,
+        serviceCategories: [...serviceCategories],
       });
     }
   });

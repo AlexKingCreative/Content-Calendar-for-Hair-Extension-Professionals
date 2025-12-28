@@ -8,6 +8,15 @@ export * from "./models/auth";
 export const contentTypes = ["Photo", "Video", "Reel", "Carousel", "Story", "Live"] as const;
 export type ContentType = typeof contentTypes[number];
 
+export const serviceCategories = [
+  "Cutting Services",
+  "Coloring Services", 
+  "Extension Services",
+  "Topper Services",
+  "Wig Services"
+] as const;
+export type ServiceCategory = typeof serviceCategories[number];
+
 export const categories = [
   "Educational",
   "Before & After",
@@ -90,6 +99,7 @@ export const posts = pgTable("posts", {
   category: text("category").notNull(),
   contentType: text("content_type").notNull(),
   hashtags: text("hashtags").array().notNull().default(sql`'{}'::text[]`),
+  serviceCategory: text("service_category").default("Extension Services"),
   instagramExampleUrl: text("instagram_example_url"),
   isAiGenerated: boolean("is_ai_generated").default(false),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
@@ -111,6 +121,8 @@ export const userProfiles = pgTable("user_profiles", {
   city: text("city"),
   certifiedBrands: text("certified_brands").array().default(sql`'{}'::text[]`),
   extensionMethods: text("extension_methods").array().default(sql`'{}'::text[]`),
+  offeredServices: text("offered_services").array().default(sql`'{}'::text[]`),
+  postingServices: text("posting_services").array().default(sql`'{}'::text[]`),
   voice: text("voice").default("solo_stylist"),
   tone: text("tone").default("neutral"),
   postingGoal: text("posting_goal").default("casual"),

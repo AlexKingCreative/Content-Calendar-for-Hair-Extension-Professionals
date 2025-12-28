@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, MapPin, Award, Scissors, ChevronRight, ChevronLeft, Check, X } from "lucide-react";
+import { Sparkles, MapPin, Award, Scissors, ChevronRight, ChevronLeft, Check, X, Briefcase, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { apiRequest } from "@/lib/queryClient";
 interface OptionsData {
   certifiedBrands: string[];
   extensionMethods: string[];
+  serviceCategories: string[];
 }
 
 export default function OnboardingPage() {
@@ -21,6 +22,8 @@ export default function OnboardingPage() {
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
   const [city, setCity] = useState("");
+  const [offeredServices, setOfferedServices] = useState<string[]>([]);
+  const [postingServices, setPostingServices] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
   const [brandSearch, setBrandSearch] = useState("");
@@ -30,9 +33,16 @@ export default function OnboardingPage() {
     queryKey: ["/api/options"],
   });
 
+  const serviceCategories = options?.serviceCategories ?? [];
   const certifiedBrands = options?.certifiedBrands ?? [];
   const extensionMethods = options?.extensionMethods ?? [];
   const optionsReady = !optionsLoading && options;
+
+  const showExtensionSteps = offeredServices.includes("Extension Services") || 
+                             offeredServices.includes("Topper Services") || 
+                             offeredServices.includes("Wig Services");
+
+  const totalSteps = showExtensionSteps ? 5 : 3;
 
   useEffect(() => {
     const pending = localStorage.getItem("pendingOnboarding");
@@ -40,6 +50,8 @@ export default function OnboardingPage() {
       try {
         const data = JSON.parse(pending);
         if (data.city) setCity(data.city);
+        if (data.offeredServices?.length) setOfferedServices(data.offeredServices);
+        if (data.postingServices?.length) setPostingServices(data.postingServices);
         if (data.certifiedBrands?.length) setSelectedBrands(data.certifiedBrands);
         if (data.extensionMethods?.length) setSelectedMethods(data.extensionMethods);
         localStorage.removeItem("pendingOnboarding");
@@ -49,13 +61,14 @@ export default function OnboardingPage() {
     }
   }, []);
 
-  const totalSteps = 3;
   const progress = (step / totalSteps) * 100;
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       return apiRequest("PUT", "/api/profile", {
         city: city || null,
+        offeredServices,
+        postingServices,
         certifiedBrands: selectedBrands,
         extensionMethods: selectedMethods,
       });
@@ -65,6 +78,10 @@ export default function OnboardingPage() {
       setLocation("/");
     },
   });
+
+  const toggleService = (service: string, list: string[], setList: (val: string[]) => void) => {
+    setList(list.includes(service) ? list.filter((s) => s !== service) : [...list, service]);
+  };
 
   const addBrand = (brand: string) => {
     if (brand && !selectedBrands.includes(brand)) {
@@ -92,6 +109,10 @@ export default function OnboardingPage() {
 
   const handleNext = () => {
     if (step < totalSteps) {
+      if (step === 2) {
+        const validPostingServices = postingServices.filter(s => offeredServices.includes(s));
+        setPostingServices(validPostingServices);
+      }
       setStep(step + 1);
     } else {
       saveMutation.mutate();
@@ -108,6 +129,23 @@ export default function OnboardingPage() {
     saveMutation.mutate();
   };
 
+  const getServiceIcon = (service: string) => {
+    switch (service) {
+      case "Cutting Services":
+        return <Scissors className="w-4 h-4" />;
+      case "Coloring Services":
+        return <Sparkles className="w-4 h-4" />;
+      case "Extension Services":
+        return <Award className="w-4 h-4" />;
+      case "Topper Services":
+        return <Award className="w-4 h-4" />;
+      case "Wig Services":
+        return <Award className="w-4 h-4" />;
+      default:
+        return <Briefcase className="w-4 h-4" />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 safe-area-top safe-area-bottom">
       <Card className="w-full max-w-2xl">
@@ -119,7 +157,7 @@ export default function OnboardingPage() {
           </div>
           <CardTitle className="font-heading text-2xl">Personalize Your Experience</CardTitle>
           <CardDescription>
-            Help us customize your hashtags and content recommendations
+            Help us customize your content and hashtag recommendations
           </CardDescription>
           <div className="mt-4">
             <Progress value={progress} className="h-2" />
@@ -137,7 +175,7 @@ export default function OnboardingPage() {
                 <h3 className="font-heading font-semibold text-lg">Your Location</h3>
               </div>
               <p className="text-muted-foreground">
-                Enter your city to get location-based hashtags like #YourCityExtensions
+                Enter your city to get location-based hashtags like #YourCityHairPro
               </p>
               <Input
                 placeholder="e.g., Los Angeles, New York, Miami"
@@ -149,6 +187,80 @@ export default function OnboardingPage() {
           )}
 
           {step === 2 && (
+            <div className="space-y-4" data-testid="step-services-offered">
+              <div className="flex items-center gap-2 mb-4">
+                <Briefcase className="w-5 h-5 text-primary" />
+                <h3 className="font-heading font-semibold text-lg">Services You Offer</h3>
+              </div>
+              <p className="text-muted-foreground">
+                Select all the services you offer at your salon
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {optionsLoading ? (
+                  <p className="text-muted-foreground text-sm">Loading services...</p>
+                ) : serviceCategories.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">No services available</p>
+                ) : (
+                  serviceCategories.map((service) => (
+                    <Badge
+                      key={service}
+                      variant={offeredServices.includes(service) ? "default" : "outline"}
+                      className="cursor-pointer py-2 px-3 gap-1"
+                      onClick={() => toggleService(service, offeredServices, setOfferedServices)}
+                      data-testid={`badge-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      {offeredServices.includes(service) && <Check className="w-3 h-3" />}
+                      {getServiceIcon(service)}
+                      {service}
+                    </Badge>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-4" data-testid="step-services-posting">
+              <div className="flex items-center gap-2 mb-4">
+                <MessageSquare className="w-5 h-5 text-primary" />
+                <h3 className="font-heading font-semibold text-lg">Services to Post About</h3>
+              </div>
+              <p className="text-muted-foreground">
+                Choose which services you want to attract clients for through your content
+              </p>
+              
+              <div className="flex flex-wrap gap-2">
+                {offeredServices.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">Please select services you offer first</p>
+                ) : (
+                  offeredServices.map((service) => (
+                    <Badge
+                      key={service}
+                      variant={postingServices.includes(service) ? "default" : "outline"}
+                      className="cursor-pointer py-2 px-3 gap-1"
+                      onClick={() => toggleService(service, postingServices, setPostingServices)}
+                      data-testid={`badge-posting-${service.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      {postingServices.includes(service) && <Check className="w-3 h-3" />}
+                      {getServiceIcon(service)}
+                      {service}
+                    </Badge>
+                  ))
+                )}
+              </div>
+              
+              <div className="mt-6 p-4 bg-muted/50 rounded-md border border-border/50">
+                <p className="text-sm text-muted-foreground italic text-center">
+                  "What you post about, you will bring about!"
+                </p>
+                <p className="text-xs text-muted-foreground/70 text-center mt-1">
+                  — Ashley Diana, Hair Extension Business Coach
+                </p>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && showExtensionSteps && (
             <div className="space-y-4" data-testid="step-brands">
               <div className="flex items-center gap-2 mb-4">
                 <Award className="w-5 h-5 text-primary" />
@@ -233,7 +345,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {step === 3 && (
+          {step === 5 && showExtensionSteps && (
             <div className="space-y-4" data-testid="step-methods">
               <div className="flex items-center gap-2 mb-4">
                 <Scissors className="w-5 h-5 text-primary" />
@@ -278,7 +390,11 @@ export default function OnboardingPage() {
                 </Button>
               )}
             </div>
-            <Button onClick={handleNext} disabled={saveMutation.isPending} data-testid="button-next">
+            <Button 
+              onClick={handleNext} 
+              disabled={saveMutation.isPending || (step === 2 && offeredServices.length === 0)} 
+              data-testid="button-next"
+            >
               {saveMutation.isPending ? (
                 "Saving..."
               ) : step === totalSteps ? (
