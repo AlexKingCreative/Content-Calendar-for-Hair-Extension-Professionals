@@ -412,6 +412,30 @@ Return only the caption text, nothing else.`;
           subscriptionStatus: p.subscriptionStatus || "free",
         }));
       
+      // Count brand popularity
+      const brandCounts: Record<string, number> = {};
+      allProfiles.forEach(p => {
+        (p.certifiedBrands || []).forEach((brand: string) => {
+          brandCounts[brand] = (brandCounts[brand] || 0) + 1;
+        });
+      });
+      const popularBrands = Object.entries(brandCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+      
+      // Count method popularity
+      const methodCounts: Record<string, number> = {};
+      allProfiles.forEach(p => {
+        (p.extensionMethods || []).forEach((method: string) => {
+          methodCounts[method] = (methodCounts[method] || 0) + 1;
+        });
+      });
+      const popularMethods = Object.entries(methodCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+      
       res.json({
         totalUsers,
         activeSubscribers,
@@ -419,6 +443,8 @@ Return only the caption text, nothing else.`;
         freeUsers,
         mrr,
         recentSignups,
+        popularBrands,
+        popularMethods,
       });
     } catch (error) {
       console.error("Error fetching admin stats:", error);

@@ -718,6 +718,74 @@ function StatsSection({ stats, isLoading }: { stats: any; isLoading: boolean }) 
           )}
         </CardContent>
       </Card>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="w-5 h-5" />
+              Popular Brands
+            </CardTitle>
+            <CardDescription>Most selected certified brands by users</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8" />
+                ))}
+              </div>
+            ) : stats?.popularBrands?.length > 0 ? (
+              <div className="space-y-3">
+                {stats.popularBrands.map((brand: { name: string; count: number }, i: number) => (
+                  <div key={brand.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground w-5">{i + 1}.</span>
+                      <span className="font-medium">{brand.name}</span>
+                    </div>
+                    <Badge variant="secondary">{brand.count} users</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-4">No brand data yet</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="w-5 h-5" />
+              Popular Methods
+            </CardTitle>
+            <CardDescription>Most selected extension methods by users</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8" />
+                ))}
+              </div>
+            ) : stats?.popularMethods?.length > 0 ? (
+              <div className="space-y-3">
+                {stats.popularMethods.map((method: { name: string; count: number }, i: number) => (
+                  <div key={method.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground w-5">{i + 1}.</span>
+                      <span className="font-medium">{method.name}</span>
+                    </div>
+                    <Badge variant="secondary">{method.count} users</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-4">No method data yet</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
