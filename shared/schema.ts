@@ -122,6 +122,9 @@ export const userProfiles = pgTable("user_profiles", {
   showStreaks: boolean("show_streaks").default(true),
   pushNotificationsEnabled: boolean("push_notifications_enabled").default(false),
   emailReminders: boolean("email_reminders").default(false),
+  stripeCustomerId: text("stripe_customer_id"),
+  subscriptionStatus: text("subscription_status").default("free"),
+  freeAccessEndsAt: timestamp("free_access_ends_at"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
