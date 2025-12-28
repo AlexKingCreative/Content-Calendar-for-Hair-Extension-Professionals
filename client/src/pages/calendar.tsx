@@ -358,33 +358,31 @@ export default function CalendarPage() {
                 </Badge>
               </div>
               {user && profile?.onboardingComplete && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant={streakData?.hasPostedToday ? "secondary" : "default"}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!streakData?.hasPostedToday) {
-                          logPostMutation.mutate();
-                        }
-                      }}
-                      disabled={streakData?.hasPostedToday || logPostMutation.isPending}
-                      data-testid="button-mark-posted"
-                    >
-                      {streakData?.hasPostedToday ? (
-                        <Check className="w-4 h-4" />
-                      ) : (
-                        <Flame className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {streakData?.hasPostedToday 
-                      ? `Posted today! ${streakData.currentStreak} day streak` 
-                      : "Mark as posted today"}
-                  </TooltipContent>
-                </Tooltip>
+                <Button
+                  size="sm"
+                  variant={streakData?.hasPostedToday ? "secondary" : "default"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (!streakData?.hasPostedToday) {
+                      logPostMutation.mutate();
+                    }
+                  }}
+                  disabled={streakData?.hasPostedToday || logPostMutation.isPending}
+                  data-testid="button-mark-posted"
+                >
+                  {streakData?.hasPostedToday ? (
+                    <>
+                      <Check className="w-4 h-4 mr-1" />
+                      Posted
+                    </>
+                  ) : (
+                    <>
+                      <Flame className="w-4 h-4 mr-1" />
+                      I Posted
+                    </>
+                  )}
+                </Button>
               )}
             </div>
             <button
