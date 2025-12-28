@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { MobileNav } from "@/components/MobileNav";
+import { APP_VERSION } from "@/lib/version";
 
 interface UserProfile {
   id: number;
@@ -258,7 +259,7 @@ export default function SettingsPage() {
 
         <div className="text-center pt-4 pb-8 space-y-1">
           <p className="text-xs text-muted-foreground">
-            Version 1.0.0
+            Version {APP_VERSION}
           </p>
           {user?.email && (
             <p className="text-xs text-muted-foreground">
@@ -348,7 +349,7 @@ export default function SettingsPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Version</span>
-                <span className="font-medium">1.0.0</span>
+                <span className="font-medium">{APP_VERSION}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Build</span>

@@ -31,6 +31,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { LandingAnimation } from "@/components/LandingAnimation";
 import { navigateToLogin } from "@/lib/auth-utils";
+import { APP_VERSION } from "@/lib/version";
 
 interface OptionsData {
   certifiedBrands: string[];
@@ -268,7 +269,7 @@ export default function WelcomePage() {
               </div>
               
               <div className="text-center pt-2">
-                <span className="text-[10px] text-muted-foreground/60">v1.0.8</span>
+                <span className="text-[10px] text-muted-foreground/60">v{APP_VERSION}</span>
               </div>
             </motion.div>
           )}
