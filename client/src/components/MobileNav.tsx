@@ -1,6 +1,13 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Settings, Sparkles } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Calendar, Settings, Sparkles, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getQueryFn } from "@/lib/queryClient";
+
+interface StreakData {
+  currentStreak: number;
+  hasPostedToday: boolean;
+}
 
 interface MobileNavProps {
   isLoggedIn?: boolean;
@@ -11,8 +18,30 @@ interface MobileNavProps {
 export function MobileNav({ isLoggedIn, onTodayClick, hasTodayPost }: MobileNavProps) {
   const [location] = useLocation();
 
+  const { data: streak } = useQuery<StreakData>({
+    queryKey: ["/api/streak"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!isLoggedIn,
+  });
+
   return (
     <nav className="fixed bottom-4 left-4 right-4 z-50 sm:hidden">
+      {isLoggedIn && streak && streak.currentStreak > 0 && (
+        <div className="glass-pill rounded-2xl mx-auto max-w-xs mb-2 px-4 py-2">
+          <div className="flex items-center justify-center gap-2">
+            <Flame className={cn(
+              "w-4 h-4",
+              streak.hasPostedToday ? "text-orange-500" : "text-muted-foreground"
+            )} />
+            <span className="text-sm font-medium">
+              {streak.currentStreak} day streak
+            </span>
+            {streak.hasPostedToday && (
+              <span className="text-xs text-green-600 dark:text-green-400">Posted today</span>
+            )}
+          </div>
+        </div>
+      )}
       <div className="glass-pill rounded-3xl mx-auto max-w-xs">
         <div className="flex items-center justify-around h-14 px-4">
           <button
