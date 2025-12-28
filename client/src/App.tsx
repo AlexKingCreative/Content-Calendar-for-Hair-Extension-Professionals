@@ -20,6 +20,10 @@ import ContactPage from "@/pages/contact";
 import SubscribePage from "@/pages/subscribe";
 import SignupPage from "@/pages/signup";
 import WelcomePage from "@/pages/welcome";
+import SalonPricingPage from "@/pages/salon-pricing";
+import SalonSetupPage from "@/pages/salon-setup";
+import SalonDashboardPage from "@/pages/salon-dashboard";
+import JoinSalonPage from "@/pages/join-salon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Capacitor } from "@capacitor/core";
 
@@ -129,6 +133,18 @@ function Router() {
       <Route path="/terms" component={TermsPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/contact" component={ContactPage} />
+      <Route path="/salon-pricing" component={SalonPricingPage} />
+      <Route path="/salon-setup">
+        <ProtectedRoute>
+          <SalonSetupPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/salon-dashboard">
+        <ProtectedRoute>
+          <SalonDashboardPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/join-salon/:token" component={JoinSalonPage} />
       <Route component={NotFound} />
     </Switch>
   );

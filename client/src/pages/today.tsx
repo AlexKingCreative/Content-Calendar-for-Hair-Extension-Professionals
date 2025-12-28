@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ArrowLeft, Calendar, Flame, Check, Copy, Hash, Sparkles, Loader2, Camera, Video, Film, Images, Clock, Radio, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Lightbulb, TrendingUp } from "lucide-react";
+import { ArrowLeft, Calendar, Flame, Check, Copy, Hash, Sparkles, Loader2, Camera, Video, Film, Images, Clock, Radio, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Lightbulb, TrendingUp, Send, X, AtSign } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MobileNav } from "@/components/MobileNav";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
@@ -25,6 +27,15 @@ interface User {
 interface UserProfile {
   onboardingComplete: boolean;
   postingServices: string[];
+  salonId?: number;
+  salonRole?: string;
+  subscriptionStatus?: string;
+}
+
+interface Salon {
+  id: number;
+  name: string;
+  instagramHandle?: string;
 }
 
 const contentTypeIcons: Record<ContentType, typeof Camera> = {
@@ -71,6 +82,8 @@ export default function TodayPage() {
   const [captionCopied, setCaptionCopied] = useState(false);
   const [generatedCaption, setGeneratedCaption] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+  const [instagramUrl, setInstagramUrl] = useState("");
 
   const { data: user } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
@@ -92,6 +105,12 @@ export default function TodayPage() {
     enabled: !!user && !!profile?.onboardingComplete,
   });
 
+  const { data: salon } = useQuery<Salon>({
+    queryKey: ["/api/users/me/salon"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!user && !!profile?.salonId && profile?.salonRole === "stylist",
+  });
+
   const logPostMutation = useMutation({
     mutationFn: async () => {
       return apiRequest("POST", "/api/streak/log", {});
@@ -104,11 +123,35 @@ export default function TodayPage() {
           ? `You're on a ${(streakData.currentStreak || 0) + 1} day streak!` 
           : "You've started a new streak!" 
       });
+      if (todayPost?.id) {
+        setShowSubmitDialog(true);
+      }
     },
     onError: () => {
       toast({ 
         title: "Already logged", 
         description: "You've already marked a post for today.",
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const submitPostMutation = useMutation({
+    mutationFn: async (url: string) => {
+      return apiRequest("POST", `/api/posts/${todayPost?.id}/submissions`, { instagramUrl: url });
+    },
+    onSuccess: () => {
+      toast({ 
+        title: "Post submitted!", 
+        description: "We'll review your post and may feature it as an example." 
+      });
+      setShowSubmitDialog(false);
+      setInstagramUrl("");
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Submission failed", 
+        description: error?.message || "Please check your URL and try again.",
         variant: "destructive" 
       });
     },
@@ -381,7 +424,66 @@ export default function TodayPage() {
             See Example on Instagram
           </Button>
         )}
+
+        {salon?.instagramHandle && profile?.salonRole === "stylist" && (
+          <div className="glass-card rounded-2xl p-4 animate-fade-in-up stagger-4">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <AtSign className="w-4 h-4 text-primary flex-shrink-0" />
+              <p className="text-sm">
+                Tag <span className="font-medium text-foreground">@{salon.instagramHandle}</span> in your post to help your salon grow!
+              </p>
+            </div>
+          </div>
+        )}
       </main>
+
+      <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+        <DialogContent className="max-w-sm mx-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <SiInstagram className="w-5 h-5" />
+              Share Your Post
+            </DialogTitle>
+            <DialogDescription>
+              Want to be featured? Submit your Instagram post link and we may feature it as an example for other pros!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="https://instagram.com/p/..."
+              value={instagramUrl}
+              onChange={(e) => setInstagramUrl(e.target.value)}
+              data-testid="input-instagram-url"
+            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setShowSubmitDialog(false);
+                  setInstagramUrl("");
+                }}
+                data-testid="button-skip-submit"
+              >
+                Skip
+              </Button>
+              <Button
+                className="flex-1 gap-2"
+                onClick={() => submitPostMutation.mutate(instagramUrl)}
+                disabled={!instagramUrl.includes("instagram.com/") || submitPostMutation.isPending}
+                data-testid="button-submit-post"
+              >
+                {submitPostMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                Submit
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <MobileNav isLoggedIn={!!user} />
     </div>

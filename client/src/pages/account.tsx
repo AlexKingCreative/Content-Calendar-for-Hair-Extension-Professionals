@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  ArrowLeft, MapPin, Award, Scissors, Check, X, Crown, CreditCard, ExternalLink, Briefcase, Megaphone 
+  ArrowLeft, MapPin, Award, Scissors, Check, X, Crown, CreditCard, ExternalLink, Briefcase, Megaphone, Users 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,8 @@ interface UserProfile {
   voice: VoiceOption | null;
   tone: ToneOption | null;
   postingGoal: PostingGoal | null;
+  salonId?: number;
+  salonRole?: string;
 }
 
 interface User {
@@ -572,6 +574,23 @@ export default function AccountPage() {
               </Button>
             </div>
           )}
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 animate-fade-in-up stagger-4">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Salon Owner?
+          </Label>
+          <p className="text-sm text-muted-foreground mt-2 mb-3">
+            Get your entire team posting consistently with our salon plan.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => setLocation(profile?.salonRole === "owner" ? "/salon-dashboard" : "/salon-pricing")}
+            data-testid="button-salon-plan"
+          >
+            {profile?.salonRole === "owner" ? "Manage Your Salon" : "Learn About Salon Plans"}
+          </Button>
         </div>
       </main>
     </div>

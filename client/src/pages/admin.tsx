@@ -3,8 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Plus, Sparkles, Pencil, Trash2, Calendar, ArrowLeft, Award, 
   Users, CreditCard, BarChart3, DollarSign, Settings, ChevronLeft,
-  List, LayoutGrid, Scissors
+  List, LayoutGrid, Scissors, Send, Check, X, ExternalLink
 } from "lucide-react";
+import { SiInstagram } from "react-icons/si";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,10 +38,23 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-type AdminSection = "posts" | "brands" | "methods" | "users" | "billing" | "stats";
+type AdminSection = "posts" | "brands" | "methods" | "users" | "billing" | "stats" | "submissions";
+
+interface PostSubmission {
+  id: number;
+  userId: string;
+  postId: number;
+  instagramUrl: string;
+  status: string;
+  createdAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  reviewNote?: string;
+}
 
 const navItems = [
   { id: "posts" as AdminSection, title: "Posts", icon: Calendar },
+  { id: "submissions" as AdminSection, title: "Submissions", icon: Send },
   { id: "brands" as AdminSection, title: "Brands", icon: Award },
   { id: "methods" as AdminSection, title: "Methods", icon: Scissors },
   { id: "users" as AdminSection, title: "Users", icon: Users },
@@ -96,6 +110,27 @@ export default function AdminPage() {
     recentSignups: Array<{ userId: string; createdAt: string; subscriptionStatus: string }>;
   }>({
     queryKey: ["/api/admin/stats"],
+  });
+
+  const { data: submissions = [], isLoading: submissionsLoading } = useQuery<PostSubmission[]>({
+    queryKey: ["/api/submissions"],
+  });
+
+  const [submissionFilter, setSubmissionFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
+  const filteredSubmissions = submissions.filter(s => submissionFilter === "all" || s.status === submissionFilter);
+
+  const approveSubmissionMutation = useMutation({
+    mutationFn: async ({ id, status, reviewNote }: { id: number; status: string; reviewNote?: string }) => {
+      return apiRequest("PATCH", `/api/submissions/${id}/status`, { status, reviewNote });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/submissions"] });
+      qc.invalidateQueries({ queryKey: ["/api/admin/posts"] });
+      toast({ title: "Submission updated" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update submission", variant: "destructive" });
+    },
   });
 
   const [newBrandName, setNewBrandName] = useState("");
@@ -418,6 +453,19 @@ export default function AdminPage() {
                 onUpdate={(id, isActive) => updateMethodMutation.mutate({ id, isActive })}
                 onDelete={(id) => deleteMethodMutation.mutate(id)}
                 isCreating={createMethodMutation.isPending}
+              />
+            )}
+            
+            {activeSection === "submissions" && (
+              <SubmissionsSection
+                submissions={filteredSubmissions}
+                posts={posts}
+                isLoading={submissionsLoading}
+                filter={submissionFilter}
+                setFilter={setSubmissionFilter}
+                onApprove={(id) => approveSubmissionMutation.mutate({ id, status: "approved" })}
+                onReject={(id, note) => approveSubmissionMutation.mutate({ id, status: "rejected", reviewNote: note })}
+                isPending={approveSubmissionMutation.isPending}
               />
             )}
           </div>
@@ -1444,6 +1492,144 @@ function MethodsSection({
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function SubmissionsSection({
+  submissions,
+  posts,
+  isLoading,
+  filter,
+  setFilter,
+  onApprove,
+  onReject,
+  isPending,
+}: {
+  submissions: PostSubmission[];
+  posts: Post[];
+  isLoading: boolean;
+  filter: "all" | "pending" | "approved" | "rejected";
+  setFilter: (filter: "all" | "pending" | "approved" | "rejected") => void;
+  onApprove: (id: number) => void;
+  onReject: (id: number, note?: string) => void;
+  isPending: boolean;
+}) {
+  const getPostTitle = (postId: number) => {
+    const post = posts.find(p => p.id === postId);
+    return post ? `${months[post.month - 1]} ${post.day}: ${post.title}` : `Post #${postId}`;
+  };
+
+  const pendingCount = submissions.filter(s => s.status === "pending").length;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-heading text-2xl font-semibold text-foreground flex items-center gap-2" data-testid="text-submissions-title">
+          Submissions
+          {pendingCount > 0 && (
+            <Badge variant="default" className="text-xs">{pendingCount} pending</Badge>
+          )}
+        </h1>
+        <p className="text-muted-foreground">Review user-submitted Instagram posts</p>
+      </div>
+
+      <div className="flex gap-2 flex-wrap">
+        {(["pending", "approved", "rejected", "all"] as const).map((f) => (
+          <Button
+            key={f}
+            variant={filter === f ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter(f)}
+            data-testid={`button-filter-${f}`}
+          >
+            {f.charAt(0).toUpperCase() + f.slice(1)}
+          </Button>
+        ))}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-heading flex items-center gap-2">
+            <SiInstagram className="w-5 h-5" />
+            User Submissions
+          </CardTitle>
+          <CardDescription>
+            Review and approve Instagram posts submitted by users for featuring
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-20 rounded-md" />
+              ))}
+            </div>
+          ) : submissions.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">
+              No submissions yet.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {submissions.map((sub) => (
+                <div
+                  key={sub.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-md border bg-background"
+                  data-testid={`submission-row-${sub.id}`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{getPostTitle(sub.postId)}</p>
+                    <a
+                      href={sub.instagramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline flex items-center gap-1 truncate"
+                    >
+                      <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">{sub.instagramUrl}</span>
+                    </a>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Submitted {new Date(sub.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {sub.status === "pending" ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onReject(sub.id)}
+                          disabled={isPending}
+                          data-testid={`button-reject-${sub.id}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => onApprove(sub.id)}
+                          disabled={isPending}
+                          data-testid={`button-approve-${sub.id}`}
+                        >
+                          <Check className="w-4 h-4 mr-1" />
+                          Approve
+                        </Button>
+                      </>
+                    ) : (
+                      <Badge
+                        variant={sub.status === "approved" ? "default" : "secondary"}
+                        className={sub.status === "approved" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"}
+                      >
+                        {sub.status}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               ))}
