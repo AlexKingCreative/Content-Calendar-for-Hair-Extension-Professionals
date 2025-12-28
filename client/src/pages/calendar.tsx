@@ -4,7 +4,7 @@ import { Link, useLocation } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getQueryFn, apiRequest } from "@/lib/queryClient";
 import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List, LogIn, LogOut, Settings, User, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Sparkles, Lightbulb, TrendingUp, Check, ChevronDown, Flame, Filter, Lock, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List, LogIn, LogOut, Settings, User, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Sparkles, Lightbulb, TrendingUp, Check, ChevronDown, Flame, Filter, Lock, Download, type LucideIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,6 +21,7 @@ import { StreakWidget } from "@/components/streak-widget";
 import { useSwipe } from "@/hooks/useSwipe";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { exportMonthToPDF } from "@/lib/pdfExport";
 
 interface StreakData {
   currentStreak: number;
@@ -267,6 +268,10 @@ export default function CalendarPage() {
     return posts.find(p => p.month === month && p.day === day);
   }, [posts]);
 
+  const monthPosts = useMemo(() => {
+    return posts.filter((post) => post.month === selectedMonth);
+  }, [posts, selectedMonth]);
+
   return (
     <div className="min-h-screen bg-background pb-24 sm:pb-0">
       <header className="sticky top-0 z-50 glass-header safe-area-top">
@@ -323,6 +328,18 @@ export default function CalendarPage() {
                 <ChevronRight className="w-5 h-5" />
               </Button>
 
+              {isMonthAccessible(selectedMonth) && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => exportMonthToPDF(monthPosts, selectedMonth)}
+                  data-testid="button-export-pdf-mobile"
+                  className="touch-target sm:hidden"
+                >
+                  <Download className="w-5 h-5" />
+                </Button>
+              )}
+
               <Button
                 variant={hasActiveFilters ? "secondary" : "ghost"}
                 size="icon"
@@ -354,6 +371,23 @@ export default function CalendarPage() {
                   <List className="w-4 h-4" />
                 </Button>
               </div>
+
+              {isMonthAccessible(selectedMonth) && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => exportMonthToPDF(monthPosts, selectedMonth)}
+                      data-testid="button-export-pdf"
+                      className="hidden sm:flex"
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Export {months[selectedMonth - 1]} as PDF</TooltipContent>
+                </Tooltip>
+              )}
 
               <div className="hidden sm:flex items-center gap-2 ml-2">
                 {user ? (
