@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -5,17 +6,50 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
-import { stripeApi } from '../services/api';
+import { stripeApi, profileApi, streakApi } from '../services/api';
 
 const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://content-calendar-hair-pro.replit.app';
 
+interface Profile {
+  currentStreak: number;
+  longestStreak: number;
+  totalPosts: number;
+  postingGoal: string;
+  certifiedBrands: string[];
+  extensionMethods: string[];
+  city: string;
+}
+
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
+  const queryClient = useQueryClient();
+  const [showGoalModal, setShowGoalModal] = useState(false);
+
+  const { data: profile } = useQuery<Profile>({
+    queryKey: ['profile'],
+    queryFn: profileApi.get,
+  });
+
+  const { data: streakData } = useQuery({
+    queryKey: ['streak'],
+    queryFn: streakApi.get,
+  });
+
+  const updateGoalMutation = useMutation({
+    mutationFn: (postingGoal: string) => profileApi.update({ postingGoal }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['streak'] });
+      setShowGoalModal(false);
+    },
+  });
 
   const handleUpgrade = async () => {
     try {
@@ -60,6 +94,54 @@ export default function SettingsScreen() {
             </View>
           </View>
         </View>
+      </View>
+
+      {streakData && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Progress</Text>
+          <View style={styles.card}>
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Ionicons name="flame" size={20} color="#D4A574" />
+                <Text style={styles.statNumber}>{streakData.currentStreak}</Text>
+                <Text style={styles.statLabel}>Day Streak</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Ionicons name="trophy" size={20} color="#D4A574" />
+                <Text style={styles.statNumber}>{streakData.longestStreak}</Text>
+                <Text style={styles.statLabel}>Best Streak</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Ionicons name="checkmark-circle" size={20} color="#D4A574" />
+                <Text style={styles.statNumber}>{streakData.totalPosts}</Text>
+                <Text style={styles.statLabel}>Total Posts</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Posting Goal</Text>
+        <TouchableOpacity 
+          style={styles.goalCard}
+          onPress={() => setShowGoalModal(true)}
+        >
+          <View style={styles.goalContent}>
+            <Ionicons name="calendar" size={24} color="#D4A574" />
+            <View style={styles.goalText}>
+              <Text style={styles.goalTitle}>
+                {profile?.postingGoal === 'daily' ? 'Daily' : 
+                 profile?.postingGoal === 'casual' ? 'Casual (3-4x/week)' : 
+                 'Occasional (1-2x/week)'}
+              </Text>
+              <Text style={styles.goalDescription}>Tap to change your posting goal</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#D4A574" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
@@ -114,6 +196,47 @@ export default function SettingsScreen() {
       </TouchableOpacity>
 
       <Text style={styles.version}>Version 1.0.0</Text>
+
+      <Modal
+        visible={showGoalModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowGoalModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Posting Goal</Text>
+            {[
+              { value: 'daily', label: 'Daily', desc: 'Post every day' },
+              { value: 'casual', label: 'Casual', desc: '3-4 times per week' },
+              { value: 'occasional', label: 'Occasional', desc: '1-2 times per week' },
+            ].map((goal) => (
+              <TouchableOpacity
+                key={goal.value}
+                style={[
+                  styles.goalOption,
+                  profile?.postingGoal === goal.value && styles.goalOptionSelected
+                ]}
+                onPress={() => updateGoalMutation.mutate(goal.value)}
+              >
+                <View>
+                  <Text style={styles.goalOptionTitle}>{goal.label}</Text>
+                  <Text style={styles.goalOptionDesc}>{goal.desc}</Text>
+                </View>
+                {profile?.postingGoal === goal.value && (
+                  <Ionicons name="checkmark" size={24} color="#D4A574" />
+                )}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowGoalModal(false)}
+            >
+              <Text style={styles.modalCloseText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -230,5 +353,108 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 24,
     marginBottom: 16,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    padding: 16,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#5D4E3C',
+    marginTop: 4,
+  },
+  statLabel: {
+    fontSize: 11,
+    color: '#8B7355',
+    marginTop: 2,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#F5EDE4',
+  },
+  goalCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+  },
+  goalContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  goalText: {
+    flex: 1,
+  },
+  goalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#5D4E3C',
+  },
+  goalDescription: {
+    fontSize: 13,
+    color: '#8B7355',
+    marginTop: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#5D4E3C',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  goalOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#FFF8F0',
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  goalOptionSelected: {
+    borderWidth: 2,
+    borderColor: '#D4A574',
+  },
+  goalOptionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#5D4E3C',
+  },
+  goalOptionDesc: {
+    fontSize: 13,
+    color: '#8B7355',
+    marginTop: 2,
+  },
+  modalCloseButton: {
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  modalCloseText: {
+    fontSize: 16,
+    color: '#8B7355',
   },
 });
