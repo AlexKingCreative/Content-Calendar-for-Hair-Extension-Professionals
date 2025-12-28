@@ -119,6 +119,9 @@ export const userProfiles = pgTable("user_profiles", {
   totalPosts: integer("total_posts").default(0),
   isAdmin: boolean("is_admin").default(false),
   onboardingComplete: boolean("onboarding_complete").default(false),
+  showStreaks: boolean("show_streaks").default(true),
+  pushNotificationsEnabled: boolean("push_notifications_enabled").default(false),
+  emailReminders: boolean("email_reminders").default(false),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });

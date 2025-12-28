@@ -196,18 +196,34 @@ export async function registerRoutes(
   app.put("/api/profile", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { city, certifiedBrands, extensionMethods, voice, tone, postingGoal } = req.body;
+      const { 
+        city, 
+        certifiedBrands, 
+        extensionMethods, 
+        voice, 
+        tone, 
+        postingGoal,
+        showStreaks,
+        pushNotificationsEnabled,
+        emailReminders
+      } = req.body;
       
-      const profile = await storage.upsertUserProfile({
+      const updateData: any = {
         userId,
-        city: city || null,
-        certifiedBrands: certifiedBrands || [],
-        extensionMethods: extensionMethods || [],
-        ...(voice && { voice }),
-        ...(tone && { tone }),
-        ...(postingGoal && { postingGoal }),
         onboardingComplete: true,
-      });
+      };
+
+      if (city !== undefined) updateData.city = city || null;
+      if (certifiedBrands !== undefined) updateData.certifiedBrands = certifiedBrands || [];
+      if (extensionMethods !== undefined) updateData.extensionMethods = extensionMethods || [];
+      if (voice !== undefined) updateData.voice = voice;
+      if (tone !== undefined) updateData.tone = tone;
+      if (postingGoal !== undefined) updateData.postingGoal = postingGoal;
+      if (typeof showStreaks === "boolean") updateData.showStreaks = showStreaks;
+      if (typeof pushNotificationsEnabled === "boolean") updateData.pushNotificationsEnabled = pushNotificationsEnabled;
+      if (typeof emailReminders === "boolean") updateData.emailReminders = emailReminders;
+      
+      const profile = await storage.upsertUserProfile(updateData);
       
       res.json(profile);
     } catch (error) {
