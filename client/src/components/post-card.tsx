@@ -74,13 +74,13 @@ export default function PostCard({ post, compact = false, onClick }: PostCardPro
 
   return (
     <Card
-      className="p-4 cursor-pointer hover-elevate active-elevate-2 transition-all touch-target"
+      className="p-4 cursor-pointer hover-elevate active-elevate-2 fluid-transition touch-target glass-card rounded-2xl"
       onClick={onClick}
       data-testid={`post-card-${post.id}`}
     >
       <div className="flex flex-col sm:flex-row sm:items-start gap-3">
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 backdrop-blur-sm flex items-center justify-center">
             <ContentIcon className="w-6 h-6 text-primary" />
           </div>
           <div className="sm:hidden">

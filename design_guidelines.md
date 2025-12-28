@@ -67,8 +67,46 @@
 ## Images
 No hero image required. Focus on icon-based visual hierarchy with category badges and content type indicators using icon libraries (Heroicons recommended for consistency with clean design aesthetic).
 
+## iOS 26 Liquid Glass Design System
+
+This app implements the iOS 26 Liquid Glass design aesthetic with the following principles:
+
+### Glass Effects
+- **glass**: Standard glass effect with 70% opacity, 20px blur, and 180% saturation
+- **glass-light**: Lighter glass with 50% opacity and 12px blur
+- **glass-ultra**: Premium glass with 85% opacity, 30px blur, and subtle shadow
+- **glass-nav**: Navigation-specific glass for bottom floating nav
+- **glass-header**: Header glass with bottom border highlight
+- **glass-card**: Card-specific glass with subtle elevation
+- **glass-pill**: Floating pill-shaped containers
+
+### Visual Characteristics
+- Translucent surfaces that hint at content beneath
+- Floating controls with rounded corners (rounded-2xl, rounded-3xl)
+- Depth-aware layering with subtle shadows
+- Clean borders using rgba white values
+
+### Animation Principles
+- **fluid-transition**: Smooth 300ms ease-out transitions
+- **fluid-spring**: Bouncy 400ms spring animations for interactive elements
+- Active states use subtle scale transforms (0.95)
+
+### Component Patterns
+- Bottom navigation: Floating glass pill with 3 items, positioned above bottom edge
+- Headers: Sticky glass-header with backdrop blur
+- Cards: Glass-card with rounded-2xl corners, no hard borders
+- Icons: Rounded-xl containers with backdrop blur
+- Badges: Colored but translucent backgrounds
+
+### Dark Mode Adaptations
+- Glass backgrounds shift to dark grays (20-40% opacity)
+- Borders use rgba white at lower opacity (0.08-0.15)
+- Shadows become more pronounced for depth perception
+
 ## Key Design Principles
 1. **Scanability**: Clear visual hierarchy allows quick browsing of 365 posts
 2. **Accessibility**: Sufficient color contrast, touch-friendly targets (min 44px)
 3. **Performance**: Lazy load post cards, virtualize long lists
 4. **Consistency**: Unified card design across all views, predictable navigation patterns
+5. **Translucency**: Use glass effects to create depth without heavy borders
+6. **Fluidity**: Smooth animations and spring transitions for natural feel

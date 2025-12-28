@@ -69,7 +69,7 @@ export function StreakWidget() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="glass-card rounded-2xl border-0">
         <CardHeader className="pb-2">
           <Skeleton className="h-5 w-32" />
         </CardHeader>
@@ -88,7 +88,7 @@ export function StreakWidget() {
   const goalInfo = postingGoalDescriptions[streak.postingGoal as PostingGoal] || postingGoalDescriptions.casual;
 
   return (
-    <Card data-testid="card-streak-widget">
+    <Card data-testid="card-streak-widget" className="glass-card rounded-2xl border-0">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="font-heading text-base flex items-center gap-2">

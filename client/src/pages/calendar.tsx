@@ -213,12 +213,12 @@ export default function CalendarPage() {
   }, [posts]);
 
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-0">
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border safe-area-top">
+    <div className="min-h-screen bg-background pb-24 sm:pb-0">
+      <header className="sticky top-0 z-50 glass-header safe-area-top">
         <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-primary/90 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-sm">
                 <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
               </div>
               <div className="min-w-0">
