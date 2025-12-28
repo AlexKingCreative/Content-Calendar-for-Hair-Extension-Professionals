@@ -7,26 +7,14 @@ import {
   Calendar, 
   Sparkles, 
   Check, 
-  Heart, 
-  Gift, 
-  Star, 
+  Star,
   Crown,
-  Clock,
-  CalendarDays,
   Smartphone,
   ArrowRight,
   LogIn
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { navigateToLogin } from "@/lib/auth-utils";
-
-const specialDays = [
-  { name: "National Hairstylist Appreciation Day", date: "April 30" },
-  { name: "Hair Loss Awareness Month", date: "August" },
-  { name: "Extensions Week", date: "February" },
-  { name: "Beauty Professional Day", date: "June 26" },
-  { name: "World Hair Day", date: "October 1" },
-];
 
 const freeFeatures = [
   "Current month + next month access",
@@ -44,7 +32,7 @@ const proFeatures = [
   "Custom hashtags (max 5)",
   "Posting streaks with badges",
   "Push notification reminders",
-  "Never miss special industry days",
+  "Never miss important dates in your industry",
   "PDF export for planning",
 ];
 
@@ -90,28 +78,6 @@ export default function SignupPage() {
               Sign up free and get 3 days of full access. Then choose the plan that works for you.
             </p>
           </div>
-
-          <Card className="border-primary/20 overflow-hidden">
-            <CardHeader className="text-center pb-2 bg-primary/5">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Badge variant="secondary" className="text-xs">
-                  <CalendarDays className="w-3 h-3 mr-1" />
-                  Never Miss These Special Days
-                </Badge>
-              </div>
-              <div className="flex flex-wrap justify-center gap-2">
-                {specialDays.map((day) => (
-                  <Badge 
-                    key={day.name} 
-                    variant="outline" 
-                    className="text-xs whitespace-nowrap"
-                  >
-                    {day.name}
-                  </Badge>
-                ))}
-              </div>
-            </CardHeader>
-          </Card>
 
           <div className="grid md:grid-cols-2 gap-6">
             <motion.div
