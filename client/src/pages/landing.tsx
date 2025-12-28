@@ -410,16 +410,12 @@ export default function LandingPage() {
                 a: "Yes! You get 3 days of free access to the current and next month's content. Subscribe for $10/month to unlock all 12 months of content and never miss key dates like National Hairstylist Appreciation Day."
               },
               {
-                q: "How do I install the app on my iPhone?",
-                a: "Open this website in Safari, tap the Share button at the bottom, then tap 'Add to Home Screen'. The app will appear on your home screen just like any other app!"
-              },
-              {
-                q: "How do I install on Android?",
-                a: "When you visit the site in Chrome, you'll see an 'Install' prompt. Tap it to add the app to your home screen. You can also tap the menu and select 'Add to Home Screen'."
+                q: "What devices does this work on?",
+                a: "The app works on all devices - iOS, Android, and Desktop. Access it from any browser and add it to your home screen for the best experience."
               },
               {
                 q: "Do I need an account to use the app?",
-                a: "You can browse all content without an account. Sign in with your Replit account to unlock personalized hashtags based on your city and expertise."
+                a: "You can browse all content without an account. Sign in to unlock personalized hashtags based on your city and expertise."
               },
               {
                 q: "Will I get push notifications?",
