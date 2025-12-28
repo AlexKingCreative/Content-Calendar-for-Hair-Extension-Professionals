@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { getQueryFn, apiRequest } from "@/lib/queryClient";
 import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List, LogIn, LogOut, Settings, User, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Sparkles, Lightbulb, TrendingUp, Check, ChevronDown, Flame, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List, LogIn, LogOut, Settings, User, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Sparkles, Lightbulb, TrendingUp, Check, ChevronDown, Flame, Filter, type LucideIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -266,6 +266,19 @@ export default function CalendarPage() {
                 className="touch-target"
               >
                 <ChevronRight className="w-5 h-5" />
+              </Button>
+
+              <Button
+                variant={hasActiveFilters ? "secondary" : "ghost"}
+                size="icon"
+                onClick={() => setFilterSheetOpen(true)}
+                data-testid="button-filter-mobile"
+                className="touch-target sm:hidden relative"
+              >
+                <Filter className="w-5 h-5" />
+                {hasActiveFilters && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
+                )}
               </Button>
 
               <div className="hidden sm:flex items-center gap-1 ml-2 border rounded-md p-1">
@@ -550,10 +563,7 @@ export default function CalendarPage() {
       </main>
 
       <MobileNav
-        isAdmin={profile?.isAdmin}
         isLoggedIn={!!user}
-        onFilterClick={() => setFilterSheetOpen(true)}
-        hasActiveFilters={hasActiveFilters}
         onTodayClick={() => todayPost && setSelectedPost(todayPost)}
         hasTodayPost={!!todayPost && selectedMonth === new Date().getMonth() + 1}
       />
