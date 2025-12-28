@@ -9,6 +9,7 @@ import webpush from "web-push";
 import { z } from "zod";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
+import mobileAuthRoutes from "./mobileAuth";
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(
@@ -48,6 +49,8 @@ export async function registerRoutes(
   await setupAuth(app);
   registerAuthRoutes(app);
   
+  app.use('/api/mobile', mobileAuthRoutes);
+  
   await seedPosts();
 
   app.get("/api/posts", async (req, res) => {
@@ -69,6 +72,19 @@ export async function registerRoutes(
       res.json(posts);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch posts" });
+    }
+  });
+
+  app.get("/api/posts/today", async (req, res) => {
+    try {
+      const today = new Date();
+      const month = today.getMonth() + 1;
+      const day = today.getDate();
+      const posts = await storage.getPostsByMonth(month);
+      const todayPost = posts.find((p: any) => p.day === day);
+      res.json(todayPost ? [todayPost] : []);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch today's post" });
     }
   });
 

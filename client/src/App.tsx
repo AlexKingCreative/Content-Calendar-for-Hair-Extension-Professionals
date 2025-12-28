@@ -26,7 +26,6 @@ import SalonDashboardPage from "@/pages/salon-dashboard";
 import JoinSalonPage from "@/pages/join-salon";
 import PricingPage from "@/pages/pricing";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Capacitor } from "@capacitor/core";
 
 interface UserProfile {
   id: number;
@@ -92,7 +91,6 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 function HomePage() {
-  const isNative = Capacitor.isNativePlatform();
   const [, setLocation] = useLocation();
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ["/api/auth/user"],
@@ -125,7 +123,7 @@ function HomePage() {
     return null;
   }
 
-  return isNative ? <WelcomePage /> : <LandingPage />;
+  return <LandingPage />;
 }
 
 function Router() {

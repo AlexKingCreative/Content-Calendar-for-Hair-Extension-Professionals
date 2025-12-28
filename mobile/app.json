@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Hair Pro Content Calendar",
+    "slug": "hairpro-content-calendar",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#D4A574"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hairpro360.contentcalendar"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#D4A574"
+      },
+      "package": "com.hairpro360.contentcalendar"
+    },
+    "scheme": "hairpro",
+    "extra": {
+      "apiUrl": "https://content-calendar-hair-pro.replit.app"
+    }
+  }
+}
