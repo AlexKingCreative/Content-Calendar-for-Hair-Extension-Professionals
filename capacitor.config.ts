@@ -4,6 +4,9 @@ const config: CapacitorConfig = {
   appId: 'com.hairpro360.contentcalendar',
   appName: 'Content Calendar',
   webDir: 'dist/public',
+  ios: {
+    scrollEnabled: false,
+  },
   plugins: {
     CapacitorUpdater: {
       autoUpdate: true
