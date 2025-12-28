@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Sparkles, Pencil, Trash2, Calendar, ArrowLeft, Award, Check, X } from "lucide-react";
+import { 
+  Plus, Sparkles, Pencil, Trash2, Calendar, ArrowLeft, Award, 
+  Users, CreditCard, BarChart3, DollarSign, Settings, ChevronLeft
+} from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,19 +14,42 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { type Post, type Brand, categories, contentTypes, type Category, type ContentType } from "@shared/schema";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarHeader,
+  SidebarFooter,
+} from "@/components/ui/sidebar";
 
 const months = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
 
+type AdminSection = "posts" | "brands" | "users" | "billing" | "stats";
+
+const navItems = [
+  { id: "posts" as AdminSection, title: "Posts", icon: Calendar },
+  { id: "brands" as AdminSection, title: "Brands", icon: Award },
+  { id: "users" as AdminSection, title: "Users", icon: Users },
+  { id: "billing" as AdminSection, title: "Billing", icon: CreditCard },
+  { id: "stats" as AdminSection, title: "Stats & MRR", icon: BarChart3 },
+];
+
 export default function AdminPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const [activeSection, setActiveSection] = useState<AdminSection>("stats");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
@@ -53,6 +79,17 @@ export default function AdminPage() {
 
   const { data: brands = [], isLoading: brandsLoading } = useQuery<Brand[]>({
     queryKey: ["/api/brands"],
+  });
+
+  const { data: adminStats, isLoading: statsLoading } = useQuery<{
+    totalUsers: number;
+    activeSubscribers: number;
+    trialingUsers: number;
+    freeUsers: number;
+    mrr: number;
+    recentSignups: Array<{ userId: string; createdAt: string; subscriptionStatus: string }>;
+  }>({
+    queryKey: ["/api/admin/stats"],
   });
 
   const [newBrandName, setNewBrandName] = useState("");
@@ -234,231 +271,96 @@ export default function AdminPage() {
     generateMutation.mutate(generateData);
   };
 
+  const sidebarStyle = {
+    "--sidebar-width": "16rem",
+    "--sidebar-width-icon": "3rem",
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
+    <SidebarProvider style={sidebarStyle as React.CSSProperties}>
+      <div className="flex h-screen w-full bg-background">
+        <Sidebar>
+          <SidebarHeader className="p-4 border-b border-border">
+            <div className="flex items-center gap-2">
               <Link href="/">
                 <Button variant="ghost" size="icon" data-testid="button-back-home">
-                  <ArrowLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-5 h-5" />
                 </Button>
               </Link>
               <div>
-                <h1 className="font-heading text-xl sm:text-2xl font-semibold text-foreground" data-testid="text-admin-title">
-                  Admin Dashboard
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Manage calendar posts
-                </p>
+                <h2 className="font-heading font-semibold text-foreground">Admin</h2>
+                <p className="text-xs text-muted-foreground">Dashboard</p>
               </div>
             </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <Select
-                value={selectedMonth.toString()}
-                onValueChange={(value) => setSelectedMonth(parseInt(value))}
-              >
-                <SelectTrigger className="w-36" data-testid="select-admin-month">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {months.map((month, index) => (
-                    <SelectItem key={month} value={(index + 1).toString()}>
-                      {month}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Button variant="outline" onClick={() => setIsGenerateOpen(true)} data-testid="button-generate-ai">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate with AI
-              </Button>
-              
-              <Button onClick={() => setIsCreateOpen(true)} data-testid="button-create-post">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Post
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="posts" data-testid="tab-posts">
-              <Calendar className="w-4 h-4 mr-2" />
-              Posts
-            </TabsTrigger>
-            <TabsTrigger value="brands" data-testid="tab-brands">
-              <Award className="w-4 h-4 mr-2" />
-              Brands
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="posts">
-            {isLoading ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="h-40 rounded-md" />
-                ))}
-              </div>
-            ) : filteredPosts.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No posts for {months[selectedMonth - 1]}</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredPosts.map((post) => (
-                  <Card key={post.id} data-testid={`card-post-${post.id}`}>
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <CardDescription>
-                            {months[post.month - 1]} {post.day}
-                          </CardDescription>
-                          <CardTitle className="font-heading text-base line-clamp-2">
-                            {post.title}
-                          </CardTitle>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(post)}
-                            data-testid={`button-edit-${post.id}`}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteMutation.mutate(post.id)}
-                            data-testid={`button-delete-${post.id}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="secondary" className="text-xs">
-                          {post.category}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {post.contentType}
-                        </Badge>
-                        {post.isAiGenerated && (
-                          <Badge variant="default" className="text-xs">
-                            <Sparkles className="w-3 h-3 mr-1" />
-                            AI
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="brands">
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-heading">Certified Brands</CardTitle>
-                <CardDescription>
-                  Manage the list of certified hair extension brands available to stylists
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add new brand..."
-                    value={newBrandName}
-                    onChange={(e) => setNewBrandName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && newBrandName.trim()) {
-                        createBrandMutation.mutate(newBrandName.trim());
-                      }
-                    }}
-                    data-testid="input-new-brand"
-                  />
-                  <Button
-                    onClick={() => {
-                      if (newBrandName.trim()) {
-                        createBrandMutation.mutate(newBrandName.trim());
-                      }
-                    }}
-                    disabled={!newBrandName.trim() || createBrandMutation.isPending}
-                    data-testid="button-add-brand"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add
-                  </Button>
-                </div>
-
-                {brandsLoading ? (
-                  <div className="space-y-2">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Skeleton key={i} className="h-12 rounded-md" />
-                    ))}
-                  </div>
-                ) : brands.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">
-                    No brands yet. Add your first brand above.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {brands.map((brand) => (
-                      <div
-                        key={brand.id}
-                        className="flex items-center justify-between gap-2 p-3 rounded-md border bg-background"
-                        data-testid={`brand-row-${brand.id}`}
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Management</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navItems.map((item) => (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        onClick={() => setActiveSection(item.id)}
+                        isActive={activeSection === item.id}
+                        data-testid={`nav-${item.id}`}
                       >
-                        <div className="flex items-center gap-3">
-                          <Award className="w-4 h-4 text-muted-foreground" />
-                          <span className={brand.isActive ? "" : "text-muted-foreground line-through"}>
-                            {brand.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                              {brand.isActive ? "Active" : "Inactive"}
-                            </span>
-                            <Switch
-                              checked={brand.isActive ?? true}
-                              onCheckedChange={(checked) => 
-                                updateBrandMutation.mutate({ id: brand.id, isActive: checked })
-                              }
-                              data-testid={`switch-brand-${brand.id}`}
-                            />
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteBrandMutation.mutate(brand.id)}
-                            data-testid={`button-delete-brand-${brand.id}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
+                        <item.icon className="w-4 h-4" />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter className="p-4 border-t border-border">
+            <p className="text-xs text-muted-foreground">Content Calendar Admin</p>
+          </SidebarFooter>
+        </Sidebar>
+
+        <main className="flex-1 overflow-auto">
+          <div className="p-6">
+            {activeSection === "stats" && (
+              <StatsSection stats={adminStats} isLoading={statsLoading} />
+            )}
+            
+            {activeSection === "users" && (
+              <UsersSection stats={adminStats} isLoading={statsLoading} />
+            )}
+            
+            {activeSection === "billing" && (
+              <BillingSection stats={adminStats} isLoading={statsLoading} />
+            )}
+            
+            {activeSection === "posts" && (
+              <PostsSection
+                posts={filteredPosts}
+                isLoading={isLoading}
+                selectedMonth={selectedMonth}
+                setSelectedMonth={setSelectedMonth}
+                onEdit={handleEdit}
+                onDelete={(id) => deleteMutation.mutate(id)}
+                onCreateOpen={() => setIsCreateOpen(true)}
+                onGenerateOpen={() => setIsGenerateOpen(true)}
+              />
+            )}
+            
+            {activeSection === "brands" && (
+              <BrandsSection
+                brands={brands}
+                isLoading={brandsLoading}
+                newBrandName={newBrandName}
+                setNewBrandName={setNewBrandName}
+                onCreate={(name) => createBrandMutation.mutate(name)}
+                onUpdate={(id, isActive) => updateBrandMutation.mutate({ id, isActive })}
+                onDelete={(id) => deleteBrandMutation.mutate(id)}
+                isCreating={createBrandMutation.isPending}
+              />
+            )}
+          </div>
+        </main>
+      </div>
 
       <Dialog open={isCreateOpen || !!editingPost} onOpenChange={(open) => {
         if (!open) {
@@ -602,21 +504,21 @@ export default function AdminPage() {
               disabled={createMutation.isPending || updateMutation.isPending}
               data-testid="button-save-post"
             >
-              {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : (editingPost ? "Update" : "Create")}
+              {editingPost ? "Update" : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isGenerateOpen} onOpenChange={setIsGenerateOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
+              <Sparkles className="w-5 h-5" />
               Generate Post with AI
             </DialogTitle>
             <DialogDescription>
-              Let AI create a post idea based on the date and optional theme
+              Let AI create a social media post idea for you
             </DialogDescription>
           </DialogHeader>
           
@@ -654,11 +556,11 @@ export default function AdminPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Theme (optional)</label>
+              <label className="text-sm font-medium">Theme or Topic (optional)</label>
               <Input
                 value={generateData.theme}
                 onChange={(e) => setGenerateData({ ...generateData, theme: e.target.value })}
-                placeholder="e.g., Holiday preparations, Summer care"
+                placeholder="e.g., Summer hair care tips"
                 data-testid="input-generate-theme"
               />
             </div>
@@ -675,7 +577,7 @@ export default function AdminPage() {
                 <SelectContent>
                   <SelectItem value="professional">Professional</SelectItem>
                   <SelectItem value="casual">Casual</SelectItem>
-                  <SelectItem value="fun">Fun</SelectItem>
+                  <SelectItem value="fun">Fun & Playful</SelectItem>
                   <SelectItem value="educational">Educational</SelectItem>
                 </SelectContent>
               </Select>
@@ -689,23 +591,541 @@ export default function AdminPage() {
             <Button
               onClick={handleGenerate}
               disabled={generateMutation.isPending}
-              data-testid="button-generate-submit"
+              data-testid="button-generate-post"
             >
-              {generateMutation.isPending ? (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate
-                </>
-              )}
+              {generateMutation.isPending ? "Generating..." : "Generate"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </SidebarProvider>
+  );
+}
+
+function StatsSection({ stats, isLoading }: { stats: any; isLoading: boolean }) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-stats-title">
+          Stats & MRR
+        </h1>
+        <p className="text-muted-foreground">Overview of your business metrics</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+            <DollarSign className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-8 w-24" />
+            ) : (
+              <div className="text-2xl font-bold" data-testid="text-mrr">
+                ${((stats?.mrr || 0) / 100).toFixed(2)}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">MRR from active subscriptions</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <Users className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold" data-testid="text-total-users">
+                {stats?.totalUsers || 0}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">Registered accounts</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+            <CardTitle className="text-sm font-medium">Active Subscribers</CardTitle>
+            <CreditCard className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold text-green-600" data-testid="text-active-subs">
+                {stats?.activeSubscribers || 0}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">Paying customers</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+            <CardTitle className="text-sm font-medium">Trial Users</CardTitle>
+            <BarChart3 className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold text-amber-600" data-testid="text-trialing">
+                {stats?.trialingUsers || 0}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">On free trial</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscription Breakdown</CardTitle>
+          <CardDescription>Distribution of user subscription statuses</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <Skeleton className="h-32" />
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500" />
+                  <span>Active Subscribers</span>
+                </div>
+                <span className="font-medium">{stats?.activeSubscribers || 0}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-amber-500" />
+                  <span>Trialing</span>
+                </div>
+                <span className="font-medium">{stats?.trialingUsers || 0}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-gray-400" />
+                  <span>Free Users</span>
+                </div>
+                <span className="font-medium">{stats?.freeUsers || 0}</span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function UsersSection({ stats, isLoading }: { stats: any; isLoading: boolean }) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-users-title">
+          Users
+        </h1>
+        <p className="text-muted-foreground">Manage user accounts and subscriptions</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Paying</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold text-green-600">{stats?.activeSubscribers || 0}</div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Free</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold text-muted-foreground">{stats?.freeUsers || 0}</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Signups</CardTitle>
+          <CardDescription>Latest user registrations</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12" />
+              ))}
+            </div>
+          ) : stats?.recentSignups?.length > 0 ? (
+            <div className="space-y-2">
+              {stats.recentSignups.map((user: any, i: number) => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-md border">
+                  <div>
+                    <p className="font-medium">User {user.userId}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Badge variant={user.subscriptionStatus === "active" ? "default" : "secondary"}>
+                    {user.subscriptionStatus || "free"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-8">No recent signups</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function BillingSection({ stats, isLoading }: { stats: any; isLoading: boolean }) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-billing-title">
+          Billing
+        </h1>
+        <p className="text-muted-foreground">Revenue and subscription management</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5" />
+              Monthly Recurring Revenue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-12 w-32" />
+            ) : (
+              <div className="text-4xl font-bold text-green-600" data-testid="text-billing-mrr">
+                ${((stats?.mrr || 0) / 100).toFixed(2)}
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground mt-2">
+              From {stats?.activeSubscribers || 0} active subscribers at $10/month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Subscription Stats</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span>Active Subscriptions</span>
+              <Badge variant="default">{stats?.activeSubscribers || 0}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Trial Subscriptions</span>
+              <Badge variant="secondary">{stats?.trialingUsers || 0}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Conversion Rate</span>
+              <Badge variant="outline">
+                {stats?.totalUsers > 0 
+                  ? ((stats?.activeSubscribers / stats?.totalUsers) * 100).toFixed(1) 
+                  : 0}%
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Stripe Dashboard</CardTitle>
+          <CardDescription>Access full billing management in Stripe</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <a 
+            href="https://dashboard.stripe.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            <Button variant="outline">
+              Open Stripe Dashboard
+            </Button>
+          </a>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function PostsSection({
+  posts,
+  isLoading,
+  selectedMonth,
+  setSelectedMonth,
+  onEdit,
+  onDelete,
+  onCreateOpen,
+  onGenerateOpen,
+}: {
+  posts: Post[];
+  isLoading: boolean;
+  selectedMonth: number;
+  setSelectedMonth: (month: number) => void;
+  onEdit: (post: Post) => void;
+  onDelete: (id: number) => void;
+  onCreateOpen: () => void;
+  onGenerateOpen: () => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-posts-title">
+            Posts
+          </h1>
+          <p className="text-muted-foreground">Manage calendar post content</p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select
+            value={selectedMonth.toString()}
+            onValueChange={(value) => setSelectedMonth(parseInt(value))}
+          >
+            <SelectTrigger className="w-36" data-testid="select-admin-month">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map((month, index) => (
+                <SelectItem key={month} value={(index + 1).toString()}>
+                  {month}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Button variant="outline" onClick={onGenerateOpen} data-testid="button-generate-ai">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Generate with AI
+          </Button>
+          
+          <Button onClick={onCreateOpen} data-testid="button-create-post">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Post
+          </Button>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 rounded-md" />
+          ))}
+        </div>
+      ) : posts.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">No posts for {months[selectedMonth - 1]}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {posts.map((post) => (
+            <Card key={post.id} data-testid={`card-post-${post.id}`}>
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <CardDescription>
+                      {months[post.month - 1]} {post.day}
+                    </CardDescription>
+                    <CardTitle className="font-heading text-base line-clamp-2">
+                      {post.title}
+                    </CardTitle>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit(post)}
+                      data-testid={`button-edit-${post.id}`}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(post.id)}
+                      data-testid={`button-delete-${post.id}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="secondary" className="text-xs">
+                    {post.category}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {post.contentType}
+                  </Badge>
+                  {post.isAiGenerated && (
+                    <Badge variant="default" className="text-xs">
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      AI
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BrandsSection({
+  brands,
+  isLoading,
+  newBrandName,
+  setNewBrandName,
+  onCreate,
+  onUpdate,
+  onDelete,
+  isCreating,
+}: {
+  brands: Brand[];
+  isLoading: boolean;
+  newBrandName: string;
+  setNewBrandName: (name: string) => void;
+  onCreate: (name: string) => void;
+  onUpdate: (id: number, isActive: boolean) => void;
+  onDelete: (id: number) => void;
+  isCreating: boolean;
+}) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-brands-title">
+          Brands
+        </h1>
+        <p className="text-muted-foreground">Manage certified hair extension brands</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-heading">Certified Brands</CardTitle>
+          <CardDescription>
+            Manage the list of certified hair extension brands available to stylists
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add new brand..."
+              value={newBrandName}
+              onChange={(e) => setNewBrandName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newBrandName.trim()) {
+                  onCreate(newBrandName.trim());
+                }
+              }}
+              data-testid="input-new-brand"
+            />
+            <Button
+              onClick={() => {
+                if (newBrandName.trim()) {
+                  onCreate(newBrandName.trim());
+                }
+              }}
+              disabled={!newBrandName.trim() || isCreating}
+              data-testid="button-add-brand"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add
+            </Button>
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 rounded-md" />
+              ))}
+            </div>
+          ) : brands.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">
+              No brands yet. Add your first brand above.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {brands.map((brand) => (
+                <div
+                  key={brand.id}
+                  className="flex items-center justify-between gap-2 p-3 rounded-md border bg-background"
+                  data-testid={`brand-row-${brand.id}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Award className="w-4 h-4 text-muted-foreground" />
+                    <span className={brand.isActive ? "" : "text-muted-foreground line-through"}>
+                      {brand.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {brand.isActive ? "Active" : "Inactive"}
+                      </span>
+                      <Switch
+                        checked={brand.isActive ?? true}
+                        onCheckedChange={(checked) => onUpdate(brand.id, checked)}
+                        data-testid={`switch-brand-${brand.id}`}
+                      />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(brand.id)}
+                      data-testid={`button-delete-brand-${brand.id}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

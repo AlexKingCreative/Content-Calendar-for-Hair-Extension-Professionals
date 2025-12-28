@@ -392,6 +392,40 @@ Return only the caption text, nothing else.`;
     }
   });
 
+  app.get("/api/admin/stats", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const allProfiles = await storage.getAllUserProfiles();
+      
+      const totalUsers = allProfiles.length;
+      const activeSubscribers = allProfiles.filter(p => p.subscriptionStatus === "active").length;
+      const trialingUsers = allProfiles.filter(p => p.subscriptionStatus === "trialing").length;
+      const freeUsers = allProfiles.filter(p => !p.subscriptionStatus || p.subscriptionStatus === "free").length;
+      
+      const mrr = activeSubscribers * 1000;
+      
+      const recentSignups = allProfiles
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 10)
+        .map(p => ({
+          userId: p.userId,
+          createdAt: p.createdAt,
+          subscriptionStatus: p.subscriptionStatus || "free",
+        }));
+      
+      res.json({
+        totalUsers,
+        activeSubscribers,
+        trialingUsers,
+        freeUsers,
+        mrr,
+        recentSignups,
+      });
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
   app.get("/api/admin/posts", isAuthenticated, requireAdmin, async (req, res) => {
     try {
       const posts = await storage.getAllPosts();

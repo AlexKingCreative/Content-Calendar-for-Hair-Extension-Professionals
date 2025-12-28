@@ -12,6 +12,7 @@ export interface IStorage {
   deletePost(id: number): Promise<boolean>;
   
   getUserProfile(userId: string): Promise<UserProfile | undefined>;
+  getAllUserProfiles(): Promise<UserProfile[]>;
   upsertUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
   setUserAdmin(userId: string, isAdmin: boolean): Promise<void>;
   updateUserStripeInfo(userId: string, info: { stripeCustomerId?: string; subscriptionStatus?: string }): Promise<UserProfile>;
@@ -69,6 +70,10 @@ export class DatabaseStorage implements IStorage {
   async getUserProfile(userId: string): Promise<UserProfile | undefined> {
     const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId));
     return profile;
+  }
+
+  async getAllUserProfiles(): Promise<UserProfile[]> {
+    return db.select().from(userProfiles).orderBy(desc(userProfiles.createdAt));
   }
 
   async upsertUserProfile(profile: InsertUserProfile): Promise<UserProfile> {
