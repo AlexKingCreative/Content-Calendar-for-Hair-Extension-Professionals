@@ -175,6 +175,53 @@ export async function registerRoutes(
     }
   });
 
+  // Generate caption for a post using AI
+  app.post("/api/posts/:id/generate-caption", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid post ID" });
+      }
+      
+      const post = await storage.getPostById(id);
+      if (!post) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+
+      const prompt = `You are an expert social media copywriter for hair extension professionals. Generate an engaging Instagram caption for the following post idea.
+
+Post Title: ${post.title}
+Category: ${post.category}
+Content Type: ${post.contentType}
+Description: ${post.description}
+
+Guidelines:
+- Write in a friendly, professional tone that connects with clients
+- Include a call-to-action (book now, DM for details, comment below, etc.)
+- Keep it concise but engaging (2-4 short paragraphs max)
+- Use line breaks for readability
+- Do NOT include hashtags (those are added separately)
+- Make it feel authentic and personal, not salesy
+- Include 1-2 relevant emojis naturally placed
+
+Return only the caption text, nothing else.`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 500,
+        temperature: 0.8,
+      });
+
+      const caption = completion.choices[0]?.message?.content?.trim() || "";
+      
+      res.json({ caption });
+    } catch (error) {
+      console.error("Error generating caption:", error);
+      res.status(500).json({ error: "Failed to generate caption" });
+    }
+  });
+
   app.get("/api/admin/posts", isAuthenticated, requireAdmin, async (req, res) => {
     try {
       const posts = await storage.getAllPosts();

@@ -1,11 +1,13 @@
-import { Camera, Video, Film, Images, Clock, Radio, X, Hash, Copy, Check, ExternalLink } from "lucide-react";
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Camera, Video, Film, Images, Clock, Radio, Hash, Copy, Check, ExternalLink, Sparkles, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { type Post, type ContentType, type Category } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 const contentTypeIcons: Record<ContentType, typeof Camera> = {
   Photo: Camera,
@@ -50,9 +52,49 @@ interface PostDetailModalProps {
 
 export default function PostDetailModal({ post, onClose }: PostDetailModalProps) {
   const [copied, setCopied] = useState(false);
+  const [captionCopied, setCaptionCopied] = useState(false);
+  const [generatedCaption, setGeneratedCaption] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
+  // Reset caption when post changes
+  useEffect(() => {
+    setGeneratedCaption("");
+    setCaptionCopied(false);
+  }, [post?.id]);
+
   if (!post) return null;
+
+  const handleGenerateCaption = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await apiRequest("POST", `/api/posts/${post.id}/generate-caption`);
+      const data = await response.json();
+      setGeneratedCaption(data.caption);
+      toast({
+        title: "Caption generated!",
+        description: "Your personalized caption is ready to copy.",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to generate caption",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleCopyCaption = async () => {
+    await navigator.clipboard.writeText(generatedCaption);
+    setCaptionCopied(true);
+    toast({
+      title: "Caption copied!",
+      description: "Caption has been copied to your clipboard.",
+    });
+    setTimeout(() => setCaptionCopied(false), 2000);
+  };
 
   const ContentIcon = contentTypeIcons[post.contentType];
 
@@ -166,6 +208,80 @@ export default function PostDetailModal({ post, onClose }: PostDetailModalProps)
             </div>
           </div>
 
+          <Separator />
+
+          {/* Write My Caption Section */}
+          <div>
+            <h4 className="font-heading font-medium text-foreground mb-2">
+              AI Caption Generator
+            </h4>
+            {!generatedCaption ? (
+              <Button
+                onClick={handleGenerateCaption}
+                disabled={isGenerating}
+                className="w-full gap-2"
+                data-testid="button-write-caption"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Writing your caption...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    Write My Caption
+                  </>
+                )}
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <Textarea
+                  value={generatedCaption}
+                  onChange={(e) => setGeneratedCaption(e.target.value)}
+                  className="min-h-[120px] text-sm"
+                  data-testid="textarea-generated-caption"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyCaption}
+                    className="flex-1 gap-1"
+                    data-testid="button-copy-caption"
+                  >
+                    {captionCopied ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy Caption
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleGenerateCaption}
+                    disabled={isGenerating}
+                    className="gap-1"
+                    data-testid="button-regenerate-caption"
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4" />
+                    )}
+                    Regenerate
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {post.instagramExampleUrl && (
             <>
               <Separator />
@@ -186,6 +302,9 @@ export default function PostDetailModal({ post, onClose }: PostDetailModalProps)
             </>
           )}
         </div>
+        <DialogDescription className="sr-only">
+          View post details, generate captions, and copy hashtags for your social media content.
+        </DialogDescription>
       </DialogContent>
     </Dialog>
   );
