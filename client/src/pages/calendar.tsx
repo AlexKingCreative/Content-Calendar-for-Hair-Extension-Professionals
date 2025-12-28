@@ -22,6 +22,7 @@ import { useSwipe } from "@/hooks/useSwipe";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { exportMonthToPDF } from "@/lib/pdfExport";
+import { navigateToLogin } from "@/lib/auth-utils";
 
 interface StreakData {
   currentStreak: number;
@@ -428,7 +429,7 @@ export default function CalendarPage() {
                   <Button
                     variant="default"
                     size="sm"
-                    onClick={() => window.location.href = "/api/login"}
+                    onClick={navigateToLogin}
                     data-testid="button-login"
                   >
                     <LogIn className="w-4 h-4 mr-1" />

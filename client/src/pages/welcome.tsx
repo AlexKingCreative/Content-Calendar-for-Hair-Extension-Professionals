@@ -25,6 +25,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { LandingAnimation } from "@/components/LandingAnimation";
 import { certifiedBrands, extensionMethods } from "@shared/schema";
+import { navigateToLogin } from "@/lib/auth-utils";
 
 type Step = "welcome" | "city" | "city-success" | "brands" | "brands-success" | "methods" | "methods-success" | "signup";
 
@@ -146,7 +147,7 @@ export default function WelcomePage() {
 
   const handleSignup = () => {
     savePreferences();
-    window.location.href = "/api/login";
+    navigateToLogin();
   };
 
   return (
@@ -164,12 +165,10 @@ export default function WelcomePage() {
               </div>
               <span className="font-heading font-bold text-sm">Content Calendar</span>
             </div>
-            <a href="/api/login">
-              <Button variant="ghost" size="sm" data-testid="button-signin-header">
-                <LogIn className="w-4 h-4 mr-1" />
-                Sign In
-              </Button>
-            </a>
+            <Button variant="ghost" size="sm" onClick={navigateToLogin} data-testid="button-signin-header">
+              <LogIn className="w-4 h-4 mr-1" />
+              Sign In
+            </Button>
           </div>
         </header>
       )}
@@ -228,12 +227,10 @@ export default function WelcomePage() {
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
                 
-                <a href="/api/login" className="block">
-                  <Button variant="outline" size="lg" className="w-full text-base py-6" data-testid="button-sign-in">
-                    <LogIn className="w-5 h-5 mr-2" />
-                    I Already Have an Account
-                  </Button>
-                </a>
+                <Button variant="outline" size="lg" className="w-full text-base py-6" onClick={navigateToLogin} data-testid="button-sign-in">
+                  <LogIn className="w-5 h-5 mr-2" />
+                  I Already Have an Account
+                </Button>
 
                 <div className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground pt-2">
                   <span className="flex items-center gap-1">

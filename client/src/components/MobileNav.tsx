@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Calendar, Settings, Sparkles, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { navigateToLogin } from "@/lib/auth-utils";
 
 interface MobileNavProps {
   isLoggedIn?: boolean;
@@ -9,8 +10,16 @@ interface MobileNavProps {
 export function MobileNav({ isLoggedIn }: MobileNavProps) {
   const [location, setLocation] = useLocation();
 
+  const handleSettingsClick = () => {
+    if (isLoggedIn) {
+      setLocation("/settings");
+    } else {
+      navigateToLogin();
+    }
+  };
+
   return (
-    <nav className="fixed bottom-4 left-4 right-4 z-50 sm:hidden">
+    <nav className="fixed bottom-4 left-4 right-4 z-50 sm:hidden safe-area-bottom">
       <div className="glass-pill rounded-3xl mx-auto max-w-sm">
         <div className="flex items-center h-14 px-2">
           <button
@@ -57,20 +66,19 @@ export function MobileNav({ isLoggedIn }: MobileNavProps) {
             </div>
           </Link>
 
-          <Link href={isLoggedIn ? "/settings" : "/api/login"} className="flex-1">
-            <div
-              className={cn(
-                "flex flex-col items-center justify-center gap-0.5 h-full rounded-2xl fluid-transition active:scale-95",
-                location === "/settings" || location === "/account"
-                  ? "text-primary" 
-                  : "text-muted-foreground"
-              )}
-              data-testid="nav-settings"
-            >
-              <Settings className="w-5 h-5" />
-              <span className="text-[10px] font-medium">Settings</span>
-            </div>
-          </Link>
+          <button
+            onClick={handleSettingsClick}
+            className={cn(
+              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full rounded-2xl fluid-transition active:scale-95",
+              location === "/settings" || location === "/account"
+                ? "text-primary" 
+                : "text-muted-foreground"
+            )}
+            data-testid="nav-settings"
+          >
+            <Settings className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Settings</span>
+          </button>
         </div>
       </div>
     </nav>

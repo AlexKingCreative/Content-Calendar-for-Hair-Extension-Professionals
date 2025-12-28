@@ -18,6 +18,7 @@ import {
   LogIn
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { navigateToLogin } from "@/lib/auth-utils";
 
 const specialDays = [
   { name: "National Hairstylist Appreciation Day", date: "April 30" },
@@ -62,12 +63,10 @@ export default function SignupPage() {
           </Link>
           
           <div className="flex items-center gap-3">
-            <a href="/api/login">
-              <Button variant="ghost" data-testid="button-signin-header">
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign In
-              </Button>
-            </a>
+            <Button variant="ghost" onClick={navigateToLogin} data-testid="button-signin-header">
+              <LogIn className="w-4 h-4 mr-2" />
+              Sign In
+            </Button>
           </div>
         </div>
       </header>
@@ -150,12 +149,10 @@ export default function SignupPage() {
                     ))}
                   </ul>
                   
-                  <a href="/api/login" className="block">
-                    <Button variant="outline" className="w-full" size="lg" data-testid="button-signup-free">
-                      Get Started Free
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </a>
+                  <Button variant="outline" className="w-full" size="lg" onClick={navigateToLogin} data-testid="button-signup-free">
+                    Get Started Free
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
                 </CardContent>
               </Card>
             </motion.div>
@@ -203,12 +200,10 @@ export default function SignupPage() {
                     ))}
                   </ul>
                   
-                  <a href="/api/login" className="block">
-                    <Button className="w-full" size="lg" data-testid="button-signup-pro">
-                      Start Free Trial
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </a>
+                  <Button className="w-full" size="lg" onClick={navigateToLogin} data-testid="button-signup-pro">
+                    Start Free Trial
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
                 </CardContent>
               </Card>
             </motion.div>
@@ -217,9 +212,9 @@ export default function SignupPage() {
           <div className="text-center space-y-4">
             <p className="text-muted-foreground text-sm">
               Already have an account?{" "}
-              <a href="/api/login" className="text-primary font-medium hover:underline">
+              <button onClick={navigateToLogin} className="text-primary font-medium hover:underline">
                 Sign in here
-              </a>
+              </button>
             </p>
             
             <div className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">

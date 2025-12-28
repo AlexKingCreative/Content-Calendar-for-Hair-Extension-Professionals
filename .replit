@@ -46,3 +46,4 @@ integrations = ["javascript_database:1.0.0", "javascript_log_in_with_replit:2.0.
 [userenv.shared]
 VAPID_PUBLIC_KEY = "BAuxM2YJ4sAm-vP5QDy1lr0zWnw0m_YTcPcWRvYDQf89tALBolYpJyimeOq8J07LrN0MzxwWBuSlqUunH8LIJmM"
 VITE_VAPID_PUBLIC_KEY = "BAuxM2YJ4sAm-vP5QDy1lr0zWnw0m_YTcPcWRvYDQf89tALBolYpJyimeOq8J07LrN0MzxwWBuSlqUunH8LIJmM"
+VITE_APP_URL = "https://content-calendar-hair-pro.replit.app"

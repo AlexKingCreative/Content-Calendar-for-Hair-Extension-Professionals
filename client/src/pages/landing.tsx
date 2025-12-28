@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { SiApple, SiGoogleplay } from "react-icons/si";
 import { Button } from "@/components/ui/button";
+import { navigateToLogin } from "@/lib/auth-utils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -141,12 +142,10 @@ export default function LandingPage() {
           </Link>
           
           <div className="flex items-center gap-3">
-            <a href="/api/login">
-              <Button variant="ghost" data-testid="button-sign-in">
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign In
-              </Button>
-            </a>
+            <Button variant="ghost" onClick={navigateToLogin} data-testid="button-sign-in">
+              <LogIn className="w-4 h-4 mr-2" />
+              Sign In
+            </Button>
             <Link href="/signup">
               <Button data-testid="button-sign-up">
                 <UserPlus className="w-4 h-4 mr-2" />

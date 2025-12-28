@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MobileNav } from "@/components/MobileNav";
+import { navigateToLogin } from "@/lib/auth-utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { streakMilestones, postingGoalDescriptions, type PostingGoal } from "@shared/schema";
@@ -104,7 +105,7 @@ export default function StreaksPage() {
             <p className="text-muted-foreground mb-6">
               Keep track of your posting consistency and earn badges!
             </p>
-            <Button onClick={() => window.location.href = "/api/login"}>
+            <Button onClick={navigateToLogin}>
               Sign In
             </Button>
           </div>
