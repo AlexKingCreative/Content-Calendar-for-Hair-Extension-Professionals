@@ -18,7 +18,6 @@ import {
   Clock,
   TrendingUp
 } from "lucide-react";
-import { SiApple, SiAndroid } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -407,8 +406,8 @@ export default function LandingPage() {
           <div className="space-y-4">
             {[
               {
-                q: "Is this app really free?",
-                a: "Yes! The core features including all 365 post ideas, filtering, and personalized hashtags are completely free. We may add premium features in the future."
+                q: "Is this app free to try?",
+                a: "Yes! You get 3 days of free access to the current and next month's content. Subscribe for $10/month to unlock all 12 months of content and never miss key dates like National Hairstylist Appreciation Day."
               },
               {
                 q: "How do I install the app on my iPhone?",
@@ -446,18 +445,23 @@ export default function LandingPage() {
             Join thousands of hair extension professionals who have revolutionized their social media presence. It takes just 2 minutes to get started.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="#" data-testid="button-install-ios">
-              <Button size="lg" className="text-lg px-8 py-6 gap-2">
-                <SiApple className="w-5 h-5" />
-                Download for iOS
+            {showInstallButton && (
+              <Button 
+                size="lg" 
+                className="text-lg px-8 py-6 gap-2"
+                onClick={handleInstallClick}
+                data-testid="button-final-install"
+              >
+                <Smartphone className="w-5 h-5" />
+                {isIOS ? "Add to Home Screen" : "Install Free App"}
               </Button>
-            </a>
-            <a href="#" data-testid="button-install-android">
-              <Button variant="outline" size="lg" className="text-lg px-8 py-6 gap-2">
-                <SiAndroid className="w-5 h-5" />
-                Download for Android
+            )}
+            <Link href="/calendar">
+              <Button variant={showInstallButton ? "outline" : "default"} size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-final-get-started">
+                Get Started Free
+                <ChevronRight className="w-5 h-5" />
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
