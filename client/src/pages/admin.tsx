@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Plus, Sparkles, Pencil, Trash2, Calendar, ArrowLeft, Award, 
   Users, CreditCard, BarChart3, DollarSign, Settings, ChevronLeft,
-  List, LayoutGrid
+  List, LayoutGrid, Scissors
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { type Post, type Brand, categories, contentTypes, type Category, type ContentType } from "@shared/schema";
+import { type Post, type Brand, type Method, categories, contentTypes, type Category, type ContentType } from "@shared/schema";
 import { Switch } from "@/components/ui/switch";
 import {
   Sidebar,
@@ -37,11 +37,12 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-type AdminSection = "posts" | "brands" | "users" | "billing" | "stats";
+type AdminSection = "posts" | "brands" | "methods" | "users" | "billing" | "stats";
 
 const navItems = [
   { id: "posts" as AdminSection, title: "Posts", icon: Calendar },
   { id: "brands" as AdminSection, title: "Brands", icon: Award },
+  { id: "methods" as AdminSection, title: "Methods", icon: Scissors },
   { id: "users" as AdminSection, title: "Users", icon: Users },
   { id: "billing" as AdminSection, title: "Billing", icon: CreditCard },
   { id: "stats" as AdminSection, title: "Stats & MRR", icon: BarChart3 },
@@ -82,6 +83,10 @@ export default function AdminPage() {
     queryKey: ["/api/brands"],
   });
 
+  const { data: methods = [], isLoading: methodsLoading } = useQuery<Method[]>({
+    queryKey: ["/api/methods"],
+  });
+
   const { data: adminStats, isLoading: statsLoading } = useQuery<{
     totalUsers: number;
     activeSubscribers: number;
@@ -94,6 +99,7 @@ export default function AdminPage() {
   });
 
   const [newBrandName, setNewBrandName] = useState("");
+  const [newMethodName, setNewMethodName] = useState("");
 
   const filteredPosts = posts.filter((post) => post.month === selectedMonth);
 
@@ -136,6 +142,48 @@ export default function AdminPage() {
     },
     onError: () => {
       toast({ title: "Failed to delete brand", variant: "destructive" });
+    },
+  });
+
+  const createMethodMutation = useMutation({
+    mutationFn: async (name: string) => {
+      return apiRequest("POST", "/api/methods", { name, isActive: true });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/methods"] });
+      qc.invalidateQueries({ queryKey: ["/api/options"] });
+      setNewMethodName("");
+      toast({ title: "Method added successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to add method", variant: "destructive" });
+    },
+  });
+
+  const updateMethodMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
+      return apiRequest("PUT", `/api/methods/${id}`, { isActive });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/methods"] });
+      qc.invalidateQueries({ queryKey: ["/api/options"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to update method", variant: "destructive" });
+    },
+  });
+
+  const deleteMethodMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/methods/${id}`);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/methods"] });
+      qc.invalidateQueries({ queryKey: ["/api/options"] });
+      toast({ title: "Method deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete method", variant: "destructive" });
     },
   });
 
@@ -357,6 +405,19 @@ export default function AdminPage() {
                 onUpdate={(id, isActive) => updateBrandMutation.mutate({ id, isActive })}
                 onDelete={(id) => deleteBrandMutation.mutate(id)}
                 isCreating={createBrandMutation.isPending}
+              />
+            )}
+            
+            {activeSection === "methods" && (
+              <MethodsSection
+                methods={methods}
+                isLoading={methodsLoading}
+                newMethodName={newMethodName}
+                setNewMethodName={setNewMethodName}
+                onCreate={(name) => createMethodMutation.mutate(name)}
+                onUpdate={(id, isActive) => updateMethodMutation.mutate({ id, isActive })}
+                onDelete={(id) => deleteMethodMutation.mutate(id)}
+                isCreating={createMethodMutation.isPending}
               />
             )}
           </div>
@@ -1264,6 +1325,122 @@ function BrandsSection({
                       size="icon"
                       onClick={() => onDelete(brand.id)}
                       data-testid={`button-delete-brand-${brand.id}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function MethodsSection({
+  methods,
+  isLoading,
+  newMethodName,
+  setNewMethodName,
+  onCreate,
+  onUpdate,
+  onDelete,
+  isCreating,
+}: {
+  methods: Method[];
+  isLoading: boolean;
+  newMethodName: string;
+  setNewMethodName: (name: string) => void;
+  onCreate: (name: string) => void;
+  onUpdate: (id: number, isActive: boolean) => void;
+  onDelete: (id: number) => void;
+  isCreating: boolean;
+}) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-methods-title">
+          Methods
+        </h1>
+        <p className="text-muted-foreground">Manage hair extension application methods</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-heading">Extension Methods</CardTitle>
+          <CardDescription>
+            Manage the list of hair extension application methods available to stylists
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add new method..."
+              value={newMethodName}
+              onChange={(e) => setNewMethodName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newMethodName.trim()) {
+                  onCreate(newMethodName.trim());
+                }
+              }}
+              data-testid="input-new-method"
+            />
+            <Button
+              onClick={() => {
+                if (newMethodName.trim()) {
+                  onCreate(newMethodName.trim());
+                }
+              }}
+              disabled={!newMethodName.trim() || isCreating}
+              data-testid="button-add-method"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add
+            </Button>
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 rounded-md" />
+              ))}
+            </div>
+          ) : methods.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">
+              No methods yet. Add your first method above.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {methods.map((method) => (
+                <div
+                  key={method.id}
+                  className="flex items-center justify-between gap-2 p-3 rounded-md border bg-background"
+                  data-testid={`method-row-${method.id}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Scissors className="w-4 h-4 text-muted-foreground" />
+                    <span className={method.isActive ? "" : "text-muted-foreground line-through"}>
+                      {method.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {method.isActive ? "Active" : "Inactive"}
+                      </span>
+                      <Switch
+                        checked={method.isActive ?? true}
+                        onCheckedChange={(checked) => onUpdate(method.id, checked)}
+                        data-testid={`switch-method-${method.id}`}
+                      />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(method.id)}
+                      data-testid={`button-delete-method-${method.id}`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

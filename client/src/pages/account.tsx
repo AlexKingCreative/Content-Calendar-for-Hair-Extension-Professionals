@@ -14,7 +14,12 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { certifiedBrands, extensionMethods, postingGoals, postingGoalDescriptions, type VoiceOption, type ToneOption, type PostingGoal } from "@shared/schema";
+import { postingGoals, postingGoalDescriptions, type VoiceOption, type ToneOption, type PostingGoal } from "@shared/schema";
+
+interface OptionsData {
+  certifiedBrands: string[];
+  extensionMethods: string[];
+}
 
 interface AccessStatus {
   hasAccess: boolean;
@@ -75,6 +80,13 @@ export default function AccountPage() {
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!user,
   });
+
+  const { data: options, isLoading: optionsLoading } = useQuery<OptionsData>({
+    queryKey: ["/api/options"],
+  });
+
+  const certifiedBrands = options?.certifiedBrands ?? [];
+  const extensionMethods = options?.extensionMethods ?? [];
 
   const portalMutation = useMutation({
     mutationFn: async () => {
@@ -360,8 +372,8 @@ export default function AccountPage() {
           )}
           <Popover open={brandPopoverOpen} onOpenChange={setBrandPopoverOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start">
-                Add certified brand...
+              <Button variant="outline" className="w-full justify-start" disabled={optionsLoading}>
+                {optionsLoading ? "Loading brands..." : "Add certified brand..."}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-0 w-[280px]" align="start">
@@ -404,21 +416,27 @@ export default function AccountPage() {
             Extension Methods
           </Label>
           <div className="flex flex-wrap gap-2">
-            {extensionMethods.map((method) => {
-              const isSelected = selectedMethods.includes(method);
-              return (
-                <Badge
-                  key={method}
-                  variant={isSelected ? "default" : "outline"}
-                  onClick={() => toggleMethod(method)}
-                  className="cursor-pointer"
-                  data-testid={`badge-method-${method.toLowerCase().replace(/\s+/g, "-")}`}
-                >
-                  {isSelected && <Check className="w-3 h-3 mr-1" />}
-                  {method}
-                </Badge>
-              );
-            })}
+            {optionsLoading ? (
+              <p className="text-muted-foreground text-sm">Loading methods...</p>
+            ) : extensionMethods.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No methods available</p>
+            ) : (
+              extensionMethods.map((method) => {
+                const isSelected = selectedMethods.includes(method);
+                return (
+                  <Badge
+                    key={method}
+                    variant={isSelected ? "default" : "outline"}
+                    onClick={() => toggleMethod(method)}
+                    className="cursor-pointer"
+                    data-testid={`badge-method-${method.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    {isSelected && <Check className="w-3 h-3 mr-1" />}
+                    {method}
+                  </Badge>
+                );
+              })
+            )}
           </div>
         </div>
 

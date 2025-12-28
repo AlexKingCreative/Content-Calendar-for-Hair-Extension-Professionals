@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Sparkles, MapPin, Award, Scissors, ChevronRight, ChevronLeft, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,11 @@ import { Progress } from "@/components/ui/progress";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest } from "@/lib/queryClient";
-import { certifiedBrands, extensionMethods } from "@shared/schema";
+
+interface OptionsData {
+  certifiedBrands: string[];
+  extensionMethods: string[];
+}
 
 export default function OnboardingPage() {
   const [, setLocation] = useLocation();
@@ -21,6 +25,14 @@ export default function OnboardingPage() {
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
   const [brandSearch, setBrandSearch] = useState("");
   const [brandPopoverOpen, setBrandPopoverOpen] = useState(false);
+
+  const { data: options, isLoading: optionsLoading } = useQuery<OptionsData>({
+    queryKey: ["/api/options"],
+  });
+
+  const certifiedBrands = options?.certifiedBrands ?? [];
+  const extensionMethods = options?.extensionMethods ?? [];
+  const optionsReady = !optionsLoading && options;
 
   useEffect(() => {
     const pending = localStorage.getItem("pendingOnboarding");
@@ -153,10 +165,11 @@ export default function OnboardingPage() {
                     role="combobox"
                     aria-expanded={brandPopoverOpen}
                     className="w-full justify-start text-muted-foreground"
+                    disabled={optionsLoading}
                     data-testid="button-add-brand"
                   >
                     <Award className="w-4 h-4 mr-2" />
-                    Search brands to add...
+                    {optionsLoading ? "Loading brands..." : "Search brands to add..."}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-full p-0" align="start">
@@ -230,18 +243,24 @@ export default function OnboardingPage() {
                 Select the extension methods you specialize in
               </p>
               <div className="flex flex-wrap gap-2">
-                {extensionMethods.map((method) => (
-                  <Badge
-                    key={method}
-                    variant={selectedMethods.includes(method) ? "default" : "outline"}
-                    className="cursor-pointer py-2 px-3"
-                    onClick={() => toggleMethod(method)}
-                    data-testid={`badge-method-${method.toLowerCase().replace(/[\s\-]+/g, "-")}`}
-                  >
-                    {selectedMethods.includes(method) && <Check className="w-3 h-3 mr-1" />}
-                    {method}
-                  </Badge>
-                ))}
+                {optionsLoading ? (
+                  <p className="text-muted-foreground text-sm">Loading methods...</p>
+                ) : extensionMethods.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">No methods available</p>
+                ) : (
+                  extensionMethods.map((method) => (
+                    <Badge
+                      key={method}
+                      variant={selectedMethods.includes(method) ? "default" : "outline"}
+                      className="cursor-pointer py-2 px-3"
+                      onClick={() => toggleMethod(method)}
+                      data-testid={`badge-method-${method.toLowerCase().replace(/[\s\-]+/g, "-")}`}
+                    >
+                      {selectedMethods.includes(method) && <Check className="w-3 h-3 mr-1" />}
+                      {method}
+                    </Badge>
+                  ))
+                )}
               </div>
             </div>
           )}

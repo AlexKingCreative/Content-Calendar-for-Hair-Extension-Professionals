@@ -91,15 +91,19 @@ export async function registerRoutes(
   app.get("/api/options", async (req, res) => {
     try {
       const dbBrands = await storage.getActiveBrands();
+      const dbMethods = await storage.getActiveMethods();
       const brandNames = dbBrands.length > 0 
         ? dbBrands.map(b => b.name) 
         : [...certifiedBrands];
+      const methodNames = dbMethods.length > 0 
+        ? dbMethods.map(m => m.name) 
+        : [...extensionMethods];
       
       res.json({
         categories,
         contentTypes,
         certifiedBrands: brandNames,
-        extensionMethods,
+        extensionMethods: methodNames,
       });
     } catch (error) {
       res.json({
@@ -169,6 +173,67 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete brand" });
+    }
+  });
+
+  app.get("/api/methods", async (req, res) => {
+    try {
+      const allMethods = await storage.getAllMethods();
+      res.json(allMethods);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch methods" });
+    }
+  });
+
+  app.post("/api/methods", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { name, isActive = true } = req.body;
+      if (!name || typeof name !== "string" || name.trim().length === 0) {
+        return res.status(400).json({ error: "Method name is required" });
+      }
+      const method = await storage.createMethod({ name: name.trim(), isActive });
+      res.json(method);
+    } catch (error: any) {
+      if (error.code === "23505") {
+        return res.status(400).json({ error: "Method already exists" });
+      }
+      res.status(500).json({ error: "Failed to create method" });
+    }
+  });
+
+  app.put("/api/methods/:id", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid method ID" });
+      }
+      const { name, isActive } = req.body;
+      const method = await storage.updateMethod(id, { 
+        ...(name && { name: name.trim() }),
+        ...(typeof isActive === "boolean" && { isActive }),
+      });
+      if (!method) {
+        return res.status(404).json({ error: "Method not found" });
+      }
+      res.json(method);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update method" });
+    }
+  });
+
+  app.delete("/api/methods/:id", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid method ID" });
+      }
+      const deleted = await storage.deleteMethod(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Method not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete method" });
     }
   });
 

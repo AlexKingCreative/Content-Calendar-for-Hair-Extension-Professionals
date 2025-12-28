@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { posts, userProfiles, pushSubscriptions, brands, postingLogs, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type PostingLog, type InsertPostingLog } from "@shared/schema";
+import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog } from "@shared/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 
 export interface IStorage {
@@ -27,6 +27,12 @@ export interface IStorage {
   createBrand(brand: InsertBrand): Promise<Brand>;
   updateBrand(id: number, brand: Partial<InsertBrand>): Promise<Brand | undefined>;
   deleteBrand(id: number): Promise<boolean>;
+  
+  getAllMethods(): Promise<Method[]>;
+  getActiveMethods(): Promise<Method[]>;
+  createMethod(method: InsertMethod): Promise<Method>;
+  updateMethod(id: number, method: Partial<InsertMethod>): Promise<Method | undefined>;
+  deleteMethod(id: number): Promise<boolean>;
   
   logPost(userId: string, date: string, postId?: number): Promise<PostingLog>;
   getPostingLogs(userId: string, limit?: number): Promise<PostingLog[]>;
@@ -174,6 +180,33 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBrand(id: number): Promise<boolean> {
     const result = await db.delete(brands).where(eq(brands.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllMethods(): Promise<Method[]> {
+    return db.select().from(methods).orderBy(methods.name);
+  }
+
+  async getActiveMethods(): Promise<Method[]> {
+    return db.select().from(methods).where(eq(methods.isActive, true)).orderBy(methods.name);
+  }
+
+  async createMethod(method: InsertMethod): Promise<Method> {
+    const [created] = await db.insert(methods).values(method).returning();
+    return created;
+  }
+
+  async updateMethod(id: number, methodData: Partial<InsertMethod>): Promise<Method | undefined> {
+    const [updated] = await db
+      .update(methods)
+      .set(methodData)
+      .where(eq(methods.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMethod(id: number): Promise<boolean> {
+    const result = await db.delete(methods).where(eq(methods.id, id)).returning();
     return result.length > 0;
   }
 

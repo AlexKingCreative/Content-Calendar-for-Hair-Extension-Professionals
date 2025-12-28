@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -29,8 +30,12 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LandingAnimation } from "@/components/LandingAnimation";
-import { certifiedBrands, extensionMethods } from "@shared/schema";
 import { navigateToLogin } from "@/lib/auth-utils";
+
+interface OptionsData {
+  certifiedBrands: string[];
+  extensionMethods: string[];
+}
 
 type Step = "welcome" | "city" | "city-success" | "brands" | "brands-success" | "methods" | "methods-success" | "signup";
 
@@ -98,6 +103,13 @@ export default function WelcomePage() {
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
   const [brandSearch, setBrandSearch] = useState("");
   const [brandPopoverOpen, setBrandPopoverOpen] = useState(false);
+
+  const { data: options, isLoading: optionsLoading } = useQuery<OptionsData>({
+    queryKey: ["/api/options"],
+  });
+
+  const certifiedBrands = options?.certifiedBrands ?? [];
+  const extensionMethods = options?.extensionMethods ?? [];
 
   const steps: Step[] = ["welcome", "city", "city-success", "brands", "brands-success", "methods", "methods-success", "signup"];
   const currentIndex = steps.indexOf(step);
@@ -328,9 +340,9 @@ export default function WelcomePage() {
               <div className="flex-1 space-y-4">
                 <Popover open={brandPopoverOpen} onOpenChange={setBrandPopoverOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start" data-testid="button-add-brand">
+                    <Button variant="outline" className="w-full justify-start" disabled={optionsLoading} data-testid="button-add-brand">
                       <Award className="w-4 h-4 mr-2" />
-                      Search brands...
+                      {optionsLoading ? "Loading brands..." : "Search brands..."}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0" align="start">
@@ -413,22 +425,28 @@ export default function WelcomePage() {
               </div>
 
               <div className="flex-1">
-                <div className="grid grid-cols-2 gap-2">
-                  {extensionMethods.map((method) => (
-                    <Button
-                      key={method}
-                      variant={selectedMethods.includes(method) ? "default" : "outline"}
-                      className="justify-start h-auto py-3 px-3"
-                      onClick={() => toggleMethod(method)}
-                      data-testid={`button-method-${method.toLowerCase().replace(/[^a-z]/g, '-')}`}
-                    >
-                      {selectedMethods.includes(method) && (
-                        <Check className="w-4 h-4 mr-2 shrink-0" />
-                      )}
-                      <span className="text-sm">{method}</span>
-                    </Button>
-                  ))}
-                </div>
+                {optionsLoading ? (
+                  <p className="text-center text-muted-foreground">Loading methods...</p>
+                ) : extensionMethods.length === 0 ? (
+                  <p className="text-center text-muted-foreground">No methods available</p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {extensionMethods.map((method) => (
+                      <Button
+                        key={method}
+                        variant={selectedMethods.includes(method) ? "default" : "outline"}
+                        className="justify-start h-auto py-3 px-3"
+                        onClick={() => toggleMethod(method)}
+                        data-testid={`button-method-${method.toLowerCase().replace(/[^a-z]/g, '-')}`}
+                      >
+                        {selectedMethods.includes(method) && (
+                          <Check className="w-4 h-4 mr-2 shrink-0" />
+                        )}
+                        <span className="text-sm">{method}</span>
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3 pt-6">

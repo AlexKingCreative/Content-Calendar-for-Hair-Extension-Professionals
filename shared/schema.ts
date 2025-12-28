@@ -175,6 +175,21 @@ export const insertBrandSchema = createInsertSchema(brands).omit({
 export type Brand = typeof brands.$inferSelect;
 export type InsertBrand = z.infer<typeof insertBrandSchema>;
 
+export const methods = pgTable("methods", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertMethodSchema = createInsertSchema(methods).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Method = typeof methods.$inferSelect;
+export type InsertMethod = z.infer<typeof insertMethodSchema>;
+
 export const postingLogs = pgTable("posting_logs", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull(),
