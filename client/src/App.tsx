@@ -12,6 +12,7 @@ import LandingPage from "@/pages/landing";
 import SettingsPage from "@/pages/settings";
 import AccountPage from "@/pages/account";
 import TodayPage from "@/pages/today";
+import StreaksPage from "@/pages/streaks";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
@@ -102,6 +103,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/today" component={TodayPage} />
+      <Route path="/streaks" component={StreaksPage} />
       <Route component={NotFound} />
     </Switch>
   );

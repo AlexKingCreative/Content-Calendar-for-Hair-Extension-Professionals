@@ -1,13 +1,6 @@
 import { Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
 import { Calendar, Settings, Sparkles, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getQueryFn } from "@/lib/queryClient";
-
-interface StreakData {
-  currentStreak: number;
-  hasPostedToday: boolean;
-}
 
 interface MobileNavProps {
   isLoggedIn?: boolean;
@@ -16,32 +9,10 @@ interface MobileNavProps {
 export function MobileNav({ isLoggedIn }: MobileNavProps) {
   const [location, setLocation] = useLocation();
 
-  const { data: streak } = useQuery<StreakData>({
-    queryKey: ["/api/streak"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: !!isLoggedIn,
-  });
-
   return (
     <nav className="fixed bottom-4 left-4 right-4 z-50 sm:hidden">
-      {isLoggedIn && streak && streak.currentStreak > 0 && (
-        <div className="glass-pill rounded-2xl mx-auto max-w-xs mb-2 px-4 py-2">
-          <div className="flex items-center justify-center gap-2">
-            <Flame className={cn(
-              "w-4 h-4",
-              streak.hasPostedToday ? "text-orange-500" : "text-muted-foreground"
-            )} />
-            <span className="text-sm font-medium">
-              {streak.currentStreak} day streak
-            </span>
-            {streak.hasPostedToday && (
-              <span className="text-xs text-green-600 dark:text-green-400">Posted today</span>
-            )}
-          </div>
-        </div>
-      )}
-      <div className="glass-pill rounded-3xl mx-auto max-w-xs">
-        <div className="flex items-center justify-around h-14 px-4">
+      <div className="glass-pill rounded-3xl mx-auto max-w-sm">
+        <div className="flex items-center justify-around h-14 px-2">
           <button
             onClick={() => setLocation("/today")}
             className={cn(
@@ -59,7 +30,7 @@ export function MobileNav({ isLoggedIn }: MobileNavProps) {
           <Link href="/calendar">
             <div
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 h-full px-6 rounded-2xl fluid-transition active:scale-95",
+                "flex flex-col items-center justify-center gap-0.5 h-full px-4 rounded-2xl fluid-transition active:scale-95",
                 location === "/calendar" 
                   ? "text-primary" 
                   : "text-muted-foreground"
@@ -71,11 +42,26 @@ export function MobileNav({ isLoggedIn }: MobileNavProps) {
             </div>
           </Link>
 
+          <Link href="/streaks">
+            <div
+              className={cn(
+                "flex flex-col items-center justify-center gap-0.5 h-full px-4 rounded-2xl fluid-transition active:scale-95",
+                location === "/streaks" 
+                  ? "text-primary" 
+                  : "text-muted-foreground"
+              )}
+              data-testid="nav-streaks"
+            >
+              <Flame className="w-5 h-5" />
+              <span className="text-[10px] font-medium">Streaks</span>
+            </div>
+          </Link>
+
           <Link href={isLoggedIn ? "/settings" : "/api/login"}>
             <div
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 h-full px-4 rounded-2xl fluid-transition active:scale-95",
-                location === "/settings" 
+                location === "/settings" || location === "/account"
                   ? "text-primary" 
                   : "text-muted-foreground"
               )}
