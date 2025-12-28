@@ -72,7 +72,7 @@ export const profileApi = {
     return response.data;
   },
   update: async (data: any) => {
-    const response = await api.put('/api/profile', data);
+    const response = await api.put('/api/mobile/profile', data);
     return response.data;
   },
   getOptions: async () => {

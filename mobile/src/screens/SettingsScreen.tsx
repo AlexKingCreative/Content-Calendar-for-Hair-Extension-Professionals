@@ -48,6 +48,10 @@ export default function SettingsScreen() {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['streak'] });
       setShowGoalModal(false);
+      Alert.alert('Success', 'Your posting goal has been updated');
+    },
+    onError: (error: any) => {
+      Alert.alert('Error', error?.response?.data?.message || 'Failed to update posting goal');
     },
   });
 

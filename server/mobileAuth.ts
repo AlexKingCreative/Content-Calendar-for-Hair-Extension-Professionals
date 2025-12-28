@@ -150,6 +150,64 @@ router.get('/profile', authenticateMobile, async (req: any, res) => {
   }
 });
 
+router.put('/profile', authenticateMobile, async (req: any, res) => {
+  try {
+    const { postingGoal, certifiedBrands, extensionMethods, city, postingServices } = req.body;
+    
+    const updateData: Record<string, any> = {};
+    
+    if (postingGoal !== undefined) {
+      if (!['daily', 'casual', 'occasional'].includes(postingGoal)) {
+        return res.status(400).json({ message: 'Invalid posting goal' });
+      }
+      updateData.postingGoal = postingGoal;
+    }
+    if (certifiedBrands !== undefined) {
+      if (!Array.isArray(certifiedBrands)) {
+        return res.status(400).json({ message: 'certifiedBrands must be an array' });
+      }
+      updateData.certifiedBrands = certifiedBrands;
+    }
+    if (extensionMethods !== undefined) {
+      if (!Array.isArray(extensionMethods)) {
+        return res.status(400).json({ message: 'extensionMethods must be an array' });
+      }
+      updateData.extensionMethods = extensionMethods;
+    }
+    if (city !== undefined && typeof city === 'string') {
+      updateData.city = city;
+    }
+    if (postingServices !== undefined) {
+      if (!Array.isArray(postingServices)) {
+        return res.status(400).json({ message: 'postingServices must be an array' });
+      }
+      updateData.postingServices = postingServices;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: 'No valid fields to update' });
+    }
+
+    const [existing] = await db.select().from(userProfiles).where(eq(userProfiles.userId, req.mobileUserId));
+    
+    if (existing) {
+      const [updated] = await db.update(userProfiles)
+        .set(updateData)
+        .where(eq(userProfiles.userId, req.mobileUserId))
+        .returning();
+      res.json(updated);
+    } else {
+      const [created] = await db.insert(userProfiles)
+        .values({ userId: req.mobileUserId, ...updateData })
+        .returning();
+      res.json(created);
+    }
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Failed to update profile' });
+  }
+});
+
 router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
   try {
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
