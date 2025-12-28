@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Plus, Sparkles, Pencil, Trash2, Calendar, ArrowLeft, Award, 
   Users, CreditCard, BarChart3, DollarSign, Settings, ChevronLeft,
-  List, LayoutGrid, Scissors, Send, Check, X, ExternalLink
+  List, LayoutGrid, Scissors, Send, Check, X, ExternalLink, LogOut
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { Link } from "wouter";
@@ -400,7 +400,15 @@ export default function AdminPage() {
             </SidebarGroup>
           </SidebarContent>
           <SidebarFooter className="p-4 border-t border-border">
-            <p className="text-xs text-muted-foreground">Content Calendar Admin</p>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start gap-2"
+              onClick={() => window.location.href = "/api/logout"}
+              data-testid="button-admin-logout"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </Button>
           </SidebarFooter>
         </Sidebar>
 
