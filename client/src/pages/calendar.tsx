@@ -231,7 +231,7 @@ export default function CalendarPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => window.location.href = "/api/auth/logout"}
+                      onClick={() => window.location.href = "/api/logout"}
                       data-testid="button-logout"
                     >
                       <LogOut className="w-4 h-4 mr-1" />
@@ -242,7 +242,7 @@ export default function CalendarPage() {
                   <Button
                     variant="default"
                     size="sm"
-                    onClick={() => window.location.href = "/api/auth/login"}
+                    onClick={() => window.location.href = "/api/login"}
                     data-testid="button-login"
                   >
                     <LogIn className="w-4 h-4 mr-1" />
