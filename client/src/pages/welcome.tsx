@@ -145,9 +145,9 @@ export default function WelcomePage() {
     }));
   };
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     savePreferences();
-    navigateToLogin();
+    await navigateToLogin();
   };
 
   return (
@@ -165,7 +165,7 @@ export default function WelcomePage() {
               </div>
               <span className="font-heading font-bold text-sm">Content Calendar</span>
             </div>
-            <Button variant="ghost" size="sm" onClick={navigateToLogin} data-testid="button-signin-header">
+            <Button variant="ghost" size="sm" onClick={() => navigateToLogin()} data-testid="button-signin-header">
               <LogIn className="w-4 h-4 mr-1" />
               Sign In
             </Button>
@@ -227,7 +227,7 @@ export default function WelcomePage() {
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
                 
-                <Button variant="outline" size="lg" className="w-full text-base py-6" onClick={navigateToLogin} data-testid="button-sign-in">
+                <Button variant="outline" size="lg" className="w-full text-base py-6" onClick={() => navigateToLogin()} data-testid="button-sign-in">
                   <LogIn className="w-5 h-5 mr-2" />
                   I Already Have an Account
                 </Button>
