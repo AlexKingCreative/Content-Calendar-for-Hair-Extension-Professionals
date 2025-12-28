@@ -228,6 +228,12 @@ export default function CalendarPage() {
                         </Button>
                       </Link>
                     )}
+                    <Link href="/settings">
+                      <Button variant="ghost" size="sm" data-testid="button-settings">
+                        <Settings className="w-4 h-4 mr-1" />
+                        Settings
+                      </Button>
+                    </Link>
                     <Button
                       variant="ghost"
                       size="sm"

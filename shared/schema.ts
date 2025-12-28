@@ -54,6 +54,12 @@ export const extensionMethods = [
 ] as const;
 export type ExtensionMethod = typeof extensionMethods[number];
 
+export const voiceOptions = ["solo_stylist", "salon"] as const;
+export type VoiceOption = typeof voiceOptions[number];
+
+export const toneOptions = ["professional", "neutral", "informal"] as const;
+export type ToneOption = typeof toneOptions[number];
+
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
   date: text("date").notNull(),
@@ -85,6 +91,8 @@ export const userProfiles = pgTable("user_profiles", {
   city: text("city"),
   certifiedBrands: text("certified_brands").array().default(sql`'{}'::text[]`),
   extensionMethods: text("extension_methods").array().default(sql`'{}'::text[]`),
+  voice: text("voice").default("solo_stylist"),
+  tone: text("tone").default("neutral"),
   isAdmin: boolean("is_admin").default(false),
   onboardingComplete: boolean("onboarding_complete").default(false),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),

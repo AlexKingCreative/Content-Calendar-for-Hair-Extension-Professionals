@@ -9,6 +9,7 @@ import CalendarPage from "@/pages/calendar";
 import OnboardingPage from "@/pages/onboarding";
 import AdminPage from "@/pages/admin";
 import LandingPage from "@/pages/landing";
+import SettingsPage from "@/pages/settings";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
@@ -87,6 +88,11 @@ function Router() {
         <AdminRoute>
           <AdminPage />
         </AdminRoute>
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute>
+          <SettingsPage />
+        </ProtectedRoute>
       </Route>
       <Route component={NotFound} />
     </Switch>

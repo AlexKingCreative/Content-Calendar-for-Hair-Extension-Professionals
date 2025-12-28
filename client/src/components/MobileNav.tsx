@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Filter, Settings } from "lucide-react";
+import { Calendar, Filter, Settings, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MobileNavProps {
@@ -25,6 +25,16 @@ export function MobileNav({ isAdmin, isLoggedIn, onFilterClick, hasActiveFilters
       onClick: onFilterClick,
       active: hasActiveFilters,
     },
+    ...(isLoggedIn
+      ? [
+          {
+            icon: User,
+            label: "Settings",
+            href: "/settings",
+            active: location === "/settings",
+          },
+        ]
+      : []),
     ...(isAdmin
       ? [
           {
@@ -63,24 +73,6 @@ export function MobileNav({ isAdmin, isLoggedIn, onFilterClick, hasActiveFilters
                 </div>
                 <span className="text-xs font-medium">{item.label}</span>
               </button>
-            );
-          }
-
-          if (item.external) {
-            return (
-              <a
-                key={index}
-                href={item.href}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1 w-full h-full px-2",
-                  "text-muted-foreground active:text-foreground transition-colors",
-                  item.active && "text-primary"
-                )}
-                data-testid={`nav-${item.label.toLowerCase().replace(" ", "-")}`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-xs font-medium">{item.label}</span>
-              </a>
             );
           }
 
