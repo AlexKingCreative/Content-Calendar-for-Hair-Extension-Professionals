@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { getQueryFn, apiRequest } from "@/lib/queryClient";
 import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List, LogIn, LogOut, Settings, User, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Sparkles, Lightbulb, TrendingUp, Check, ChevronDown, Flame, Filter, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List, LogIn, LogOut, Settings, User, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Sparkles, Lightbulb, TrendingUp, Check, ChevronDown, Flame, Filter, Lock, type LucideIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -48,6 +48,24 @@ const months = [
 ];
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function isMonthAccessible(month: number): boolean {
+  const currentMonth = new Date().getMonth() + 1;
+  const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+  return month === currentMonth || month === nextMonth;
+}
+
+function getUnlockMonth(selectedMonth: number): string {
+  const currentMonth = new Date().getMonth() + 1;
+  const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+  
+  if (selectedMonth <= currentMonth || selectedMonth === nextMonth) {
+    return "";
+  }
+  
+  const unlockMonthIndex = selectedMonth - 1;
+  return months[unlockMonthIndex === 0 ? 11 : unlockMonthIndex - 1];
+}
 
 const categoryIcons: Record<Category, LucideIcon> = {
   Educational: GraduationCap,
@@ -415,17 +433,19 @@ export default function CalendarPage() {
           </div>
         )}
 
-        <div className="hidden sm:block">
-          <FilterControls
-            selectedCategories={selectedCategories}
-            setSelectedCategories={setSelectedCategories}
-            selectedContentTypes={selectedContentTypes}
-            setSelectedContentTypes={setSelectedContentTypes}
-            hasActiveFilters={hasActiveFilters}
-            clearFilters={clearFilters}
-            postCount={filteredPosts.length}
-          />
-        </div>
+        {isMonthAccessible(selectedMonth) && (
+          <div className="hidden sm:block">
+            <FilterControls
+              selectedCategories={selectedCategories}
+              setSelectedCategories={setSelectedCategories}
+              selectedContentTypes={selectedContentTypes}
+              setSelectedContentTypes={setSelectedContentTypes}
+              hasActiveFilters={hasActiveFilters}
+              clearFilters={clearFilters}
+              postCount={filteredPosts.length}
+            />
+          </div>
+        )}
 
         <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
           <SheetContent side="bottom" className="h-[80vh] rounded-t-xl">
@@ -452,6 +472,26 @@ export default function CalendarPage() {
             {Array.from({ length: 7 }).map((_, i) => (
               <Skeleton key={i} className="h-20 rounded-lg" />
             ))}
+          </div>
+        ) : !isMonthAccessible(selectedMonth) ? (
+          <div className="mt-8 flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-6">
+              <Lock className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h3 className="font-heading text-xl font-semibold text-foreground mb-2 text-center">
+              {months[selectedMonth - 1]} is Locked
+            </h3>
+            <p className="text-muted-foreground text-center max-w-sm">
+              This month's content will be unlocked on the 1st of {getUnlockMonth(selectedMonth)}.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-6"
+              onClick={() => setSelectedMonth(new Date().getMonth() + 1)}
+              data-testid="button-go-to-current-month"
+            >
+              Go to {months[new Date().getMonth()]}
+            </Button>
           </div>
         ) : viewMode === "grid" ? (
           <div className="mt-4 sm:mt-6">
@@ -545,15 +585,17 @@ export default function CalendarPage() {
           </div>
         )}
 
-        <div className="mt-6 sm:mt-8 text-center text-sm text-muted-foreground pb-4">
-          <p>
-            {filteredPosts.length} post{filteredPosts.length !== 1 ? "s" : ""} for {months[selectedMonth - 1]}
-            {hasActiveFilters && " (filtered)"}
-          </p>
-          <p className="text-xs mt-1 sm:hidden text-muted-foreground/70">
-            Swipe left or right to change months
-          </p>
-        </div>
+        {isMonthAccessible(selectedMonth) && (
+          <div className="mt-6 sm:mt-8 text-center text-sm text-muted-foreground pb-4">
+            <p>
+              {filteredPosts.length} post{filteredPosts.length !== 1 ? "s" : ""} for {months[selectedMonth - 1]}
+              {hasActiveFilters && " (filtered)"}
+            </p>
+            <p className="text-xs mt-1 sm:hidden text-muted-foreground/70">
+              Swipe left or right to change months
+            </p>
+          </div>
+        )}
 
         {user && profile?.onboardingComplete && (
           <div id="streak-widget" className="mb-20 sm:mb-4">
