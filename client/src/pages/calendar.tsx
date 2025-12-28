@@ -56,15 +56,8 @@ function isMonthAccessible(month: number): boolean {
 }
 
 function getUnlockMonth(selectedMonth: number): string {
-  const currentMonth = new Date().getMonth() + 1;
-  const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-  
-  if (selectedMonth <= currentMonth || selectedMonth === nextMonth) {
-    return "";
-  }
-  
-  const unlockMonthIndex = selectedMonth - 1;
-  return months[unlockMonthIndex === 0 ? 11 : unlockMonthIndex - 1];
+  const previousMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
+  return months[previousMonth - 1];
 }
 
 const categoryIcons: Record<Category, LucideIcon> = {
