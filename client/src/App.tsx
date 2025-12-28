@@ -94,19 +94,34 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 function HomePage() {
   const isNative = Capacitor.isNativePlatform();
   const [, setLocation] = useLocation();
-  const { data: user } = useQuery({
+  const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
-  const { data: profile } = useQuery<UserProfile | null>({
+  const { data: profile, isLoading: profileLoading } = useQuery<UserProfile | null>({
     queryKey: ["/api/profile"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!user,
   });
 
-  // Redirect admins to admin dashboard
-  if (user && profile?.isAdmin) {
-    setLocation("/admin");
+  // Show loading while checking auth status
+  if (userLoading || (user && profileLoading)) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Skeleton className="h-12 w-48" />
+      </div>
+    );
+  }
+
+  // Redirect logged-in users
+  if (user) {
+    if (profile?.isAdmin) {
+      setLocation("/admin");
+    } else if (profile?.onboardingComplete) {
+      setLocation("/today");
+    } else {
+      setLocation("/onboarding");
+    }
     return null;
   }
 
