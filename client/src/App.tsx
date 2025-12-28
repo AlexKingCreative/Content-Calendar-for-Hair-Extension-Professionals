@@ -13,6 +13,7 @@ import SettingsPage from "@/pages/settings";
 import AccountPage from "@/pages/account";
 import TodayPage from "@/pages/today";
 import StreaksPage from "@/pages/streaks";
+import PostPage from "@/pages/post";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
@@ -104,6 +105,7 @@ function Router() {
       </Route>
       <Route path="/today" component={TodayPage} />
       <Route path="/streaks" component={StreaksPage} />
+      <Route path="/post/:id" component={PostPage} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { getQueryFn, apiRequest } from "@/lib/queryClient";
 import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List, LogIn, LogOut, Settings, User, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Sparkles, Lightbulb, TrendingUp, Check, ChevronDown, Flame, Filter, Lock, type LucideIcon } from "lucide-react";
@@ -100,12 +101,22 @@ const categoryIconColors: Record<Category, string> = {
 };
 
 export default function CalendarPage() {
+  const [, setLocation] = useLocation();
+  const isMobile = useIsMobile();
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
   const [selectedContentTypes, setSelectedContentTypes] = useState<ContentType[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  
+  const handlePostClick = useCallback((post: Post) => {
+    if (isMobile) {
+      setLocation(`/post/${post.id}`);
+    } else {
+      setSelectedPost(post);
+    }
+  }, [isMobile, setLocation]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -410,7 +421,7 @@ export default function CalendarPage() {
               )}
             </div>
             <button
-              onClick={() => setSelectedPost(todayPost)}
+              onClick={() => handlePostClick(todayPost)}
               className="text-left w-full group"
               data-testid="button-today-post"
             >
@@ -517,7 +528,7 @@ export default function CalendarPage() {
                 return (
                   <button
                     key={day}
-                    onClick={() => dayPosts.length > 0 && setSelectedPost(dayPosts[0])}
+                    onClick={() => dayPosts.length > 0 && handlePostClick(dayPosts[0])}
                     className={`min-h-16 sm:min-h-24 border border-card-border rounded-md p-1 sm:p-2 hover-elevate transition-all text-left ${
                       isToday ? "ring-2 ring-primary" : ""
                     } ${firstPost ? bgColor : "bg-card"}`}
@@ -571,7 +582,7 @@ export default function CalendarPage() {
                 <PostCard
                   key={post.id}
                   post={post}
-                  onClick={() => setSelectedPost(post)}
+                  onClick={() => handlePostClick(post)}
                 />
               ))
             )}
