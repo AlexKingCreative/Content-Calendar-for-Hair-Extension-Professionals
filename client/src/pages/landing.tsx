@@ -464,7 +464,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Calendar className="w-6 h-6 text-primary" />
-              <span className="font-semibold">Hair Content Calendar</span>
+              <span className="font-semibold">Content Calendar for Hair Extension Professionals</span>
             </div>
             <div className="flex gap-6 text-sm text-muted-foreground">
               <Link href="/calendar" className="hover:text-foreground transition-colors" data-testid="link-footer-calendar">

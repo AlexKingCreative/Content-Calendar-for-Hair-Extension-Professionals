@@ -1,4 +1,4 @@
-# Hair Extension Social Media Content Calendar
+# Content Calendar for Hair Extension Professionals
 
 ## Overview
 

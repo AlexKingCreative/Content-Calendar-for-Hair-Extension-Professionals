@@ -1,4 +1,4 @@
-# Design Guidelines: Hair Extension Social Media Content Calendar
+# Design Guidelines: Content Calendar for Hair Extension Professionals
 
 ## Design Approach
 **Reference-Based Approach**: Drawing inspiration from Notion's calendar views and Planoly's content planning interface, focusing on clean, intuitive navigation and organized content display.
