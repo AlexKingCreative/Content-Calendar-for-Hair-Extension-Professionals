@@ -868,9 +868,10 @@ Respond in JSON format with these fields:
       }
 
       const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const priceId = priceInfo.price_id as string;
       const session = await stripeService.createCheckoutSession(
         customerId,
-        priceInfo.price_id,
+        priceId,
         `${baseUrl}/account?success=true`,
         `${baseUrl}/subscribe?canceled=true`,
         withTrial === true
