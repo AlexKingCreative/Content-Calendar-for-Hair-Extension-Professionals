@@ -95,7 +95,7 @@ export default function Subscribe() {
             Never Miss a Special Day Again
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Hair extension professionals trust our calendar to stay ahead with daily content ideas,
+            Hair pros trust our calendar to stay ahead with daily content ideas,
             industry holidays, and AI-powered captions.
           </p>
         </div>

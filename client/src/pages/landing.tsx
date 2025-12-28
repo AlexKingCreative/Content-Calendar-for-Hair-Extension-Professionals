@@ -183,7 +183,7 @@ export default function LandingPage() {
               
               {/* Subheadline */}
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl lg:max-w-none mb-8">
-                365 days of professionally crafted social media post ideas designed specifically for hair extension professionals. Personalized hashtags, daily reminders, and AI-powered content generation.
+                365 days of professionally crafted social media post ideas for hair pros. Covering cutting, coloring, extensions, toppers, and wigs. Personalized hashtags, daily reminders, and AI-powered content generation.
               </p>
               
               {/* CTA Buttons */}
@@ -355,7 +355,7 @@ export default function LandingPage() {
               Everything You Need to Dominate Instagram
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Designed by hair extension professionals, for hair extension professionals.
+              Designed by hair pros, for hair pros.
             </p>
           </div>
           
@@ -463,7 +463,7 @@ export default function LandingPage() {
             {[
               {
                 q: "What exactly does this app do?",
-                a: "This app gives you 365 days of ready-to-use social media post ideas specifically for hair extension professionals. Each day includes a post title, description, content type suggestion, category, and personalized hashtags. Plus, AI writes your captions so you never have to stare at a blank screen again."
+                a: "This app gives you 365 days of ready-to-use social media post ideas for hair pros - cutting, coloring, extensions, toppers, and wigs. Each day includes a post title, description, content type suggestion, category, and personalized hashtags. Plus, AI writes your captions so you never have to stare at a blank screen again."
               },
               {
                 q: "Why do I need this app?",
@@ -506,7 +506,7 @@ export default function LandingPage() {
             Start Your Content Transformation Today
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of hair extension professionals who have revolutionized their social media presence. It takes just 2 minutes to get started.
+            Join thousands of hair pros who have revolutionized their social media presence. It takes just 2 minutes to get started.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {showInstallButton && (
@@ -540,7 +540,7 @@ export default function LandingPage() {
                 <span className="font-semibold">Content Calendar</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Your daily companion for social media success in the hair extension industry.
+                Your daily companion for social media success in the hair industry.
               </p>
             </div>
             
@@ -580,7 +580,7 @@ export default function LandingPage() {
           
           <div className="border-t pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-muted-foreground">
-              2025 Content Calendar for Hair Extension Professionals. All rights reserved.
+              2025 Content Calendar for Hair Pros. All rights reserved.
             </div>
             <div className="flex gap-4 text-sm text-muted-foreground">
               <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  ArrowLeft, MapPin, Award, Scissors, Check, X, Crown, CreditCard, ExternalLink 
+  ArrowLeft, MapPin, Award, Scissors, Check, X, Crown, CreditCard, ExternalLink, Briefcase, Megaphone 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { postingGoals, postingGoalDescriptions, type VoiceOption, type ToneOption, type PostingGoal } from "@shared/schema";
+import { postingGoals, postingGoalDescriptions, serviceCategories, type VoiceOption, type ToneOption, type PostingGoal, type ServiceCategory } from "@shared/schema";
 
 interface OptionsData {
   certifiedBrands: string[];
@@ -34,6 +34,8 @@ interface UserProfile {
   city: string | null;
   certifiedBrands: string[];
   extensionMethods: string[];
+  offeredServices: string[];
+  postingServices: string[];
   voice: VoiceOption | null;
   tone: ToneOption | null;
   postingGoal: PostingGoal | null;
@@ -58,6 +60,8 @@ export default function AccountPage() {
   const [city, setCity] = useState("");
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
+  const [offeredServices, setOfferedServices] = useState<string[]>([]);
+  const [postingServices, setPostingServices] = useState<string[]>([]);
   const [voice, setVoice] = useState<VoiceOption>("solo_stylist");
   const [tone, setTone] = useState<ToneOption>("neutral");
   const [postingGoal, setPostingGoal] = useState<PostingGoal>("casual");
@@ -125,6 +129,8 @@ export default function AccountPage() {
       setCity(profile.city || "");
       setSelectedBrands(profile.certifiedBrands || []);
       setSelectedMethods(profile.extensionMethods || []);
+      setOfferedServices(profile.offeredServices || []);
+      setPostingServices(profile.postingServices || []);
       setVoice((profile.voice as VoiceOption) || "solo_stylist");
       setTone((profile.tone as ToneOption) || "neutral");
       setPostingGoal((profile.postingGoal as PostingGoal) || "casual");
@@ -157,10 +163,28 @@ export default function AccountPage() {
       city: city || null,
       certifiedBrands: selectedBrands,
       extensionMethods: selectedMethods,
+      offeredServices,
+      postingServices,
       voice,
       tone,
       postingGoal,
     });
+  };
+
+  const toggleOfferedService = (service: string) => {
+    setOfferedServices((prev) =>
+      prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]
+    );
+    if (postingServices.includes(service) && offeredServices.includes(service)) {
+      setPostingServices((prev) => prev.filter((s) => s !== service));
+    }
+  };
+
+  const togglePostingService = (service: string) => {
+    if (!offeredServices.includes(service)) return;
+    setPostingServices((prev) =>
+      prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]
+    );
   };
 
   const addBrand = (brand: string) => {
@@ -336,6 +360,66 @@ export default function AccountPage() {
               );
             })}
           </RadioGroup>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 space-y-4">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <Briefcase className="w-4 h-4" />
+            Services You Offer
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Select all the hair services you provide to clients.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {serviceCategories.map((service) => {
+              const isSelected = offeredServices.includes(service);
+              return (
+                <Badge
+                  key={service}
+                  variant={isSelected ? "default" : "outline"}
+                  onClick={() => toggleOfferedService(service)}
+                  className="cursor-pointer"
+                  data-testid={`badge-offered-${service.toLowerCase().replace(/\s+/g, "-")}`}
+                >
+                  {isSelected && <Check className="w-3 h-3 mr-1" />}
+                  {service}
+                </Badge>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 space-y-4">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <Megaphone className="w-4 h-4" />
+            Services to Post About
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            What you post about, you will bring about! Select services you want to attract more clients for.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {serviceCategories.map((service) => {
+              const isOffered = offeredServices.includes(service);
+              const isPosting = postingServices.includes(service);
+              return (
+                <Badge
+                  key={service}
+                  variant={isPosting ? "default" : "outline"}
+                  onClick={() => togglePostingService(service)}
+                  className={`cursor-pointer ${!isOffered ? "opacity-40 cursor-not-allowed" : ""}`}
+                  data-testid={`badge-posting-${service.toLowerCase().replace(/\s+/g, "-")}`}
+                >
+                  {isPosting && <Check className="w-3 h-3 mr-1" />}
+                  {service}
+                </Badge>
+              );
+            })}
+          </div>
+          {offeredServices.length > 0 && postingServices.length === 0 && (
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              Select at least one service to see relevant content.
+            </p>
+          )}
         </div>
 
         <div className="glass-card rounded-2xl p-4 space-y-4">

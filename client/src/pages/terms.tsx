@@ -25,15 +25,15 @@ export default function TermsPage() {
 
           <h2>1. Acceptance of Terms</h2>
           <p>
-            By accessing and using Content Calendar for Hair Extension Professionals ("the App"), 
+            By accessing and using Content Calendar for Hair Pros ("the App"), 
             you accept and agree to be bound by the terms and provisions of this agreement. 
             If you do not agree to these terms, please do not use the App.
           </p>
 
           <h2>2. Description of Service</h2>
           <p>
-            Content Calendar for Hair Extension Professionals is a social media content planning 
-            application designed specifically for hair extension professionals. The App provides:
+            Content Calendar for Hair Pros is a social media content planning 
+            application designed for hair professionals. The App provides:
           </p>
           <ul>
             <li>365 days of pre-planned social media post ideas</li>
@@ -64,7 +64,7 @@ export default function TermsPage() {
           <h2>5. Intellectual Property</h2>
           <p>
             The App and its original content, features, and functionality are owned by 
-            Content Calendar for Hair Extension Professionals and are protected by international 
+            Content Calendar for Hair Pros and are protected by international 
             copyright, trademark, and other intellectual property laws.
           </p>
 
@@ -89,7 +89,7 @@ export default function TermsPage() {
 
           <h2>9. Limitation of Liability</h2>
           <p>
-            In no event shall Content Calendar for Hair Extension Professionals be liable for 
+            In no event shall Content Calendar for Hair Pros be liable for 
             any indirect, incidental, special, consequential, or punitive damages resulting 
             from your use of the App.
           </p>

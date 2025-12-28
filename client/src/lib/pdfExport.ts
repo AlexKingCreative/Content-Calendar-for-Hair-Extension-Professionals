@@ -31,7 +31,7 @@ export function exportMonthToPDF(posts: Post[], month: number, year: number = ne
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(120, 120, 120);
-  doc.text("Content Calendar for Hair Extension Professionals", margin, yPosition);
+  doc.text("Content Calendar for Hair Pros", margin, yPosition);
   yPosition += 0.4;
 
   doc.setDrawColor(220, 220, 220);

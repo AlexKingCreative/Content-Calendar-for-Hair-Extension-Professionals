@@ -25,7 +25,7 @@ export default function PrivacyPage() {
 
           <h2>1. Introduction</h2>
           <p>
-            Content Calendar for Hair Extension Professionals ("we," "our," or "the App") 
+            Content Calendar for Hair Pros ("we," "our," or "the App") 
             is committed to protecting your privacy. This Privacy Policy explains how we 
             collect, use, disclose, and safeguard your information when you use our application.
           </p>

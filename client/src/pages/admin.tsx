@@ -1248,14 +1248,14 @@ function BrandsSection({
         <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-brands-title">
           Brands
         </h1>
-        <p className="text-muted-foreground">Manage certified hair extension brands</p>
+        <p className="text-muted-foreground">Manage certified hair brands</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="font-heading">Certified Brands</CardTitle>
           <CardDescription>
-            Manage the list of certified hair extension brands available to stylists
+            Manage the list of certified hair brands available to stylists
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1364,14 +1364,14 @@ function MethodsSection({
         <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-methods-title">
           Methods
         </h1>
-        <p className="text-muted-foreground">Manage hair extension application methods</p>
+        <p className="text-muted-foreground">Manage extension application methods</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="font-heading">Extension Methods</CardTitle>
           <CardDescription>
-            Manage the list of hair extension application methods available to stylists
+            Manage the list of extension application methods available to stylists
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

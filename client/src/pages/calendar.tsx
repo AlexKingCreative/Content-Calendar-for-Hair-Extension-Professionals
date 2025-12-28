@@ -41,6 +41,8 @@ interface UserProfile {
   city: string | null;
   certifiedBrands: string[];
   extensionMethods: string[];
+  offeredServices: string[];
+  postingServices: string[];
   isAdmin: boolean;
   onboardingComplete: boolean;
 }
@@ -223,15 +225,19 @@ export default function CalendarPage() {
     const now = new Date();
     const currentDay = now.getDate();
     const currentMonth = now.getMonth() + 1;
+    const userPostingServices = profile?.postingServices || [];
     
     return posts.filter((post) => {
       const matchesMonth = post.month === selectedMonth;
       const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(post.category);
       const matchesContentType = selectedContentTypes.length === 0 || selectedContentTypes.includes(post.contentType);
       const isNotPastDay = selectedMonth !== currentMonth || post.day >= currentDay;
-      return matchesMonth && matchesCategory && matchesContentType && isNotPastDay;
+      const matchesServiceCategory = userPostingServices.length === 0 || 
+        !post.serviceCategory || 
+        userPostingServices.includes(post.serviceCategory);
+      return matchesMonth && matchesCategory && matchesContentType && isNotPastDay && matchesServiceCategory;
     });
-  }, [posts, selectedMonth, selectedCategories, selectedContentTypes]);
+  }, [posts, selectedMonth, selectedCategories, selectedContentTypes, profile?.postingServices]);
 
   const calendarDays = useMemo(() => {
     const year = 2025;

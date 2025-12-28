@@ -80,7 +80,7 @@ export default function SignupPage() {
           <div className="text-center space-y-4">
             <Badge variant="secondary" className="px-4 py-1.5">
               <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-              Join thousands of hair extension pros
+              Join thousands of hair pros
             </Badge>
             
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold">

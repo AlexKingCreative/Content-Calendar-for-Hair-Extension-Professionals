@@ -220,7 +220,7 @@ export default function WelcomePage() {
                   </div>
                 </div>
                 <h1 className="font-heading font-bold text-2xl">Content Calendar</h1>
-                <p className="text-muted-foreground text-sm">For Hair Extension Professionals</p>
+                <p className="text-muted-foreground text-sm">For Hair Pros</p>
               </div>
 
               <div className="flex-1 flex items-center justify-center py-2">

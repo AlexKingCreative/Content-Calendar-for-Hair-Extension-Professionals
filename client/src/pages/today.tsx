@@ -24,6 +24,7 @@ interface User {
 
 interface UserProfile {
   onboardingComplete: boolean;
+  postingServices: string[];
 }
 
 const contentTypeIcons: Record<ContentType, typeof Camera> = {
@@ -116,7 +117,12 @@ export default function TodayPage() {
   const now = new Date();
   const month = now.getMonth() + 1;
   const day = now.getDate();
-  const todayPost = posts.find(p => p.month === month && p.day === day);
+  
+  const userPostingServices = profile?.postingServices || [];
+  const filteredPosts = userPostingServices.length > 0
+    ? posts.filter(p => !p.serviceCategory || userPostingServices.includes(p.serviceCategory))
+    : posts;
+  const todayPost = filteredPosts.find(p => p.month === month && p.day === day);
 
   const handleGenerateCaption = async () => {
     if (!todayPost) return;

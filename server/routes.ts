@@ -268,7 +268,9 @@ export async function registerRoutes(
       const { 
         city, 
         certifiedBrands, 
-        extensionMethods, 
+        extensionMethods,
+        offeredServices,
+        postingServices,
         voice, 
         tone, 
         postingGoal,
@@ -285,6 +287,8 @@ export async function registerRoutes(
       if (city !== undefined) updateData.city = city || null;
       if (certifiedBrands !== undefined) updateData.certifiedBrands = certifiedBrands || [];
       if (extensionMethods !== undefined) updateData.extensionMethods = extensionMethods || [];
+      if (offeredServices !== undefined) updateData.offeredServices = offeredServices || [];
+      if (postingServices !== undefined) updateData.postingServices = postingServices || [];
       if (voice !== undefined) updateData.voice = voice;
       if (tone !== undefined) updateData.tone = tone;
       if (postingGoal !== undefined) updateData.postingGoal = postingGoal;
@@ -425,7 +429,7 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Post not found" });
       }
 
-      const prompt = `You are an expert social media copywriter for hair extension professionals. Generate an engaging Instagram caption for the following post idea.
+      const prompt = `You are an expert social media copywriter for hair professionals. Generate an engaging Instagram caption for the following post idea.
 
 Post Title: ${post.title}
 Category: ${post.category}
@@ -586,12 +590,12 @@ Return only the caption text, nothing else.`;
       const monthNames = ["January", "February", "March", "April", "May", "June", 
                           "July", "August", "September", "October", "November", "December"];
       
-      const prompt = `You are a social media content expert for hair extension professionals. Generate a social media post idea for ${monthNames[month - 1]} ${day}.
+      const prompt = `You are a social media content expert for hair professionals. Generate a social media post idea for ${monthNames[month - 1]} ${day}.
 
 ${theme ? `Theme/Topic: ${theme}` : ""}
 ${tone ? `Tone: ${tone}` : ""}
 
-The post should be relevant to hair extension stylists and their clients. Consider seasonal events, holidays, and industry trends.
+The post should be relevant to hair stylists and their clients. Consider seasonal events, holidays, and industry trends.
 
 Respond in JSON format with these fields:
 {

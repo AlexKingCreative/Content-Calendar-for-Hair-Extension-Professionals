@@ -342,7 +342,7 @@ export default function SettingsPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">
-              Hair Calendar is the ultimate content planning tool for hair extension professionals. 
+              Hair Calendar is the ultimate content planning tool for hair pros. 
               Get 365 days of social media post ideas tailored specifically for the hair industry.
             </p>
             <div className="space-y-2 text-sm">
