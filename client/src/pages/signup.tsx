@@ -124,9 +124,9 @@ export default function SignupPage() {
                   <div className="flex items-center justify-between gap-2">
                     <CardTitle className="flex items-center gap-2">
                       <Smartphone className="w-5 h-5" />
-                      Free Plan
+                      Free Trial
                     </CardTitle>
-                    <Badge variant="secondary">Always Free</Badge>
+                    <Badge variant="secondary">Free to Try</Badge>
                   </div>
                   <CardDescription>
                     Get started with limited access
