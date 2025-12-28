@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Sparkles, Pencil, Trash2, Calendar, ArrowLeft } from "lucide-react";
+import { Plus, Sparkles, Pencil, Trash2, Calendar, ArrowLeft, Award, Check, X } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { type Post, categories, contentTypes, type Category, type ContentType } from "@shared/schema";
+import { type Post, type Brand, categories, contentTypes, type Category, type ContentType } from "@shared/schema";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 
 const months = [
   "January", "February", "March", "April", "May", "June",
@@ -49,7 +51,55 @@ export default function AdminPage() {
     queryKey: ["/api/admin/posts"],
   });
 
+  const { data: brands = [], isLoading: brandsLoading } = useQuery<Brand[]>({
+    queryKey: ["/api/brands"],
+  });
+
+  const [newBrandName, setNewBrandName] = useState("");
+
   const filteredPosts = posts.filter((post) => post.month === selectedMonth);
+
+  const createBrandMutation = useMutation({
+    mutationFn: async (name: string) => {
+      return apiRequest("POST", "/api/brands", { name, isActive: true });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/brands"] });
+      qc.invalidateQueries({ queryKey: ["/api/options"] });
+      setNewBrandName("");
+      toast({ title: "Brand added successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to add brand", variant: "destructive" });
+    },
+  });
+
+  const updateBrandMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
+      return apiRequest("PUT", `/api/brands/${id}`, { isActive });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/brands"] });
+      qc.invalidateQueries({ queryKey: ["/api/options"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to update brand", variant: "destructive" });
+    },
+  });
+
+  const deleteBrandMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/brands/${id}`);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/brands"] });
+      qc.invalidateQueries({ queryKey: ["/api/options"] });
+      toast({ title: "Brand deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete brand", variant: "destructive" });
+    },
+  });
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -237,73 +287,177 @@ export default function AdminPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-40 rounded-md" />
-            ))}
-          </div>
-        ) : filteredPosts.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No posts for {months[selectedMonth - 1]}</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredPosts.map((post) => (
-              <Card key={post.id} data-testid={`card-post-${post.id}`}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <CardDescription>
-                        {months[post.month - 1]} {post.day}
-                      </CardDescription>
-                      <CardTitle className="font-heading text-base line-clamp-2">
-                        {post.title}
-                      </CardTitle>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(post)}
-                        data-testid={`button-edit-${post.id}`}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteMutation.mutate(post.id)}
-                        data-testid={`button-delete-${post.id}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="secondary" className="text-xs">
-                      {post.category}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {post.contentType}
-                    </Badge>
-                    {post.isAiGenerated && (
-                      <Badge variant="default" className="text-xs">
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        AI
-                      </Badge>
-                    )}
-                  </div>
+        <Tabs defaultValue="posts" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="posts" data-testid="tab-posts">
+              <Calendar className="w-4 h-4 mr-2" />
+              Posts
+            </TabsTrigger>
+            <TabsTrigger value="brands" data-testid="tab-brands">
+              <Award className="w-4 h-4 mr-2" />
+              Brands
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="posts">
+            {isLoading ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-40 rounded-md" />
+                ))}
+              </div>
+            ) : filteredPosts.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Calendar className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No posts for {months[selectedMonth - 1]}</p>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredPosts.map((post) => (
+                  <Card key={post.id} data-testid={`card-post-${post.id}`}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <CardDescription>
+                            {months[post.month - 1]} {post.day}
+                          </CardDescription>
+                          <CardTitle className="font-heading text-base line-clamp-2">
+                            {post.title}
+                          </CardTitle>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(post)}
+                            data-testid={`button-edit-${post.id}`}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteMutation.mutate(post.id)}
+                            data-testid={`button-delete-${post.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="secondary" className="text-xs">
+                          {post.category}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {post.contentType}
+                        </Badge>
+                        {post.isAiGenerated && (
+                          <Badge variant="default" className="text-xs">
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            AI
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="brands">
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-heading">Certified Brands</CardTitle>
+                <CardDescription>
+                  Manage the list of certified hair extension brands available to stylists
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add new brand..."
+                    value={newBrandName}
+                    onChange={(e) => setNewBrandName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newBrandName.trim()) {
+                        createBrandMutation.mutate(newBrandName.trim());
+                      }
+                    }}
+                    data-testid="input-new-brand"
+                  />
+                  <Button
+                    onClick={() => {
+                      if (newBrandName.trim()) {
+                        createBrandMutation.mutate(newBrandName.trim());
+                      }
+                    }}
+                    disabled={!newBrandName.trim() || createBrandMutation.isPending}
+                    data-testid="button-add-brand"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add
+                  </Button>
+                </div>
+
+                {brandsLoading ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Skeleton key={i} className="h-12 rounded-md" />
+                    ))}
+                  </div>
+                ) : brands.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">
+                    No brands yet. Add your first brand above.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {brands.map((brand) => (
+                      <div
+                        key={brand.id}
+                        className="flex items-center justify-between gap-2 p-3 rounded-md border bg-background"
+                        data-testid={`brand-row-${brand.id}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Award className="w-4 h-4 text-muted-foreground" />
+                          <span className={brand.isActive ? "" : "text-muted-foreground line-through"}>
+                            {brand.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">
+                              {brand.isActive ? "Active" : "Inactive"}
+                            </span>
+                            <Switch
+                              checked={brand.isActive ?? true}
+                              onCheckedChange={(checked) => 
+                                updateBrandMutation.mutate({ id: brand.id, isActive: checked })
+                              }
+                              data-testid={`switch-brand-${brand.id}`}
+                            />
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteBrandMutation.mutate(brand.id)}
+                            data-testid={`button-delete-brand-${brand.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
 
       <Dialog open={isCreateOpen || !!editingPost} onOpenChange={(open) => {

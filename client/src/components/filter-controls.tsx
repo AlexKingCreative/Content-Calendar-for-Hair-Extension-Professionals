@@ -89,12 +89,10 @@ export default function FilterControls({
             return (
               <Badge
                 key={category}
-                variant={isSelected ? "default" : "secondary"}
+                variant="secondary"
                 onClick={() => toggleCategory(category)}
-                className={`cursor-pointer px-3 py-1.5 text-sm font-medium gap-1.5 ${
-                  isSelected
-                    ? categoryColors[category]
-                    : "hover:bg-accent"
+                className={`cursor-pointer px-3 py-1.5 text-sm font-medium gap-1.5 ${categoryColors[category]} ${
+                  isSelected ? "ring-2 ring-offset-1 ring-foreground/20" : "opacity-70"
                 }`}
                 data-testid={`filter-category-${category.toLowerCase().replace(/\s+/g, "-")}`}
               >

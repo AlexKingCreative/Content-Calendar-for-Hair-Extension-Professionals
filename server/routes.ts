@@ -86,13 +86,88 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/options", (req, res) => {
-    res.json({
-      categories,
-      contentTypes,
-      certifiedBrands,
-      extensionMethods,
-    });
+  app.get("/api/options", async (req, res) => {
+    try {
+      const dbBrands = await storage.getActiveBrands();
+      const brandNames = dbBrands.length > 0 
+        ? dbBrands.map(b => b.name) 
+        : [...certifiedBrands];
+      
+      res.json({
+        categories,
+        contentTypes,
+        certifiedBrands: brandNames,
+        extensionMethods,
+      });
+    } catch (error) {
+      res.json({
+        categories,
+        contentTypes,
+        certifiedBrands,
+        extensionMethods,
+      });
+    }
+  });
+
+  app.get("/api/brands", async (req, res) => {
+    try {
+      const allBrands = await storage.getAllBrands();
+      res.json(allBrands);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch brands" });
+    }
+  });
+
+  app.post("/api/brands", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { name, isActive = true } = req.body;
+      if (!name || typeof name !== "string" || name.trim().length === 0) {
+        return res.status(400).json({ error: "Brand name is required" });
+      }
+      const brand = await storage.createBrand({ name: name.trim(), isActive });
+      res.json(brand);
+    } catch (error: any) {
+      if (error.code === "23505") {
+        return res.status(400).json({ error: "Brand already exists" });
+      }
+      res.status(500).json({ error: "Failed to create brand" });
+    }
+  });
+
+  app.put("/api/brands/:id", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid brand ID" });
+      }
+      const { name, isActive } = req.body;
+      const brand = await storage.updateBrand(id, { 
+        ...(name && { name: name.trim() }),
+        ...(typeof isActive === "boolean" && { isActive }),
+      });
+      if (!brand) {
+        return res.status(404).json({ error: "Brand not found" });
+      }
+      res.json(brand);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update brand" });
+    }
+  });
+
+  app.delete("/api/brands/:id", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid brand ID" });
+      }
+      const deleted = await storage.deleteBrand(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Brand not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete brand" });
+    }
   });
 
   app.get("/api/profile", isAuthenticated, async (req: any, res) => {

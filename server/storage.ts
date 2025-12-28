@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { posts, userProfiles, pushSubscriptions, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription } from "@shared/schema";
+import { posts, userProfiles, pushSubscriptions, brands, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand } from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 
 export interface IStorage {
@@ -19,6 +19,12 @@ export interface IStorage {
   getPushSubscription(endpoint: string): Promise<PushSubscription | undefined>;
   getAllActivePushSubscriptions(): Promise<PushSubscription[]>;
   deletePushSubscription(endpoint: string): Promise<boolean>;
+  
+  getAllBrands(): Promise<Brand[]>;
+  getActiveBrands(): Promise<Brand[]>;
+  createBrand(brand: InsertBrand): Promise<Brand>;
+  updateBrand(id: number, brand: Partial<InsertBrand>): Promise<Brand | undefined>;
+  deleteBrand(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -114,6 +120,33 @@ export class DatabaseStorage implements IStorage {
 
   async deletePushSubscription(endpoint: string): Promise<boolean> {
     const result = await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint)).returning();
+    return result.length > 0;
+  }
+
+  async getAllBrands(): Promise<Brand[]> {
+    return db.select().from(brands).orderBy(brands.name);
+  }
+
+  async getActiveBrands(): Promise<Brand[]> {
+    return db.select().from(brands).where(eq(brands.isActive, true)).orderBy(brands.name);
+  }
+
+  async createBrand(brand: InsertBrand): Promise<Brand> {
+    const [created] = await db.insert(brands).values(brand).returning();
+    return created;
+  }
+
+  async updateBrand(id: number, brandData: Partial<InsertBrand>): Promise<Brand | undefined> {
+    const [updated] = await db
+      .update(brands)
+      .set(brandData)
+      .where(eq(brands.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteBrand(id: number): Promise<boolean> {
+    const result = await db.delete(brands).where(eq(brands.id, id)).returning();
     return result.length > 0;
   }
 }
