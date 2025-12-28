@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 glass-nav border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
+      <header className="sticky top-0 z-50 glass-nav border-b safe-area-top">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-4">
           <Link href="/">
             <Button variant="ghost" size="icon" data-testid="button-back">
               <ChevronLeft className="w-5 h-5" />
