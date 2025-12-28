@@ -60,6 +60,26 @@ export type VoiceOption = typeof voiceOptions[number];
 export const toneOptions = ["professional", "neutral", "informal"] as const;
 export type ToneOption = typeof toneOptions[number];
 
+export const postingGoals = ["daily", "casual", "occasional"] as const;
+export type PostingGoal = typeof postingGoals[number];
+
+export const postingGoalDescriptions: Record<PostingGoal, { label: string; description: string; daysPerWeek: number }> = {
+  daily: { label: "Daily", description: "Post every day", daysPerWeek: 7 },
+  casual: { label: "Casual", description: "Post 3-4 times per week", daysPerWeek: 4 },
+  occasional: { label: "Occasional", description: "Post 1-2 times per week", daysPerWeek: 2 },
+};
+
+export const streakMilestones = [
+  { days: 3, badge: "Getting Started", icon: "flame" },
+  { days: 7, badge: "One Week Wonder", icon: "star" },
+  { days: 14, badge: "Consistent Creator", icon: "trophy" },
+  { days: 30, badge: "Monthly Maven", icon: "crown" },
+  { days: 60, badge: "Two Month Pro", icon: "gem" },
+  { days: 90, badge: "Quarter Champion", icon: "medal" },
+  { days: 180, badge: "Half Year Hero", icon: "rocket" },
+  { days: 365, badge: "Annual All-Star", icon: "sparkles" },
+] as const;
+
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
   date: text("date").notNull(),
@@ -93,6 +113,10 @@ export const userProfiles = pgTable("user_profiles", {
   extensionMethods: text("extension_methods").array().default(sql`'{}'::text[]`),
   voice: text("voice").default("solo_stylist"),
   tone: text("tone").default("neutral"),
+  postingGoal: text("posting_goal").default("casual"),
+  currentStreak: integer("current_streak").default(0),
+  longestStreak: integer("longest_streak").default(0),
+  totalPosts: integer("total_posts").default(0),
   isAdmin: boolean("is_admin").default(false),
   onboardingComplete: boolean("onboarding_complete").default(false),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
@@ -144,3 +168,19 @@ export const insertBrandSchema = createInsertSchema(brands).omit({
 
 export type Brand = typeof brands.$inferSelect;
 export type InsertBrand = z.infer<typeof insertBrandSchema>;
+
+export const postingLogs = pgTable("posting_logs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  date: text("date").notNull(),
+  postId: integer("post_id"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertPostingLogSchema = createInsertSchema(postingLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type PostingLog = typeof postingLogs.$inferSelect;
+export type InsertPostingLog = z.infer<typeof insertPostingLogSchema>;
