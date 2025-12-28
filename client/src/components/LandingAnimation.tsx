@@ -1,11 +1,10 @@
-import { Calendar, Hash, Heart, Sparkles, Camera, Video } from "lucide-react";
+import { Calendar, Hash, Heart, Sparkles, Camera } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const contentCards = [
   { title: "Before & After Magic", category: "Before & After", icon: Camera, color: "bg-rose-500" },
   { title: "Extension Care Tips", category: "Educational", icon: Sparkles, color: "bg-blue-500" },
   { title: "Client Transformation", category: "Inspiration", icon: Heart, color: "bg-amber-500" },
-  { title: "Styling Tutorial", category: "Tips & Tricks", icon: Video, color: "bg-purple-500" },
 ];
 
 const floatingHashtags = [
@@ -71,7 +70,7 @@ export function LandingAnimation() {
               ))}
             </div>
 
-            <div className="absolute bottom-16 left-0 right-0 px-3 animate-slide-in-up" style={{ animationDelay: "1s" }}>
+            <div className="mt-4 px-1 animate-slide-in-up" style={{ animationDelay: "1s" }}>
               <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-4 h-4 text-primary" />
@@ -90,8 +89,6 @@ export function LandingAnimation() {
                 </div>
               </div>
             </div>
-
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent" />
           </div>
         </div>
 
