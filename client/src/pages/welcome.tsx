@@ -207,7 +207,7 @@ export default function WelcomePage() {
               </div>
 
               <div className="flex-1 flex items-center justify-center py-2">
-                <LandingAnimation />
+                <LandingAnimation size="small" />
               </div>
 
               <div className="space-y-4">
