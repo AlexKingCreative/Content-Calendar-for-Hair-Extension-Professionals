@@ -24,6 +24,7 @@ import SalonPricingPage from "@/pages/salon-pricing";
 import SalonSetupPage from "@/pages/salon-setup";
 import SalonDashboardPage from "@/pages/salon-dashboard";
 import JoinSalonPage from "@/pages/join-salon";
+import PricingPage from "@/pages/pricing";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Capacitor } from "@capacitor/core";
 
@@ -133,6 +134,7 @@ function Router() {
       <Route path="/terms" component={TermsPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/contact" component={ContactPage} />
+      <Route path="/pricing" component={PricingPage} />
       <Route path="/salon-pricing" component={SalonPricingPage} />
       <Route path="/salon-setup">
         <ProtectedRoute>
