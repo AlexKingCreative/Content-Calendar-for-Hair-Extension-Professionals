@@ -1,9 +1,10 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { getQueryFn } from "@/lib/queryClient";
+import { getQueryFn, apiRequest } from "@/lib/queryClient";
 import { format, getDaysInMonth, startOfMonth, getDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List, LogIn, LogOut, Settings, User, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Sparkles, Lightbulb, TrendingUp, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid3X3, List, LogIn, LogOut, Settings, User, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Sparkles, Lightbulb, TrendingUp, Check, ChevronDown, Flame, type LucideIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,8 +16,14 @@ import FilterControls from "@/components/filter-controls";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { MobileNav } from "@/components/MobileNav";
-import { StreakWidget } from "@/components/streak-widget";
 import { useSwipe } from "@/hooks/useSwipe";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+
+interface StreakData {
+  currentStreak: number;
+  hasPostedToday: boolean;
+}
 
 interface User {
   id: string;
@@ -113,6 +120,36 @@ export default function CalendarPage() {
     queryKey: ["/api/profile"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!user,
+  });
+
+  const { data: streakData } = useQuery<StreakData>({
+    queryKey: ["/api/streak"],
+    enabled: !!user && !!profile?.onboardingComplete,
+  });
+
+  const { toast } = useToast();
+  const qc = useQueryClient();
+
+  const logPostMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/streak/log", {});
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/streak"] });
+      toast({ 
+        title: "Posted today!", 
+        description: streakData?.currentStreak 
+          ? `You're on a ${(streakData.currentStreak || 0) + 1} day streak!` 
+          : "You've started a new streak!" 
+      });
+    },
+    onError: () => {
+      toast({ 
+        title: "Already logged", 
+        description: "You've already marked a post for today.",
+        variant: "destructive" 
+      });
+    },
   });
 
   const handlePrevMonth = useCallback(() => {
@@ -309,25 +346,59 @@ export default function CalendarPage() {
           <NotificationBanner />
         </div>
 
-        {user && profile?.onboardingComplete && (
-          <div className="mb-4">
-            <StreakWidget />
-          </div>
-        )}
-
         {todayPost && selectedMonth === new Date().getMonth() + 1 && (
           <div className="mb-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
-            <div className="flex items-center gap-2 mb-2">
-              <CalendarIcon className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Today's Post</span>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium text-primary">Today's Post</span>
+                <Badge variant="secondary" className="text-xs">
+                  {format(new Date(), "MMMM d, yyyy")}
+                </Badge>
+              </div>
+              {user && profile?.onboardingComplete && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant={streakData?.hasPostedToday ? "secondary" : "default"}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!streakData?.hasPostedToday) {
+                          logPostMutation.mutate();
+                        }
+                      }}
+                      disabled={streakData?.hasPostedToday || logPostMutation.isPending}
+                      data-testid="button-mark-posted"
+                    >
+                      {streakData?.hasPostedToday ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Flame className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {streakData?.hasPostedToday 
+                      ? `Posted today! ${streakData.currentStreak} day streak` 
+                      : "Mark as posted today"}
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
             <button
               onClick={() => setSelectedPost(todayPost)}
-              className="text-left w-full"
+              className="text-left w-full group"
               data-testid="button-today-post"
             >
-              <h3 className="font-medium text-foreground">{todayPost.title}</h3>
+              <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
+                {todayPost.title}
+              </h3>
               <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{todayPost.description}</p>
+              <div className="flex items-center gap-1 mt-2 text-xs text-primary font-medium">
+                <span>View details</span>
+                <ChevronDown className="w-3 h-3" />
+              </div>
             </button>
           </div>
         )}
