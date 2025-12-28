@@ -31,6 +31,7 @@ import {
   SidebarProvider,
   SidebarHeader,
   SidebarFooter,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 
 const months = [
@@ -404,6 +405,10 @@ export default function AdminPage() {
         </Sidebar>
 
         <main className="flex-1 overflow-auto">
+          <div className="md:hidden flex items-center gap-2 p-4 border-b border-border sticky top-0 bg-background z-50">
+            <SidebarTrigger data-testid="button-admin-menu" />
+            <span className="font-heading font-semibold text-foreground">Admin Dashboard</span>
+          </div>
           <div className="p-6">
             {activeSection === "stats" && (
               <StatsSection stats={adminStats} isLoading={statsLoading} />
