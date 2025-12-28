@@ -190,11 +190,16 @@ export default function CalendarPage() {
   });
 
   const filteredPosts = useMemo(() => {
+    const now = new Date();
+    const currentDay = now.getDate();
+    const currentMonth = now.getMonth() + 1;
+    
     return posts.filter((post) => {
       const matchesMonth = post.month === selectedMonth;
       const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(post.category);
       const matchesContentType = selectedContentTypes.length === 0 || selectedContentTypes.includes(post.contentType);
-      return matchesMonth && matchesCategory && matchesContentType;
+      const isNotPastDay = selectedMonth !== currentMonth || post.day >= currentDay;
+      return matchesMonth && matchesCategory && matchesContentType && isNotPastDay;
     });
   }, [posts, selectedMonth, selectedCategories, selectedContentTypes]);
 
@@ -517,8 +522,17 @@ export default function CalendarPage() {
                   return <div key={`empty-${index}`} className="min-h-16 sm:min-h-24" />;
                 }
 
+                const now = new Date();
+                const currentDay = now.getDate();
+                const currentMonth = now.getMonth() + 1;
+                const isPastDay = selectedMonth === currentMonth && day < currentDay;
+                
+                if (isPastDay) {
+                  return <div key={day} className="min-h-16 sm:min-h-24" />;
+                }
+
                 const dayPosts = getPostsForDay(day);
-                const isToday = day === new Date().getDate() && selectedMonth === new Date().getMonth() + 1;
+                const isToday = day === currentDay && selectedMonth === currentMonth;
 
                 const firstPost = dayPosts[0];
                 const CategoryIcon = firstPost ? categoryIcons[firstPost.category as Category] : null;
