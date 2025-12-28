@@ -268,7 +268,7 @@ export default function WelcomePage() {
               </div>
               
               <div className="text-center pt-2">
-                <span className="text-[10px] text-muted-foreground/60">v1.0.4</span>
+                <span className="text-[10px] text-muted-foreground/60">v1.0.8</span>
               </div>
             </motion.div>
           )}
