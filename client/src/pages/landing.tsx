@@ -16,7 +16,9 @@ import {
   Play,
   Zap,
   Clock,
-  TrendingUp
+  TrendingUp,
+  LogIn,
+  UserPlus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -124,6 +126,35 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Navigation Header */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link href="/">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-rose-400 flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-heading font-bold text-lg hidden sm:block">Content Calendar</span>
+            </div>
+          </Link>
+          
+          <div className="flex items-center gap-3">
+            <a href="/api/login">
+              <Button variant="ghost" data-testid="button-sign-in">
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In
+              </Button>
+            </a>
+            <Link href="/signup">
+              <Button data-testid="button-sign-up">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Sign Up
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Gradient Background */}

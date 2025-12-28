@@ -18,6 +18,7 @@ import TermsPage from "@/pages/terms";
 import PrivacyPage from "@/pages/privacy";
 import ContactPage from "@/pages/contact";
 import SubscribePage from "@/pages/subscribe";
+import SignupPage from "@/pages/signup";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
@@ -86,6 +87,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
+      <Route path="/signup" component={SignupPage} />
       <Route path="/calendar" component={CalendarPage} />
       <Route path="/onboarding">
         <ProtectedRoute>
