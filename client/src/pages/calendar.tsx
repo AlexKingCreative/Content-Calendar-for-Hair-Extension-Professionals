@@ -556,7 +556,7 @@ export default function CalendarPage() {
         </div>
 
         {user && profile?.onboardingComplete && (
-          <div className="mb-20 sm:mb-4">
+          <div id="streak-widget" className="mb-20 sm:mb-4">
             <StreakWidget />
           </div>
         )}
@@ -565,6 +565,12 @@ export default function CalendarPage() {
       <MobileNav
         isLoggedIn={!!user}
         onTodayClick={() => todayPost && setSelectedPost(todayPost)}
+        onStreakClick={() => {
+          const streakEl = document.getElementById('streak-widget');
+          if (streakEl) {
+            streakEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }}
         hasTodayPost={!!todayPost && selectedMonth === new Date().getMonth() + 1}
       />
 

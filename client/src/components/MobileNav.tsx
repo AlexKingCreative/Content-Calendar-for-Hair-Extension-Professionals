@@ -1,14 +1,15 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Settings, Sparkles } from "lucide-react";
+import { Calendar, Settings, Sparkles, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MobileNavProps {
   isLoggedIn?: boolean;
   onTodayClick?: () => void;
+  onStreakClick?: () => void;
   hasTodayPost?: boolean;
 }
 
-export function MobileNav({ isLoggedIn, onTodayClick, hasTodayPost }: MobileNavProps) {
+export function MobileNav({ isLoggedIn, onTodayClick, onStreakClick, hasTodayPost }: MobileNavProps) {
   const [location] = useLocation();
 
   return (
@@ -19,7 +20,7 @@ export function MobileNav({ isLoggedIn, onTodayClick, hasTodayPost }: MobileNavP
             onClick={onTodayClick}
             disabled={!hasTodayPost}
             className={cn(
-              "flex flex-col items-center justify-center gap-1 flex-1 h-full px-3 rounded-2xl fluid-transition",
+              "flex flex-col items-center justify-center gap-1 flex-1 h-full px-2 rounded-2xl fluid-transition",
               hasTodayPost 
                 ? "text-primary active:scale-95" 
                 : "text-muted-foreground/40"
@@ -33,7 +34,7 @@ export function MobileNav({ isLoggedIn, onTodayClick, hasTodayPost }: MobileNavP
           <Link href="/calendar">
             <div
               className={cn(
-                "flex flex-col items-center justify-center gap-1 h-full px-5 rounded-2xl fluid-transition active:scale-95",
+                "flex flex-col items-center justify-center gap-1 h-full px-3 rounded-2xl fluid-transition active:scale-95",
                 location === "/calendar" 
                   ? "text-primary" 
                   : "text-muted-foreground"
@@ -45,10 +46,19 @@ export function MobileNav({ isLoggedIn, onTodayClick, hasTodayPost }: MobileNavP
             </div>
           </Link>
 
+          <button
+            onClick={onStreakClick}
+            className="flex flex-col items-center justify-center gap-1 flex-1 h-full px-2 rounded-2xl fluid-transition text-orange-500 active:scale-95"
+            data-testid="nav-streak"
+          >
+            <Flame className="w-5 h-5" />
+            <span className="text-xs font-medium">Streak</span>
+          </button>
+
           <Link href={isLoggedIn ? "/settings" : "/api/login"}>
             <div
               className={cn(
-                "flex flex-col items-center justify-center gap-1 h-full px-5 rounded-2xl fluid-transition active:scale-95",
+                "flex flex-col items-center justify-center gap-1 h-full px-3 rounded-2xl fluid-transition active:scale-95",
                 location === "/settings" 
                   ? "text-primary" 
                   : "text-muted-foreground"
