@@ -62,12 +62,13 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
-  
-  const { data: profile, isLoading: profileLoading } = useQuery<UserProfile | null>({
-    queryKey: ["/api/profile"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: !!user,
-  });
+
+  const { data: profile, isLoading: profileLoading } =
+    useQuery<UserProfile | null>({
+      queryKey: ["/api/profile"],
+      queryFn: getQueryFn({ on401: "returnNull" }),
+      enabled: !!user,
+    });
 
   if (userLoading || (user && profileLoading)) {
     return (
@@ -93,6 +94,16 @@ function HomePage() {
 function Router() {
   return (
     <Switch>
+      <div
+        style={{
+          background: "#00ff00",
+          padding: "10px",
+          textAlign: "center",
+          fontWeight: "bold",
+        }}
+      >
+        🚀 CAPGO LIVE UPDATE TEST - v1.0.2 🚀
+      </div>
       <Route path="/" component={HomePage} />
       <Route path="/welcome" component={WelcomePage} />
       <Route path="/signup" component={SignupPage} />
