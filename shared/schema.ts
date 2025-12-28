@@ -137,6 +137,8 @@ export const userProfiles = pgTable("user_profiles", {
   stripeCustomerId: text("stripe_customer_id"),
   subscriptionStatus: text("subscription_status").default("free"),
   freeAccessEndsAt: timestamp("free_access_ends_at"),
+  salonId: integer("salon_id"),
+  salonRole: text("salon_role"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
@@ -217,3 +219,83 @@ export const insertPostingLogSchema = createInsertSchema(postingLogs).omit({
 
 export type PostingLog = typeof postingLogs.$inferSelect;
 export type InsertPostingLog = z.infer<typeof insertPostingLogSchema>;
+
+// Post Submissions - for users to submit their Instagram posts to be featured
+export const submissionStatuses = ["pending", "approved", "rejected"] as const;
+export type SubmissionStatus = typeof submissionStatuses[number];
+
+export const postSubmissions = pgTable("post_submissions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  postId: integer("post_id").notNull(),
+  instagramUrl: text("instagram_url").notNull(),
+  status: text("status").default("pending").notNull(),
+  reviewNote: text("review_note"),
+  reviewedBy: varchar("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertPostSubmissionSchema = createInsertSchema(postSubmissions).omit({
+  id: true,
+  createdAt: true,
+  reviewedAt: true,
+});
+
+export type PostSubmission = typeof postSubmissions.$inferSelect;
+export type InsertPostSubmission = z.infer<typeof insertPostSubmissionSchema>;
+
+// Salons - for salon owner multi-seat licensing
+export const salonSeatTiers = ["5-seats", "10-plus-seats"] as const;
+export type SalonSeatTier = typeof salonSeatTiers[number];
+
+export const salons = pgTable("salons", {
+  id: serial("id").primaryKey(),
+  ownerUserId: varchar("owner_user_id").notNull().unique(),
+  name: text("name").notNull(),
+  instagramHandle: text("instagram_handle"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  seatTier: text("seat_tier").default("5-seats"),
+  seatLimit: integer("seat_limit").default(5),
+  billingStatus: text("billing_status").default("active"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertSalonSchema = createInsertSchema(salons).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Salon = typeof salons.$inferSelect;
+export type InsertSalon = z.infer<typeof insertSalonSchema>;
+
+// Salon Members - stylists invited to a salon
+export const invitationStatuses = ["pending", "accepted", "revoked"] as const;
+export type InvitationStatus = typeof invitationStatuses[number];
+
+export const salonMembers = pgTable("salon_members", {
+  id: serial("id").primaryKey(),
+  salonId: integer("salon_id").notNull(),
+  email: text("email").notNull(),
+  stylistUserId: varchar("stylist_user_id"),
+  invitationToken: text("invitation_token").notNull().unique(),
+  invitationStatus: text("invitation_status").default("pending").notNull(),
+  invitedAt: timestamp("invited_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  revokedAt: timestamp("revoked_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertSalonMemberSchema = createInsertSchema(salonMembers).omit({
+  id: true,
+  createdAt: true,
+  invitedAt: true,
+  acceptedAt: true,
+  revokedAt: true,
+});
+
+export type SalonMember = typeof salonMembers.$inferSelect;
+export type InsertSalonMember = z.infer<typeof insertSalonMemberSchema>;

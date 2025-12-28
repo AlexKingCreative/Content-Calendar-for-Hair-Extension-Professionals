@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog } from "@shared/schema";
+import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, postSubmissions, salons, salonMembers, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog, type PostSubmission, type InsertPostSubmission, type Salon, type InsertSalon, type SalonMember, type InsertSalonMember } from "@shared/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 
 export interface IStorage {
@@ -38,6 +38,28 @@ export interface IStorage {
   getPostingLogs(userId: string, limit?: number): Promise<PostingLog[]>;
   hasPostedToday(userId: string, date: string): Promise<boolean>;
   updateStreak(userId: string): Promise<UserProfile>;
+  
+  // Post Submissions
+  createPostSubmission(submission: InsertPostSubmission): Promise<PostSubmission>;
+  getPostSubmissions(status?: string): Promise<PostSubmission[]>;
+  getPostSubmissionsByUser(userId: string): Promise<PostSubmission[]>;
+  updatePostSubmissionStatus(id: number, status: string, reviewedBy: string, reviewNote?: string): Promise<PostSubmission | undefined>;
+  getPendingSubmissionForPost(userId: string, postId: number): Promise<PostSubmission | undefined>;
+  
+  // Salons
+  createSalon(salon: InsertSalon): Promise<Salon>;
+  getSalon(id: number): Promise<Salon | undefined>;
+  getSalonByOwner(ownerUserId: string): Promise<Salon | undefined>;
+  updateSalon(id: number, data: Partial<InsertSalon>): Promise<Salon | undefined>;
+  
+  // Salon Members
+  createSalonMember(member: InsertSalonMember): Promise<SalonMember>;
+  getSalonMembers(salonId: number): Promise<SalonMember[]>;
+  getSalonMemberByToken(token: string): Promise<SalonMember | undefined>;
+  getSalonMemberByEmail(salonId: number, email: string): Promise<SalonMember | undefined>;
+  updateSalonMember(id: number, data: Partial<SalonMember>): Promise<SalonMember | undefined>;
+  revokeSalonMember(id: number): Promise<boolean>;
+  acceptSalonInvitation(token: string, stylistUserId: string): Promise<SalonMember | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -255,6 +277,128 @@ export class DatabaseStorage implements IStorage {
       .set({ currentStreak, longestStreak, totalPosts, updatedAt: new Date() })
       .where(eq(userProfiles.userId, userId))
       .returning();
+    
+    return updated;
+  }
+
+  // Post Submissions
+  async createPostSubmission(submission: InsertPostSubmission): Promise<PostSubmission> {
+    const [created] = await db.insert(postSubmissions).values(submission).returning();
+    return created;
+  }
+
+  async getPostSubmissions(status?: string): Promise<PostSubmission[]> {
+    if (status) {
+      return db.select().from(postSubmissions).where(eq(postSubmissions.status, status)).orderBy(desc(postSubmissions.createdAt));
+    }
+    return db.select().from(postSubmissions).orderBy(desc(postSubmissions.createdAt));
+  }
+
+  async getPostSubmissionsByUser(userId: string): Promise<PostSubmission[]> {
+    return db.select().from(postSubmissions).where(eq(postSubmissions.userId, userId)).orderBy(desc(postSubmissions.createdAt));
+  }
+
+  async updatePostSubmissionStatus(id: number, status: string, reviewedBy: string, reviewNote?: string): Promise<PostSubmission | undefined> {
+    const [updated] = await db
+      .update(postSubmissions)
+      .set({ status, reviewedBy, reviewNote, reviewedAt: new Date() })
+      .where(eq(postSubmissions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getPendingSubmissionForPost(userId: string, postId: number): Promise<PostSubmission | undefined> {
+    const [submission] = await db.select().from(postSubmissions)
+      .where(and(
+        eq(postSubmissions.userId, userId),
+        eq(postSubmissions.postId, postId),
+        eq(postSubmissions.status, "pending")
+      ));
+    return submission;
+  }
+
+  // Salons
+  async createSalon(salon: InsertSalon): Promise<Salon> {
+    const [created] = await db.insert(salons).values(salon).returning();
+    return created;
+  }
+
+  async getSalon(id: number): Promise<Salon | undefined> {
+    const [salon] = await db.select().from(salons).where(eq(salons.id, id));
+    return salon;
+  }
+
+  async getSalonByOwner(ownerUserId: string): Promise<Salon | undefined> {
+    const [salon] = await db.select().from(salons).where(eq(salons.ownerUserId, ownerUserId));
+    return salon;
+  }
+
+  async updateSalon(id: number, data: Partial<InsertSalon>): Promise<Salon | undefined> {
+    const [updated] = await db
+      .update(salons)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(salons.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Salon Members
+  async createSalonMember(member: InsertSalonMember): Promise<SalonMember> {
+    const [created] = await db.insert(salonMembers).values(member).returning();
+    return created;
+  }
+
+  async getSalonMembers(salonId: number): Promise<SalonMember[]> {
+    return db.select().from(salonMembers).where(eq(salonMembers.salonId, salonId)).orderBy(desc(salonMembers.createdAt));
+  }
+
+  async getSalonMemberByToken(token: string): Promise<SalonMember | undefined> {
+    const [member] = await db.select().from(salonMembers).where(eq(salonMembers.invitationToken, token));
+    return member;
+  }
+
+  async getSalonMemberByEmail(salonId: number, email: string): Promise<SalonMember | undefined> {
+    const [member] = await db.select().from(salonMembers)
+      .where(and(eq(salonMembers.salonId, salonId), eq(salonMembers.email, email)));
+    return member;
+  }
+
+  async updateSalonMember(id: number, data: Partial<SalonMember>): Promise<SalonMember | undefined> {
+    const [updated] = await db
+      .update(salonMembers)
+      .set(data)
+      .where(eq(salonMembers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async revokeSalonMember(id: number): Promise<boolean> {
+    const [updated] = await db
+      .update(salonMembers)
+      .set({ invitationStatus: "revoked", revokedAt: new Date() })
+      .where(eq(salonMembers.id, id))
+      .returning();
+    return !!updated;
+  }
+
+  async acceptSalonInvitation(token: string, stylistUserId: string): Promise<SalonMember | undefined> {
+    const member = await this.getSalonMemberByToken(token);
+    if (!member || member.invitationStatus !== "pending") return undefined;
+    
+    const salon = await this.getSalon(member.salonId);
+    if (!salon) return undefined;
+    
+    const [updated] = await db
+      .update(salonMembers)
+      .set({ stylistUserId, invitationStatus: "accepted", acceptedAt: new Date() })
+      .where(eq(salonMembers.id, member.id))
+      .returning();
+    
+    if (updated) {
+      await db.update(userProfiles)
+        .set({ salonId: salon.id, salonRole: "stylist", subscriptionStatus: "salon_member", updatedAt: new Date() })
+        .where(eq(userProfiles.userId, stylistUserId));
+    }
     
     return updated;
   }
