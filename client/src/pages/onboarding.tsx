@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Sparkles, MapPin, Award, Scissors, ChevronRight, ChevronLeft, Check, X } from "lucide-react";
@@ -21,6 +21,21 @@ export default function OnboardingPage() {
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
   const [brandSearch, setBrandSearch] = useState("");
   const [brandPopoverOpen, setBrandPopoverOpen] = useState(false);
+
+  useEffect(() => {
+    const pending = localStorage.getItem("pendingOnboarding");
+    if (pending) {
+      try {
+        const data = JSON.parse(pending);
+        if (data.city) setCity(data.city);
+        if (data.certifiedBrands?.length) setSelectedBrands(data.certifiedBrands);
+        if (data.extensionMethods?.length) setSelectedMethods(data.extensionMethods);
+        localStorage.removeItem("pendingOnboarding");
+      } catch (e) {
+        console.error("Failed to parse pending onboarding data");
+      }
+    }
+  }, []);
 
   const totalSteps = 3;
   const progress = (step / totalSteps) * 100;
