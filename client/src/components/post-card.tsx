@@ -3,6 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { type Post, type ContentType, type Category } from "@shared/schema";
 
+const months = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
+
 const contentTypeIcons: Record<ContentType, typeof Camera> = {
   Photo: Camera,
   Video: Video,
@@ -48,6 +53,7 @@ export default function PostCard({ post, compact = false, onClick }: PostCardPro
   const ContentIcon = contentTypeIcons[post.contentType as ContentType];
   const CategoryIcon = categoryIcons[post.category as Category];
   const categoryColor = categoryColors[post.category as Category];
+  const dateStr = `${months[post.month - 1]} ${post.day}`;
 
   if (compact) {
     return (
@@ -79,7 +85,7 @@ export default function PostCard({ post, compact = false, onClick }: PostCardPro
           </div>
           <div className="sm:hidden">
             <div className="text-sm font-medium text-muted-foreground">
-              Day {post.day}
+              {dateStr}
             </div>
             <Badge
               variant="secondary"
@@ -97,7 +103,7 @@ export default function PostCard({ post, compact = false, onClick }: PostCardPro
               {post.title}
             </h3>
             <div className="hidden sm:block text-sm font-medium text-muted-foreground flex-shrink-0">
-              Day {post.day}
+              {dateStr}
             </div>
           </div>
 
