@@ -15,6 +15,7 @@ import FilterControls from "@/components/filter-controls";
 import { NotificationBanner } from "@/components/NotificationBanner";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { MobileNav } from "@/components/MobileNav";
+import { StreakWidget } from "@/components/streak-widget";
 import { useSwipe } from "@/hooks/useSwipe";
 
 interface User {
@@ -307,6 +308,12 @@ export default function CalendarPage() {
         <div className="mb-4">
           <NotificationBanner />
         </div>
+
+        {user && profile?.onboardingComplete && (
+          <div className="mb-4">
+            <StreakWidget />
+          </div>
+        )}
 
         {todayPost && selectedMonth === new Date().getMonth() + 1 && (
           <div className="mb-4 p-4 bg-primary/10 rounded-lg border border-primary/20">

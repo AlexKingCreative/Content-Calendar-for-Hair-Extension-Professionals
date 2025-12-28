@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MapPin, Award, Scissors, User, Volume2, Save, Check, X } from "lucide-react";
+import { ArrowLeft, MapPin, Award, Scissors, User, Volume2, Save, Check, X, Flame, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { certifiedBrands, extensionMethods, type VoiceOption, type ToneOption } from "@shared/schema";
+import { certifiedBrands, extensionMethods, postingGoals, postingGoalDescriptions, type VoiceOption, type ToneOption, type PostingGoal } from "@shared/schema";
 
 interface UserProfile {
   id: number;
@@ -24,6 +24,10 @@ interface UserProfile {
   extensionMethods: string[];
   voice: VoiceOption | null;
   tone: ToneOption | null;
+  postingGoal: PostingGoal | null;
+  currentStreak: number | null;
+  longestStreak: number | null;
+  totalPosts: number | null;
   isAdmin: boolean;
   onboardingComplete: boolean;
 }
@@ -56,6 +60,7 @@ export default function SettingsPage() {
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
   const [voice, setVoice] = useState<VoiceOption>("solo_stylist");
   const [tone, setTone] = useState<ToneOption>("neutral");
+  const [postingGoal, setPostingGoal] = useState<PostingGoal>("casual");
   const [brandSearch, setBrandSearch] = useState("");
   const [brandPopoverOpen, setBrandPopoverOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -78,6 +83,7 @@ export default function SettingsPage() {
       setSelectedMethods(profile.extensionMethods || []);
       setVoice((profile.voice as VoiceOption) || "solo_stylist");
       setTone((profile.tone as ToneOption) || "neutral");
+      setPostingGoal((profile.postingGoal as PostingGoal) || "casual");
     }
   }, [profile]);
 
@@ -88,9 +94,10 @@ export default function SettingsPage() {
       const methodsChanged = JSON.stringify(selectedMethods) !== JSON.stringify(profile.extensionMethods || []);
       const voiceChanged = voice !== (profile.voice || "solo_stylist");
       const toneChanged = tone !== (profile.tone || "neutral");
-      setHasChanges(cityChanged || brandsChanged || methodsChanged || voiceChanged || toneChanged);
+      const goalChanged = postingGoal !== (profile.postingGoal || "casual");
+      setHasChanges(cityChanged || brandsChanged || methodsChanged || voiceChanged || toneChanged || goalChanged);
     }
-  }, [city, selectedBrands, selectedMethods, voice, tone, profile]);
+  }, [city, selectedBrands, selectedMethods, voice, tone, postingGoal, profile]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -100,6 +107,7 @@ export default function SettingsPage() {
         extensionMethods: selectedMethods,
         voice,
         tone,
+        postingGoal,
       });
     },
     onSuccess: () => {
@@ -284,6 +292,49 @@ export default function SettingsPage() {
               </div>
               <p className="text-sm text-muted-foreground">{toneDescriptions[tone]}</p>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Flame className="w-5 h-5 text-orange-500" />
+              Posting Goal
+            </CardTitle>
+            <CardDescription>
+              How often do you want to post on social media?
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RadioGroup
+              value={postingGoal}
+              onValueChange={(value) => setPostingGoal(value as PostingGoal)}
+              className="space-y-3"
+            >
+              {postingGoals.map((goal) => {
+                const info = postingGoalDescriptions[goal];
+                return (
+                  <Label
+                    key={goal}
+                    htmlFor={`goal-${goal}`}
+                    className={`flex items-center gap-3 p-4 rounded-md border cursor-pointer transition-all ${
+                      postingGoal === goal
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover-elevate"
+                    }`}
+                  >
+                    <RadioGroupItem value={goal} id={`goal-${goal}`} />
+                    <div className="flex-1">
+                      <div className="font-medium">{info.label}</div>
+                      <div className="text-sm text-muted-foreground">{info.description}</div>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      {info.daysPerWeek}x/week
+                    </Badge>
+                  </Label>
+                );
+              })}
+            </RadioGroup>
           </CardContent>
         </Card>
 

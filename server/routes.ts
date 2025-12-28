@@ -196,13 +196,16 @@ export async function registerRoutes(
   app.put("/api/profile", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { city, certifiedBrands, extensionMethods } = req.body;
+      const { city, certifiedBrands, extensionMethods, voice, tone, postingGoal } = req.body;
       
       const profile = await storage.upsertUserProfile({
         userId,
         city: city || null,
         certifiedBrands: certifiedBrands || [],
         extensionMethods: extensionMethods || [],
+        ...(voice && { voice }),
+        ...(tone && { tone }),
+        ...(postingGoal && { postingGoal }),
         onboardingComplete: true,
       });
       
