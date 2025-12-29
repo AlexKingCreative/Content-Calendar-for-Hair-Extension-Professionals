@@ -8,8 +8,10 @@ import {
   Hash, 
   Instagram,
   ChevronRight,
+  ChevronLeft,
   Star,
   Check,
+  X,
   Smartphone,
   ArrowDown,
   Quote,
@@ -19,7 +21,11 @@ import {
   TrendingUp,
   LogIn,
   UserPlus,
-  Download
+  Download,
+  Users,
+  Flame,
+  AlertCircle,
+  Crown
 } from "lucide-react";
 import { SiApple, SiGoogleplay } from "react-icons/si";
 import { Button } from "@/components/ui/button";
@@ -61,7 +67,7 @@ const testimonials = [
     location: "Houston, TX",
     avatar: "BC",
     rating: 5,
-    quote: "The Instagram example links for each post idea are so helpful. I never run out of inspiration for my content.",
+    quote: "The trend alerts are amazing! I caught a viral audio early and got 50k views on my reel. This app pays for itself!",
   },
 ];
 
@@ -71,6 +77,12 @@ const features = [
     title: "365 Days of Content",
     description: "Pre-planned post ideas for every single day of the year. Never wonder what to post again.",
     color: "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400",
+  },
+  {
+    icon: Flame,
+    title: "Trend Alerts",
+    description: "Get notified when trending sounds and topics are perfect for hair stylists. Never miss a chance to go viral.",
+    color: "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400",
   },
   {
     icon: Hash,
@@ -102,17 +114,75 @@ const features = [
     description: "Generate fresh content ideas with our AI assistant when you need something unique.",
     color: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400",
   },
+  {
+    icon: Download,
+    title: "PDF Export",
+    description: "Download your monthly calendar as a beautifully formatted PDF for offline planning.",
+    color: "bg-slate-100 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400",
+  },
 ];
 
 const stats = [
+  { value: "2,000+", label: "Hair Pros Using It" },
   { value: "365", label: "Daily Post Ideas" },
   { value: "10+", label: "Content Categories" },
   { value: "6", label: "Content Types" },
-  { value: "100%", label: "Free to Use" },
+];
+
+const howItWorks = [
+  {
+    step: 1,
+    title: "Sign Up Free",
+    description: "Create your account in seconds. No credit card required to start.",
+    icon: UserPlus,
+  },
+  {
+    step: 2,
+    title: "Personalize Your Feed",
+    description: "Tell us your city, certified brands, and specialties for custom hashtags.",
+    icon: Sparkles,
+  },
+  {
+    step: 3,
+    title: "Post & Grow",
+    description: "Follow daily prompts, stay consistent, and watch your following grow.",
+    icon: TrendingUp,
+  },
+];
+
+const screenshots = [
+  {
+    title: "Monthly Calendar View",
+    description: "See all your content ideas laid out in a beautiful calendar format",
+  },
+  {
+    title: "Daily Post Details",
+    description: "Get full post descriptions, hashtags, and content type suggestions",
+  },
+  {
+    title: "AI Caption Generator",
+    description: "Generate custom captions with AI tailored to your style",
+  },
+  {
+    title: "Streak Tracking",
+    description: "Stay motivated with posting streaks and achievement badges",
+  },
+];
+
+const comparisonData = [
+  { feature: "365 days of hair-specific content", us: true, others: false },
+  { feature: "Personalized hashtags for your city", us: true, others: false },
+  { feature: "Trend alerts for viral opportunities", us: true, others: false },
+  { feature: "AI caption generation", us: true, others: false },
+  { feature: "Hair extension focused content", us: true, others: false },
+  { feature: "Daily push notification reminders", us: true, others: false },
+  { feature: "Streak tracking & badges", us: true, others: false },
+  { feature: "Works offline", us: true, others: false },
 ];
 
 export default function LandingPage() {
   const [showIOSModal, setShowIOSModal] = useState(false);
+  const [currentScreenshot, setCurrentScreenshot] = useState(0);
   const { isInstallable, isInstalled, isIOS, isAndroid, promptInstall, platform } = useInstallPrompt();
 
   const handleInstallClick = async () => {
@@ -126,6 +196,14 @@ export default function LandingPage() {
   };
 
   const showInstallButton = !isInstalled && (isIOS || isInstallable || platform === "android");
+
+  const nextScreenshot = () => {
+    setCurrentScreenshot((prev) => (prev + 1) % screenshots.length);
+  };
+
+  const prevScreenshot = () => {
+    setCurrentScreenshot((prev) => (prev - 1 + screenshots.length) % screenshots.length);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -167,10 +245,10 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Column - Info */}
             <div className="text-center lg:text-left">
-              {/* Badge */}
+              {/* Social Proof Badge */}
               <Badge variant="secondary" className="mb-6 px-4 py-1.5 text-sm font-medium">
-                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                The #1 Content Calendar for Hair Stylists
+                <Users className="w-3.5 h-3.5 mr-1.5" />
+                Join 2,000+ Hair Pros Already Using This
               </Badge>
               
               {/* Headline */}
@@ -183,7 +261,7 @@ export default function LandingPage() {
               
               {/* Subheadline */}
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl lg:max-w-none mb-8">
-                365 days of professionally crafted social media post ideas for hair pros. Covering cutting, coloring, extensions, toppers, and wigs. Personalized hashtags, daily reminders, and AI-powered content generation.
+                365 days of professionally crafted social media post ideas for hair pros. Covering cutting, coloring, extensions, toppers, and wigs. Plus trend alerts so you never miss a viral opportunity.
               </p>
               
               {/* CTA Buttons */}
@@ -212,7 +290,7 @@ export default function LandingPage() {
                   <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                     {(isIOS || (!isIOS && !isAndroid)) && (
                       <a 
-                        href="https://apps.apple.com/app/content-calendar-hair-pro/id123456789" 
+                        href="https://apps.apple.com/app/content-calendar-hair-pro/id6757116246" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         data-testid="button-app-store"
@@ -295,8 +373,38 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Problem/Solution Section */}
+      {/* How It Works Section */}
       <section className="py-16 sm:py-24">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <Badge variant="secondary" className="mb-4">How It Works</Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Start Growing Your Following in 3 Simple Steps
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Get set up in under 2 minutes and start posting like a pro today.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {howItWorks.map((item, index) => (
+              <div key={index} className="text-center" data-testid={`how-it-works-${index}`}>
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <item.icon className="w-8 h-8 text-primary" />
+                </div>
+                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center mx-auto mb-4 font-bold">
+                  {item.step}
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                <p className="text-muted-foreground">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Problem/Solution Section */}
+      <section className="py-16 sm:py-24 bg-muted/30">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
@@ -316,6 +424,10 @@ export default function LandingPage() {
                 <p className="flex items-start gap-3">
                   <Hash className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
                   Using the same hashtags that don't reach new clients
+                </p>
+                <p className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
+                  Missing trending sounds and topics that could go viral
                 </p>
               </div>
             </div>
@@ -340,8 +452,60 @@ export default function LandingPage() {
                   <Check className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
                   Personalized hashtags based on YOUR location and expertise
                 </p>
+                <p className="flex items-start gap-3">
+                  <Flame className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                  Trend alerts notify you of viral opportunities for hair stylists
+                </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* App Screenshots Carousel */}
+      <section className="py-16 sm:py-24">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <Badge variant="secondary" className="mb-4">See It In Action</Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Beautiful, Easy-to-Use Interface
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Designed for busy stylists who want results without the learning curve.
+            </p>
+          </div>
+          
+          <div className="relative">
+            <Card className="p-8 max-w-2xl mx-auto">
+              <div className="aspect-[9/16] bg-gradient-to-br from-primary/5 to-rose-500/5 rounded-lg flex flex-col items-center justify-center mb-6 border">
+                <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Calendar className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{screenshots[currentScreenshot].title}</h3>
+                <p className="text-muted-foreground text-center max-w-xs">{screenshots[currentScreenshot].description}</p>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Button variant="outline" size="icon" onClick={prevScreenshot} data-testid="button-prev-screenshot">
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <div className="flex gap-2">
+                  {screenshots.map((_, index) => (
+                    <button
+                      key={index}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        index === currentScreenshot ? "bg-primary" : "bg-muted-foreground/30"
+                      }`}
+                      onClick={() => setCurrentScreenshot(index)}
+                      data-testid={`screenshot-dot-${index}`}
+                    />
+                  ))}
+                </div>
+                <Button variant="outline" size="icon" onClick={nextScreenshot} data-testid="button-next-screenshot">
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </Card>
           </div>
         </div>
       </section>
@@ -359,16 +523,149 @@ export default function LandingPage() {
             </p>
           </div>
           
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
               <Card key={index} className="p-6 hover-elevate transition-all" data-testid={`feature-card-${index}`}>
                 <div className={`w-12 h-12 rounded-lg ${feature.color} flex items-center justify-center mb-4`}>
                   <feature.icon className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground">{feature.description}</p>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Comparison Section */}
+      <section className="py-16 sm:py-24">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <Badge variant="secondary" className="mb-4">Why Choose Us</Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Built Specifically for Hair Professionals
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Generic content planners don't understand the hair industry. We do.
+            </p>
+          </div>
+          
+          <Card className="overflow-hidden">
+            <div className="grid grid-cols-3 bg-muted/50 p-4 font-semibold text-sm">
+              <div>Feature</div>
+              <div className="text-center">
+                <span className="inline-flex items-center gap-1">
+                  <Crown className="w-4 h-4 text-primary" />
+                  Content Calendar
+                </span>
+              </div>
+              <div className="text-center text-muted-foreground">Generic Planners</div>
+            </div>
+            {comparisonData.map((row, index) => (
+              <div key={index} className={`grid grid-cols-3 p-4 text-sm ${index % 2 === 0 ? "" : "bg-muted/20"}`} data-testid={`comparison-row-${index}`}>
+                <div className="text-muted-foreground">{row.feature}</div>
+                <div className="text-center">
+                  {row.us ? (
+                    <Check className="w-5 h-5 text-emerald-500 mx-auto" />
+                  ) : (
+                    <X className="w-5 h-5 text-muted-foreground/50 mx-auto" />
+                  )}
+                </div>
+                <div className="text-center">
+                  {row.others ? (
+                    <Check className="w-5 h-5 text-emerald-500 mx-auto" />
+                  ) : (
+                    <X className="w-5 h-5 text-muted-foreground/50 mx-auto" />
+                  )}
+                </div>
+              </div>
+            ))}
+          </Card>
+        </div>
+      </section>
+
+      {/* Pricing Preview Section */}
+      <section className="py-16 sm:py-24 bg-muted/30">
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <Badge variant="secondary" className="mb-4">Simple Pricing</Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Start Free, Upgrade When You're Ready
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Try it free for 3 days. Then just $10/month for unlimited access.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {/* Free Tier */}
+            <Card className="p-6">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-semibold mb-2">Free Trial</h3>
+                <div className="text-4xl font-bold mb-1">$0</div>
+                <p className="text-sm text-muted-foreground">3-day full access</p>
+              </div>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center gap-2 text-sm">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  Current + next month's content
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  Personalized hashtags
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  Daily reminders
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <X className="w-4 h-4" />
+                  Full 12-month calendar
+                </li>
+              </ul>
+              <Link href="/onboarding">
+                <Button variant="outline" className="w-full" data-testid="button-pricing-free">
+                  Start Free Trial
+                </Button>
+              </Link>
+            </Card>
+            
+            {/* Pro Tier */}
+            <Card className="p-6 border-primary relative">
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Most Popular</Badge>
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-semibold mb-2">Pro</h3>
+                <div className="text-4xl font-bold mb-1">$10<span className="text-lg font-normal text-muted-foreground">/mo</span></div>
+                <p className="text-sm text-muted-foreground">Full access to everything</p>
+              </div>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center gap-2 text-sm">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  All 12 months of content
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  Trend alerts for viral content
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  AI caption generation
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  PDF export & offline access
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  Priority support
+                </li>
+              </ul>
+              <Link href="/pricing">
+                <Button className="w-full" data-testid="button-pricing-pro">
+                  Get Pro Access
+                </Button>
+              </Link>
+            </Card>
           </div>
         </div>
       </section>
@@ -466,6 +763,10 @@ export default function LandingPage() {
                 a: "This app gives you 365 days of ready-to-use social media post ideas for hair pros - cutting, coloring, extensions, toppers, and wigs. Each day includes a post title, description, content type suggestion, category, and personalized hashtags. Plus, AI writes your captions so you never have to stare at a blank screen again."
               },
               {
+                q: "What are trend alerts?",
+                a: "We monitor trending sounds, topics, and hashtags that are perfect for hair stylists. When we spot a viral opportunity, you'll get notified so you can jump on the trend early and maximize your reach. Many of our users have gotten their first viral video this way!"
+              },
+              {
                 q: "Why do I need this app?",
                 a: "Coming up with fresh content ideas every day is exhausting. This app eliminates that stress by telling you exactly what to post, when to post it, and how to write it. It keeps you consistent, saves you hours of planning, and helps you show up professionally on social media every single day."
               },
@@ -506,7 +807,7 @@ export default function LandingPage() {
             Start Your Content Transformation Today
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of hair pros who have revolutionized their social media presence. It takes just 2 minutes to get started.
+            Join 2,000+ hair pros who have revolutionized their social media presence. It takes just 2 minutes to get started.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {showInstallButton && (
