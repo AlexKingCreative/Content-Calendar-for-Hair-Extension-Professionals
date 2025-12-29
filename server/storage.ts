@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, postSubmissions, salons, salonMembers, challenges, userChallenges, trendAlerts, salonChallenges, stylistChallenges, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog, type PostSubmission, type InsertPostSubmission, type Salon, type InsertSalon, type SalonMember, type InsertSalonMember, type Challenge, type InsertChallenge, type UserChallenge, type InsertUserChallenge, type TrendAlert, type InsertTrendAlert, type SalonChallenge, type InsertSalonChallenge, type StylistChallenge, type InsertStylistChallenge } from "@shared/schema";
-import { eq, and, sql, desc, asc } from "drizzle-orm";
+import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, postSubmissions, salons, salonMembers, challenges, userChallenges, trendAlerts, salonChallenges, stylistChallenges, instagramAccounts, instagramMedia, instagramDailyInsights, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog, type PostSubmission, type InsertPostSubmission, type Salon, type InsertSalon, type SalonMember, type InsertSalonMember, type Challenge, type InsertChallenge, type UserChallenge, type InsertUserChallenge, type TrendAlert, type InsertTrendAlert, type SalonChallenge, type InsertSalonChallenge, type StylistChallenge, type InsertStylistChallenge, type InstagramAccount, type InsertInstagramAccount, type InstagramMedia, type InsertInstagramMedia, type InstagramDailyInsights, type InsertInstagramDailyInsights } from "@shared/schema";
+import { eq, and, sql, desc, asc, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
   getAllPosts(): Promise<Post[]>;
@@ -105,6 +105,23 @@ export interface IStorage {
   incrementStylistChallengeProgress(id: number): Promise<StylistChallenge | undefined>;
   markStylistChallengeCompleted(id: number): Promise<StylistChallenge | undefined>;
   markOwnerNotified(id: number): Promise<StylistChallenge | undefined>;
+  
+  // Instagram Integration
+  getInstagramAccount(userId: string): Promise<InstagramAccount | undefined>;
+  getAllInstagramAccounts(): Promise<InstagramAccount[]>;
+  createInstagramAccount(account: InsertInstagramAccount): Promise<InstagramAccount>;
+  updateInstagramAccount(userId: string, data: Partial<InsertInstagramAccount>): Promise<InstagramAccount | undefined>;
+  deleteInstagramAccount(userId: string): Promise<boolean>;
+  
+  // Instagram Media
+  getInstagramMedia(userId: string, limit?: number): Promise<InstagramMedia[]>;
+  getInstagramMediaByDate(userId: string, date: string): Promise<InstagramMedia[]>;
+  hasInstagramPostOnDate(userId: string, date: string): Promise<boolean>;
+  upsertInstagramMedia(media: InsertInstagramMedia): Promise<InstagramMedia>;
+  
+  // Instagram Insights
+  getInstagramDailyInsights(userId: string, startDate: string, endDate: string): Promise<InstagramDailyInsights[]>;
+  upsertInstagramDailyInsights(insights: InsertInstagramDailyInsights): Promise<InstagramDailyInsights>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -677,6 +694,104 @@ export class DatabaseStorage implements IStorage {
       updatedAt: new Date()
     }).where(eq(stylistChallenges.id, id)).returning();
     return updated;
+  }
+  
+  // Instagram Integration
+  async getInstagramAccount(userId: string): Promise<InstagramAccount | undefined> {
+    const [account] = await db.select().from(instagramAccounts).where(eq(instagramAccounts.userId, userId));
+    return account;
+  }
+  
+  async getAllInstagramAccounts(): Promise<InstagramAccount[]> {
+    return db.select().from(instagramAccounts).where(eq(instagramAccounts.isActive, true));
+  }
+  
+  async createInstagramAccount(account: InsertInstagramAccount): Promise<InstagramAccount> {
+    const [created] = await db.insert(instagramAccounts).values(account).returning();
+    return created;
+  }
+  
+  async updateInstagramAccount(userId: string, data: Partial<InsertInstagramAccount>): Promise<InstagramAccount | undefined> {
+    const [updated] = await db.update(instagramAccounts)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(instagramAccounts.userId, userId))
+      .returning();
+    return updated;
+  }
+  
+  async deleteInstagramAccount(userId: string): Promise<boolean> {
+    const result = await db.delete(instagramAccounts).where(eq(instagramAccounts.userId, userId));
+    return true;
+  }
+  
+  // Instagram Media
+  async getInstagramMedia(userId: string, limit: number = 50): Promise<InstagramMedia[]> {
+    return db.select().from(instagramMedia)
+      .where(eq(instagramMedia.userId, userId))
+      .orderBy(desc(instagramMedia.timestamp))
+      .limit(limit);
+  }
+  
+  async getInstagramMediaByDate(userId: string, date: string): Promise<InstagramMedia[]> {
+    return db.select().from(instagramMedia)
+      .where(and(
+        eq(instagramMedia.userId, userId),
+        eq(instagramMedia.postDate, date)
+      ));
+  }
+  
+  async hasInstagramPostOnDate(userId: string, date: string): Promise<boolean> {
+    const media = await this.getInstagramMediaByDate(userId, date);
+    return media.length > 0;
+  }
+  
+  async upsertInstagramMedia(media: InsertInstagramMedia): Promise<InstagramMedia> {
+    const existing = await db.select().from(instagramMedia)
+      .where(eq(instagramMedia.instagramMediaId, media.instagramMediaId));
+    
+    if (existing.length > 0) {
+      const [updated] = await db.update(instagramMedia)
+        .set({ ...media, syncedAt: new Date() })
+        .where(eq(instagramMedia.instagramMediaId, media.instagramMediaId))
+        .returning();
+      return updated;
+    }
+    
+    const [created] = await db.insert(instagramMedia).values(media).returning();
+    return created;
+  }
+  
+  // Instagram Insights
+  async getInstagramDailyInsights(userId: string, startDate: string, endDate: string): Promise<InstagramDailyInsights[]> {
+    return db.select().from(instagramDailyInsights)
+      .where(and(
+        eq(instagramDailyInsights.userId, userId),
+        gte(instagramDailyInsights.date, startDate),
+        lte(instagramDailyInsights.date, endDate)
+      ))
+      .orderBy(desc(instagramDailyInsights.date));
+  }
+  
+  async upsertInstagramDailyInsights(insights: InsertInstagramDailyInsights): Promise<InstagramDailyInsights> {
+    const existing = await db.select().from(instagramDailyInsights)
+      .where(and(
+        eq(instagramDailyInsights.userId, insights.userId),
+        eq(instagramDailyInsights.date, insights.date)
+      ));
+    
+    if (existing.length > 0) {
+      const [updated] = await db.update(instagramDailyInsights)
+        .set({ ...insights, syncedAt: new Date() })
+        .where(and(
+          eq(instagramDailyInsights.userId, insights.userId),
+          eq(instagramDailyInsights.date, insights.date)
+        ))
+        .returning();
+      return updated;
+    }
+    
+    const [created] = await db.insert(instagramDailyInsights).values(insights).returning();
+    return created;
   }
 }
 
