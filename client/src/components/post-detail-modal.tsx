@@ -1,5 +1,7 @@
-import { Camera, Video, Film, Images, Clock, Radio, Hash, Copy, Check, ExternalLink, Sparkles, Loader2, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Lightbulb, TrendingUp } from "lucide-react";
+import { Camera, Video, Film, Images, Clock, Radio, Hash, Copy, Check, ExternalLink, Sparkles, Loader2, GraduationCap, ArrowLeftRight, Clapperboard, Star, ShoppingBag, Megaphone, MessageCircle, Lightbulb, TrendingUp, Lock } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { type Post, type ContentType, type Category } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+
+interface AccessStatus {
+  hasAccess: boolean;
+  subscriptionStatus?: string;
+}
 
 const contentTypeIcons: Record<ContentType, typeof Camera> = {
   Photo: Camera,
@@ -69,6 +76,13 @@ export default function PostDetailModal({ post, onClose }: PostDetailModalProps)
   const [generatedCaption, setGeneratedCaption] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+
+  const { data: accessStatus } = useQuery<AccessStatus>({
+    queryKey: ["/api/billing/access-status"],
+  });
+
+  const isPremium = accessStatus?.subscriptionStatus === "active" || accessStatus?.subscriptionStatus === "trialing";
 
   // Reset caption when post changes
   useEffect(() => {
@@ -79,6 +93,15 @@ export default function PostDetailModal({ post, onClose }: PostDetailModalProps)
   if (!post) return null;
 
   const handleGenerateCaption = async () => {
+    if (!isPremium) {
+      toast({
+        title: "Premium Feature",
+        description: "AI captions are available for subscribers. Start your free trial!",
+      });
+      setLocation("/subscribe");
+      return;
+    }
+
     setIsGenerating(true);
     try {
       const response = await apiRequest("POST", `/api/posts/${post.id}/generate-caption`);
@@ -187,6 +210,7 @@ export default function PostDetailModal({ post, onClose }: PostDetailModalProps)
             <Button
               onClick={handleGenerateCaption}
               disabled={isGenerating}
+              variant={isPremium ? "default" : "outline"}
               className="w-full gap-2"
               size="sm"
               data-testid="button-write-caption"
@@ -196,10 +220,16 @@ export default function PostDetailModal({ post, onClose }: PostDetailModalProps)
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Writing...
                 </>
-              ) : (
+              ) : isPremium ? (
                 <>
                   <Sparkles className="w-4 h-4" />
                   Write My Caption
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  Write My Caption
+                  <Badge variant="secondary" className="text-xs ml-1">Pro</Badge>
                 </>
               )}
             </Button>

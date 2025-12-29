@@ -51,12 +51,26 @@ export function StreakWidget() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/streak"] });
       qc.invalidateQueries({ queryKey: ["/api/profile"] });
-      toast({ 
-        title: "Posted today!", 
-        description: streak?.currentStreak 
-          ? `You're on a ${(streak.currentStreak || 0) + 1} day streak!` 
-          : "You've started a new streak!" 
-      });
+      
+      const isFirstPost = !streak?.totalPosts || streak.totalPosts === 0;
+      const newStreak = (streak?.currentStreak || 0) + 1;
+      
+      if (isFirstPost) {
+        toast({ 
+          title: "Your first post logged!",
+          description: "Keep posting for 7 days to earn 50% off your first month!",
+        });
+      } else if (newStreak === 7) {
+        toast({ 
+          title: "7-day streak achieved!",
+          description: "You've unlocked 50% off! Visit Subscribe to claim your reward.",
+        });
+      } else {
+        toast({ 
+          title: "Posted today!", 
+          description: `You're on a ${newStreak} day streak!`
+        });
+      }
     },
     onError: (error: any) => {
       toast({ 
