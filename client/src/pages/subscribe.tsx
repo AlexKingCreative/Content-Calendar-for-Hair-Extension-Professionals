@@ -35,7 +35,7 @@ interface UserProfile {
 }
 
 const features = [
-  { icon: Calendar, text: "365 days of pre-planned content ideas" },
+  { icon: Calendar, text: "Monthly pre-planned content ideas" },
   { icon: Sparkles, text: "AI-powered caption generation" },
   { icon: Heart, text: "Personalized to your voice and brand" },
   { icon: Gift, text: "Never miss special industry days" },
@@ -214,7 +214,7 @@ export default function Subscribe() {
             Try Free for 7 Days
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Get full access to 365 days of content ideas, AI-powered captions,
+            Get full access to monthly content ideas, AI-powered captions,
             and streak tracking to keep you consistent.
           </p>
         </div>
@@ -265,59 +265,20 @@ export default function Subscribe() {
           </Card>
         )}
 
-        {hasYearlyOption && (
-          <div className="flex items-center justify-center gap-4 p-1 bg-muted rounded-lg w-fit mx-auto">
-            <button
-              onClick={() => setBillingInterval('month')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                billingInterval === 'month' 
-                  ? 'bg-background shadow-sm' 
-                  : 'text-muted-foreground hover-elevate'
-              }`}
-              data-testid="button-billing-monthly"
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingInterval('year')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
-                billingInterval === 'year' 
-                  ? 'bg-background shadow-sm' 
-                  : 'text-muted-foreground hover-elevate'
-              }`}
-              data-testid="button-billing-yearly"
-            >
-              Yearly
-              <Badge variant="secondary" className="text-xs">Save {yearlySavings}%</Badge>
-            </button>
-          </div>
-        )}
 
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="relative overflow-visible">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span className="text-2xl font-heading">
-                  {billingInterval === 'year' ? 'Pro Annual' : 'Pro Monthly'}
-                </span>
-                {billingInterval === 'year' && (
-                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                    Best Value
-                  </Badge>
-                )}
+                <span className="text-2xl font-heading">Pro Access</span>
+                <Badge className="bg-primary/10 text-primary">
+                  7 Days Free
+                </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-baseline gap-1">
-                {billingInterval === 'year' ? (
-                  <>
-                    <span className="text-5xl font-bold">${yearlyPriceDisplay}</span>
-                    <span className="text-muted-foreground">/year</span>
-                    <span className="text-sm text-muted-foreground ml-2">
-                      (${(parseInt(yearlyPriceDisplay) / 12).toFixed(0)}/mo)
-                    </span>
-                  </>
-                ) : hasCoupon ? (
+                {hasCoupon ? (
                   <>
                     <span className="text-3xl line-through text-muted-foreground">${monthlyPriceDisplay}</span>
                     <span className="text-5xl font-bold text-green-600">${(parseInt(monthlyPriceDisplay) / 2).toFixed(0)}</span>
@@ -326,18 +287,12 @@ export default function Subscribe() {
                 ) : (
                   <>
                     <span className="text-5xl font-bold">${monthlyPriceDisplay}</span>
-                    <span className="text-muted-foreground">/month</span>
+                    <span className="text-muted-foreground">/month after trial</span>
                   </>
                 )}
               </div>
 
-              {billingInterval === 'year' && (
-                <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                  Save ${parseInt(monthlyPriceDisplay) * 12 - parseInt(yearlyPriceDisplay)} compared to monthly
-                </Badge>
-              )}
-
-              {billingInterval === 'month' && hasCoupon && (
+              {hasCoupon && (
                 <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                   <Percent className="w-3 h-3 mr-1" />
                   Streak reward applied
@@ -358,7 +313,7 @@ export default function Subscribe() {
               <Separator />
 
               <div className="space-y-3">
-                {billingInterval === 'month' && hasCoupon ? (
+                {hasCoupon ? (
                   <Button
                     className="w-full bg-green-600 hover:bg-green-700"
                     size="lg"
@@ -367,38 +322,21 @@ export default function Subscribe() {
                     data-testid="button-subscribe-with-reward"
                   >
                     <Percent className="w-4 h-4 mr-2" />
-                    {checkoutWithRewardMutation.isPending ? "Redirecting..." : `Subscribe - $${(parseInt(monthlyPriceDisplay) / 2).toFixed(0)} First Month`}
+                    {checkoutWithRewardMutation.isPending ? "Redirecting..." : `Start Trial - $${(parseInt(monthlyPriceDisplay) / 2).toFixed(0)} First Month After`}
                   </Button>
                 ) : (
                   <Button
-                    className="w-full"
-                    size="lg"
-                    onClick={() => handleSubscribe(false)}
-                    disabled={isLoading || priceLoading || userLoading}
-                    data-testid="button-subscribe-now"
-                  >
-                    {checkoutMutation.isPending ? "Redirecting to checkout..." : userLoading ? "Loading..." : 
-                      billingInterval === 'year' ? `Subscribe - $${yearlyPriceDisplay}/year` : "Subscribe Now"}
-                  </Button>
-                )}
-
-                {billingInterval === 'month' && (
-                  <Button
-                    variant="outline"
                     className="w-full"
                     size="lg"
                     onClick={() => handleSubscribe(true)}
                     disabled={isLoading || priceLoading || userLoading}
                     data-testid="button-start-trial"
                   >
-                    {checkoutMutation.isPending ? "Redirecting..." : "Start 7-Day Free Trial"}
+                    {checkoutMutation.isPending ? "Redirecting..." : userLoading ? "Loading..." : "Start 7-Day Free Trial"}
                   </Button>
                 )}
                 <p className="text-xs text-center text-muted-foreground">
-                  {billingInterval === 'year' 
-                    ? `Billed annually at $${yearlyPriceDisplay}. Cancel anytime.`
-                    : `Try free for 7 days, then $${monthlyPriceDisplay}/month. Cancel anytime.`
-                  }
+                  7 days free, then ${monthlyPriceDisplay}/month. Cancel anytime.
                 </p>
               </div>
             </CardContent>

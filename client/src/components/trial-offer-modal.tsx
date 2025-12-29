@@ -42,7 +42,7 @@ export function TrialOfferModal({ open, onClose, onSkip }: TrialOfferModalProps)
   });
 
   const features = [
-    { icon: Calendar, text: "Full 365-day content calendar", color: "text-rose-500" },
+    { icon: Calendar, text: "Monthly content calendar", color: "text-rose-500" },
     { icon: Sparkles, text: "AI-powered captions", color: "text-violet-500" },
     { icon: Hash, text: "Personalized hashtags", color: "text-blue-500" },
     { icon: Flame, text: "Streak tracking with rewards", color: "text-amber-500" },
@@ -135,16 +135,9 @@ export function TrialOfferModal({ open, onClose, onSkip }: TrialOfferModalProps)
             Explore free calendar first
           </Button>
 
-          <div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground pt-2">
-            <span className="flex items-center gap-1">
-              <Check className="w-3 h-3 text-emerald-500" />
-              No credit card required
-            </span>
-            <span className="flex items-center gap-1">
-              <Check className="w-3 h-3 text-emerald-500" />
-              Cancel anytime
-            </span>
-          </div>
+          <p className="text-xs text-center text-muted-foreground pt-2">
+            7 days free, then $9.99/month. Cancel anytime.
+          </p>
         </div>
       </DialogContent>
     </Dialog>
