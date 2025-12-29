@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
 import { 
   Calendar, 
   Sparkles, 
@@ -12,8 +14,6 @@ import {
   X,
   Smartphone,
   ArrowDown,
-  Quote,
-  Play,
   Flame,
   Clock,
   TrendingUp,
@@ -24,7 +24,9 @@ import {
   AlertCircle,
   Target,
   Heart,
-  Gift
+  Gift,
+  Award,
+  Zap
 } from "lucide-react";
 import { SiApple, SiGoogleplay } from "react-icons/si";
 import { Button } from "@/components/ui/button";
@@ -34,6 +36,36 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { LandingAnimation } from "@/components/LandingAnimation";
+
+function AnimatedCounter({ value, duration = 2000 }: { value: number; duration?: number }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  useEffect(() => {
+    if (!isInView) return;
+    let startTime: number;
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      setCount(Math.floor(progress * value));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [isInView, value, duration]);
+
+  return <span ref={ref}>{count.toLocaleString()}</span>;
+}
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
 
 const testimonials = [
   {
@@ -175,37 +207,55 @@ export default function LandingPage() {
       {/* Hero Section - Clear One-Liner */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-background to-amber-50/30 dark:from-rose-950/20 dark:via-background dark:to-amber-950/10" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/15 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-1/2 left-1/2 w-[600px] h-[600px] bg-rose-300/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         
-        <div className="relative max-w-6xl mx-auto px-4 py-16 sm:py-24">
+        <div className="relative max-w-6xl mx-auto px-4 py-20 sm:py-28">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="text-center lg:text-left">
+            <motion.div 
+              className="text-center lg:text-left"
+              initial="hidden"
+              animate="visible"
+              variants={staggerContainer}
+            >
               {/* The One-Liner: What it is + the result */}
-              <p className="text-sm font-medium text-primary uppercase tracking-wide mb-3">
-                Daily Content Ideas for Hair Pros
-              </p>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
+              <motion.div variants={fadeInUp}>
+                <Badge variant="secondary" className="mb-4 px-4 py-1.5">
+                  <Zap className="w-3.5 h-3.5 mr-1.5" />
+                  Daily Content Ideas for Hair Pros
+                </Badge>
+              </motion.div>
+              <motion.h1 
+                className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6"
+                variants={fadeInUp}
+              >
                 <span className="block">Know What to Post.</span>
                 <span className="block bg-gradient-to-r from-primary via-rose-500 to-amber-500 bg-clip-text text-transparent">
                   Every Single Day.
                 </span>
-              </h1>
+              </motion.h1>
               
               {/* Clear value prop */}
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl lg:max-w-none mb-8">
+              <motion.p 
+                className="text-lg sm:text-xl text-muted-foreground max-w-2xl lg:max-w-none mb-8"
+                variants={fadeInUp}
+              >
                 365 days of done-for-you social media post ideas for cutting, coloring, extensions, toppers, and wigs. Stop guessing. Start posting. Attract premium clients and get recognized.
-              </p>
+              </motion.p>
               
               {/* Direct CTA */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mb-6">
+              <motion.div 
+                className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mb-6"
+                variants={fadeInUp}
+              >
                 <Link href="/onboarding">
-                  <Button size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-get-started">
+                  <Button size="lg" className="text-lg px-8 py-6 gap-2 shadow-lg shadow-primary/25" data-testid="button-get-started">
                     Start Your Free 7-Day Trial
                     <ChevronRight className="w-5 h-5" />
                   </Button>
                 </Link>
-              </div>
+              </motion.div>
 
               {/* App Store Buttons */}
               {!isInstalled && (
@@ -249,17 +299,20 @@ export default function LandingPage() {
               )}
               
               {/* Trust Indicators */}
-              <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5">
+              <motion.div 
+                className="flex flex-wrap justify-center lg:justify-start gap-6 text-sm text-muted-foreground"
+                variants={fadeInUp}
+              >
+                <span className="flex items-center gap-1.5 bg-background/50 backdrop-blur-sm px-3 py-1.5 rounded-full border">
                   <Check className="w-4 h-4 text-emerald-500" />
                   No credit card required
                 </span>
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5 bg-background/50 backdrop-blur-sm px-3 py-1.5 rounded-full border">
                   <Users className="w-3.5 h-3.5" />
                   2,000+ stylists using it
                 </span>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
             
             <div className="hidden lg:block" data-testid="landing-animation">
               <LandingAnimation />
@@ -277,56 +330,85 @@ export default function LandingPage() {
       </section>
 
       {/* The Problem Section - External, Internal, Philosophical */}
-      <section className="py-16 sm:py-24 bg-muted/30">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center mb-12">
+      <section className="py-20 sm:py-28 bg-gradient-to-b from-muted/50 to-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(212,165,116,0.08),transparent_50%)]" />
+        <div className="max-w-4xl mx-auto px-4 relative">
+          <motion.div 
+            className="text-center mb-14"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <Badge variant="outline" className="mb-4 border-destructive/30 text-destructive">
+              <AlertCircle className="w-3 h-3 mr-1.5" />
+              The Struggle Is Real
+            </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Sound Familiar?
             </h2>
-          </div>
+          </motion.div>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <motion.div 
+            className="grid md:grid-cols-3 gap-6"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+          >
             {/* External Problem */}
-            <Card className="p-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-                <Clock className="w-6 h-6 text-destructive" />
-              </div>
-              <h3 className="font-semibold mb-2">No Time to Plan</h3>
-              <p className="text-muted-foreground text-sm">
-                You're busy doing hair all day. The last thing you want to do is spend your evenings figuring out what to post.
-              </p>
-            </Card>
+            <motion.div variants={fadeInUp}>
+              <Card className="p-6 text-center h-full border-destructive/10 hover-elevate">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-destructive/20 to-destructive/5 flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-7 h-7 text-destructive" />
+                </div>
+                <h3 className="font-semibold mb-2 text-lg">No Time to Plan</h3>
+                <p className="text-muted-foreground text-sm">
+                  You're busy doing hair all day. The last thing you want to do is spend your evenings figuring out what to post.
+                </p>
+              </Card>
+            </motion.div>
             
             {/* Internal Problem */}
-            <Card className="p-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-6 h-6 text-destructive" />
-              </div>
-              <h3 className="font-semibold mb-2">Overwhelmed & Frustrated</h3>
-              <p className="text-muted-foreground text-sm">
-                You know you should be posting, but staring at a blank screen feels paralyzing. Other stylists make it look so easy.
-              </p>
-            </Card>
+            <motion.div variants={fadeInUp}>
+              <Card className="p-6 text-center h-full border-destructive/10 hover-elevate">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-destructive/20 to-destructive/5 flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-7 h-7 text-destructive" />
+                </div>
+                <h3 className="font-semibold mb-2 text-lg">Overwhelmed & Frustrated</h3>
+                <p className="text-muted-foreground text-sm">
+                  You know you should be posting, but staring at a blank screen feels paralyzing. Other stylists make it look so easy.
+                </p>
+              </Card>
+            </motion.div>
             
             {/* Philosophical Problem */}
-            <Card className="p-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-                <Target className="w-6 h-6 text-destructive" />
-              </div>
-              <h3 className="font-semibold mb-2">Missing Opportunities</h3>
-              <p className="text-muted-foreground text-sm">
-                Your talent deserves to be seen. But inconsistent posting means potential clients scroll right past you.
-              </p>
-            </Card>
-          </div>
+            <motion.div variants={fadeInUp}>
+              <Card className="p-6 text-center h-full border-destructive/10 hover-elevate">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-destructive/20 to-destructive/5 flex items-center justify-center mx-auto mb-4">
+                  <Target className="w-7 h-7 text-destructive" />
+                </div>
+                <h3 className="font-semibold mb-2 text-lg">Missing Opportunities</h3>
+                <p className="text-muted-foreground text-sm">
+                  Your talent deserves to be seen. But inconsistent posting means potential clients scroll right past you.
+                </p>
+              </Card>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
       {/* The Guide Section - Empathy + Authority */}
-      <section className="py-16 sm:py-24">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
+      <section className="py-20 sm:py-28 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/4 translate-x-1/4" />
+        <div className="max-w-5xl mx-auto px-4 relative">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
               <Badge variant="secondary" className="mb-4">
                 <Heart className="w-3 h-3 mr-1" />
                 We Get It
@@ -340,274 +422,435 @@ export default function LandingPage() {
               <p className="text-muted-foreground mb-6">
                 She saw the same problem over and over: incredibly talented stylists who couldn't stay consistent on social media because they didn't know what to post.
               </p>
-              <p className="font-medium">
+              <p className="font-medium text-lg">
                 So she built a solution. A full year of content ideas, made specifically for hair professionals.
               </p>
-              <div className="mt-6">
+              <div className="mt-8">
                 <Link href="/about">
-                  <Button variant="outline" className="gap-2" data-testid="button-meet-ashley">
+                  <Button variant="outline" size="lg" className="gap-2" data-testid="button-meet-ashley">
                     <Instagram className="w-4 h-4" />
                     Meet Ashley
                   </Button>
                 </Link>
               </div>
-            </div>
-            <div className="text-center">
-              <div className="inline-block p-8 bg-primary/5 rounded-2xl">
-                <div className="text-6xl font-bold text-primary mb-2">2,000+</div>
-                <p className="text-muted-foreground">stylists already using this app</p>
-                <div className="flex justify-center gap-1 mt-4">
+            </motion.div>
+            <motion.div 
+              className="text-center"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-block p-10 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-3xl border border-primary/10">
+                <div className="text-6xl sm:text-7xl font-bold bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent mb-2">
+                  <AnimatedCounter value={2000} />+
+                </div>
+                <p className="text-muted-foreground text-lg">stylists already using this app</p>
+                <div className="flex justify-center gap-1 mt-6">
                   {[1,2,3,4,5].map((i) => (
-                    <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
+                    <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
+                <p className="text-sm text-muted-foreground mt-2">Average rating: 4.9/5</p>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* The Plan - 3 Simple Steps */}
-      <section className="py-16 sm:py-24 bg-muted/30">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4">The Plan</Badge>
+      <section className="py-20 sm:py-28 bg-gradient-to-b from-background via-muted/30 to-muted/50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(212,165,116,0.08),transparent_50%)]" />
+        <div className="max-w-6xl mx-auto px-4 relative">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <Badge variant="secondary" className="mb-4 px-4 py-1.5">
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              The Plan
+            </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Here's How It Works
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Getting started takes less than 2 minutes.
             </p>
-          </div>
+          </motion.div>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <motion.div 
+            className="grid md:grid-cols-3 gap-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+          >
             {thePlan.map((item, index) => (
-              <div key={index} className="text-center" data-testid={`plan-step-${index}`}>
-                <div className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+              <motion.div key={index} className="text-center relative" data-testid={`plan-step-${index}`} variants={fadeInUp}>
+                {index < thePlan.length - 1 && (
+                  <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-primary/30 to-primary/10" />
+                )}
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-rose-500 text-primary-foreground flex items-center justify-center mx-auto mb-4 text-2xl font-bold shadow-lg shadow-primary/25">
                   {item.step}
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
                 <p className="text-muted-foreground">{item.description}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
           
-          <div className="text-center mt-12">
+          <motion.div 
+            className="text-center mt-14"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
             <Link href="/onboarding">
-              <Button size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-get-started-plan">
+              <Button size="lg" className="text-lg px-8 py-6 gap-2 shadow-lg shadow-primary/25" data-testid="button-get-started-plan">
                 Start Your Free Trial
                 <ChevronRight className="w-5 h-5" />
               </Button>
             </Link>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* What You Get Section */}
-      <section className="py-16 sm:py-24">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4">What You Get</Badge>
+      <section className="py-20 sm:py-28 relative overflow-hidden">
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl translate-y-1/4 -translate-x-1/4" />
+        <div className="max-w-6xl mx-auto px-4 relative">
+          <motion.div 
+            className="text-center mb-14"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <Badge variant="secondary" className="mb-4 px-4 py-1.5">
+              <Award className="w-3.5 h-3.5 mr-1.5" />
+              What You Get
+            </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Everything You Need to Post Consistently
             </h2>
-          </div>
+          </motion.div>
           
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div 
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+          >
             {whatYouGet.map((feature, index) => (
-              <div key={index} className="flex items-start gap-4 p-4" data-testid={`feature-${index}`}>
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <motion.div 
+                key={index} 
+                className="flex items-start gap-4 p-5 rounded-xl border bg-card/50 hover-elevate" 
+                data-testid={`feature-${index}`}
+                variants={fadeInUp}
+              >
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
                   <feature.icon className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold mb-1">{feature.title}</h3>
                   <p className="text-sm text-muted-foreground">{feature.description}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Failure Section - What's at Stake */}
-      <section className="py-16 sm:py-24 bg-muted/30">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12">
-            <div>
-              <Badge variant="outline" className="mb-4 border-destructive/50 text-destructive">
-                <X className="w-3 h-3 mr-1" />
-                Without a Plan
-              </Badge>
-              <h3 className="text-2xl font-bold mb-4">What Happens If You Do Nothing</h3>
-              <ul className="space-y-3 text-muted-foreground">
-                <li className="flex items-start gap-3">
-                  <X className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-                  Keep attracting budget clients who don't value your work
-                </li>
-                <li className="flex items-start gap-3">
-                  <X className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-                  Stay invisible while other stylists get all the recognition
-                </li>
-                <li className="flex items-start gap-3">
-                  <X className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-                  Watch your following stay flat month after month
-                </li>
-                <li className="flex items-start gap-3">
-                  <X className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-                  Wonder why you're not getting the clients you deserve
-                </li>
-              </ul>
-            </div>
-            <div>
-              <Badge variant="secondary" className="mb-4">
-                <Check className="w-3 h-3 mr-1" />
-                With Content Calendar
-              </Badge>
-              <h3 className="text-2xl font-bold mb-4">What Your Life Looks Like</h3>
-              <ul className="space-y-3 text-muted-foreground">
-                <li className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                  Attract premium clients who happily pay your prices
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                  Grow a following that sees you as THE expert
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                  Get recognized as the go-to stylist in your area
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                  Have brands and clients reaching out to YOU
-                </li>
-              </ul>
-            </div>
+      <section className="py-20 sm:py-28 bg-gradient-to-b from-muted/50 to-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(212,165,116,0.05),transparent_50%)]" />
+        <div className="max-w-5xl mx-auto px-4 relative">
+          <div className="grid md:grid-cols-2 gap-8">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="p-8 h-full border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent">
+                <Badge variant="outline" className="mb-4 border-destructive/50 text-destructive">
+                  <X className="w-3 h-3 mr-1" />
+                  Without a Plan
+                </Badge>
+                <h3 className="text-2xl font-bold mb-6">What Happens If You Do Nothing</h3>
+                <ul className="space-y-4 text-muted-foreground">
+                  <li className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <X className="w-4 h-4 text-destructive" />
+                    </div>
+                    Keep attracting budget clients who don't value your work
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <X className="w-4 h-4 text-destructive" />
+                    </div>
+                    Stay invisible while other stylists get all the recognition
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <X className="w-4 h-4 text-destructive" />
+                    </div>
+                    Watch your following stay flat month after month
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <X className="w-4 h-4 text-destructive" />
+                    </div>
+                    Wonder why you're not getting the clients you deserve
+                  </li>
+                </ul>
+              </Card>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="p-8 h-full border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
+                <Badge variant="secondary" className="mb-4 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0">
+                  <Check className="w-3 h-3 mr-1" />
+                  With Content Calendar
+                </Badge>
+                <h3 className="text-2xl font-bold mb-6">What Your Life Looks Like</h3>
+                <ul className="space-y-4 text-muted-foreground">
+                  <li className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    Attract premium clients who happily pay your prices
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    Grow a following that sees you as THE expert
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    Get recognized as the go-to stylist in your area
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    Have brands and clients reaching out to YOU
+                  </li>
+                </ul>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* Success - Testimonials with Transformation */}
-      <section className="py-16 sm:py-24">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4">Real Results</Badge>
+      <section className="py-20 sm:py-28 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="max-w-6xl mx-auto px-4 relative">
+          <motion.div 
+            className="text-center mb-14"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <Badge variant="secondary" className="mb-4 px-4 py-1.5">
+              <Star className="w-3.5 h-3.5 mr-1.5 fill-amber-400 text-amber-400" />
+              Real Results
+            </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Stylists Who Transformed Their Content
             </h2>
             <p className="text-lg text-muted-foreground">
               Here's what happened when they started using the app.
             </p>
-          </div>
+          </motion.div>
           
-          <div className="grid sm:grid-cols-2 gap-6">
+          <motion.div 
+            className="grid sm:grid-cols-2 gap-6"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+          >
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-6" data-testid={`testimonial-card-${index}`}>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold flex-shrink-0">
-                    {testimonial.avatar}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-1 mb-3">
-                      {Array.from({ length: testimonial.rating }).map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                      ))}
+              <motion.div key={index} variants={fadeInUp}>
+                <Card className="p-6 h-full hover-elevate" data-testid={`testimonial-card-${index}`}>
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary font-semibold flex-shrink-0 text-lg">
+                      {testimonial.avatar}
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      <span className="font-medium text-destructive">Before:</span> {testimonial.problem}
-                    </p>
-                    <p className="text-sm mb-4">
-                      <span className="font-medium text-emerald-600">After:</span> {testimonial.transformation}
-                    </p>
-                    <div>
-                      <div className="font-semibold text-sm">{testimonial.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {testimonial.role} - {testimonial.location}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1 mb-3">
+                        {Array.from({ length: testimonial.rating }).map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        <span className="font-medium text-destructive">Before:</span> {testimonial.problem}
+                      </p>
+                      <p className="text-sm mb-4">
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400">After:</span> {testimonial.transformation}
+                      </p>
+                      <div className="pt-3 border-t">
+                        <div className="font-semibold text-sm">{testimonial.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {testimonial.role} - {testimonial.location}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Pricing - Simple and Clear */}
-      <section className="py-16 sm:py-24 bg-muted/30">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4">Pricing</Badge>
+      <section className="py-20 sm:py-28 bg-gradient-to-b from-muted/50 via-muted/30 to-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(212,165,116,0.1),transparent_50%)]" />
+        <div className="max-w-4xl mx-auto px-4 relative">
+          <motion.div 
+            className="text-center mb-14"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <Badge variant="secondary" className="mb-4 px-4 py-1.5">
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              Pricing
+            </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Less Than a Coffee a Week
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Try free for 7 days. Then just $9.99/month for unlimited access.
             </p>
-          </div>
+          </motion.div>
           
-          <Card className="p-8 max-w-xl mx-auto border-primary relative">
-            <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">7-Day Free Trial</Badge>
-            <div className="text-center mb-6">
-              <div className="text-5xl font-bold mb-2">$9.99<span className="text-xl font-normal text-muted-foreground">/mo</span></div>
-              <p className="text-muted-foreground">After your free trial</p>
-            </div>
-            <ul className="space-y-3 mb-8">
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-emerald-500" />
-                365 days of post ideas for hair pros
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-emerald-500" />
-                Personalized hashtags for your city
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-emerald-500" />
-                Trend alerts for viral opportunities
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-emerald-500" />
-                AI caption generation
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-emerald-500" />
-                Daily reminders to keep you consistent
-              </li>
-              <li className="flex items-center gap-3">
-                <Gift className="w-5 h-5 text-primary" />
-                <span className="text-primary font-medium">Earn 50% off by posting 7 days straight!</span>
-              </li>
-            </ul>
-            <Link href="/onboarding">
-              <Button size="lg" className="w-full text-lg py-6" data-testid="button-pricing-start">
-                Start Your Free 7-Day Trial
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <Card className="p-10 max-w-xl mx-auto border-primary/50 relative bg-gradient-to-br from-card via-card to-primary/5 shadow-xl shadow-primary/10">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <Badge className="px-4 py-1.5 shadow-lg">
+                  <Flame className="w-3.5 h-3.5 mr-1.5" />
+                  7-Day Free Trial
+                </Badge>
+              </div>
+              <div className="text-center mb-8 pt-4">
+                <div className="text-6xl font-bold mb-2 bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent">
+                  $9.99<span className="text-2xl font-normal text-muted-foreground">/mo</span>
+                </div>
+                <p className="text-muted-foreground">After your free trial</p>
+              </div>
+              <ul className="space-y-4 mb-10">
+                <li className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  365 days of post ideas for hair pros
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  Personalized hashtags for your city
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  Trend alerts for viral opportunities
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  AI caption generation
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  Daily reminders to keep you consistent
+                </li>
+                <li className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
+                  <Gift className="w-5 h-5 text-primary flex-shrink-0" />
+                  <span className="text-primary font-medium">Earn 50% off by posting 7 days straight!</span>
+                </li>
+              </ul>
+              <Link href="/onboarding">
+                <Button size="lg" className="w-full text-lg py-6 shadow-lg shadow-primary/25" data-testid="button-pricing-start">
+                  Start Your Free 7-Day Trial
+                  <ChevronRight className="w-5 h-5 ml-1" />
+                </Button>
+              </Link>
+              <p className="text-center text-sm text-muted-foreground mt-4">
+                No credit card required. Cancel anytime.
+              </p>
+            </Card>
+          </motion.div>
+          
+          <motion.div 
+            className="text-center mt-10"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <Link href="/salon-pricing">
+              <Button variant="ghost" size="lg" className="gap-2">
+                <Users className="w-4 h-4" />
+                Salon owner? Get team pricing
+                <ChevronRight className="w-4 h-4" />
               </Button>
             </Link>
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              No credit card required. Cancel anytime.
-            </p>
-          </Card>
-          
-          <div className="text-center mt-8">
-            <Link href="/salon-pricing" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
-              <Users className="w-4 h-4 inline mr-1" />
-              Salon owner? Get team pricing
-            </Link>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 sm:py-24">
-        <div className="max-w-3xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4">Questions?</Badge>
+      <section className="py-20 sm:py-28 relative overflow-hidden">
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl translate-y-1/4 translate-x-1/4" />
+        <div className="max-w-3xl mx-auto px-4 relative">
+          <motion.div 
+            className="text-center mb-14"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <Badge variant="secondary" className="mb-4 px-4 py-1.5">Questions?</Badge>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               We've Got Answers
             </h2>
-          </div>
+          </motion.div>
           
-          <div className="space-y-4">
+          <motion.div 
+            className="space-y-4"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+          >
             {[
               {
                 q: "What if I'm not good at social media?",
@@ -650,45 +893,57 @@ export default function LandingPage() {
                 a: "Yes! The salon owner dashboard shows you each stylist's activity, their current streak, and their posting history. You can invite new team members with a simple link and remove access anytime."
               },
             ].map((faq, index) => (
-              <Card key={index} className="p-6" data-testid={`faq-card-${index}`}>
-                <h3 className="font-semibold mb-2">{faq.q}</h3>
-                <p className="text-muted-foreground">
-                  {faq.a}
-                  {faq.link && (
-                    <>
-                      {" "}
-                      <Link href={faq.link} className="text-primary hover:underline font-medium">
-                        {faq.linkText}
-                      </Link>
-                    </>
-                  )}
-                </p>
-              </Card>
+              <motion.div key={index} variants={fadeInUp}>
+                <Card className="p-6 hover-elevate" data-testid={`faq-card-${index}`}>
+                  <h3 className="font-semibold mb-2">{faq.q}</h3>
+                  <p className="text-muted-foreground">
+                    {faq.a}
+                    {faq.link && (
+                      <>
+                        {" "}
+                        <Link href={faq.link} className="text-primary hover:underline font-medium">
+                          {faq.linkText}
+                        </Link>
+                      </>
+                    )}
+                  </p>
+                </Card>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Final CTA - Direct Call to Action */}
-      <section className="py-16 sm:py-24 bg-gradient-to-r from-primary to-rose-600 text-primary-foreground">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Ready to Attract Premium Clients?
-          </h2>
-          <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-            Grow your following. Get recognized in your industry. Become the stylist everyone wants to book. It starts with showing up consistently.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/onboarding">
-              <Button variant="secondary" size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-final-cta">
-                Start Your Free Trial
-                <ChevronRight className="w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
-          <p className="text-sm opacity-70 mt-4">
-            No credit card required. Takes 60 seconds.
-          </p>
+      <section className="py-20 sm:py-28 bg-gradient-to-br from-primary via-rose-500 to-primary text-primary-foreground relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
+        <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl translate-y-1/2 translate-x-1/2" />
+        <div className="max-w-4xl mx-auto px-4 text-center relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
+              Ready to Attract Premium Clients?
+            </h2>
+            <p className="text-lg sm:text-xl opacity-90 mb-10 max-w-2xl mx-auto">
+              Grow your following. Get recognized in your industry. Become the stylist everyone wants to book. It starts with showing up consistently.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/onboarding">
+                <Button variant="secondary" size="lg" className="text-lg px-10 py-7 gap-2 shadow-xl" data-testid="button-final-cta">
+                  Start Your Free Trial
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+              </Link>
+            </div>
+            <p className="text-sm opacity-70 mt-6">
+              No credit card required. Takes 60 seconds.
+            </p>
+          </motion.div>
         </div>
       </section>
 
