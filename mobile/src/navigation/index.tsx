@@ -17,12 +17,14 @@ import SettingsScreen from '../screens/SettingsScreen';
 import PostDetailScreen from '../screens/PostDetailScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
+import HelpScreen from '../screens/HelpScreen';
 
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
   Onboarding: undefined;
   PostDetail: { postId: number };
+  Help: undefined;
 };
 
 export type AuthStackParamList = {
@@ -148,6 +150,11 @@ export default function Navigation() {
               name="PostDetail" 
               component={PostDetailScreen}
               options={{ headerShown: true, title: 'Post Details' }}
+            />
+            <Stack.Screen 
+              name="Help" 
+              component={HelpScreen}
+              options={{ headerShown: true, title: 'Help & Support' }}
             />
           </>
         ) : (

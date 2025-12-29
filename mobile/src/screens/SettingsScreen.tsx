@@ -13,9 +13,12 @@ import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../hooks/useAuth';
 import { stripeApi, profileApi } from '../services/api';
 import { colors, borderRadius, shadows, spacing, glassCard } from '../theme';
+import { RootStackParamList } from '../navigation';
 
 const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://content-calendar-hair-pro.replit.app';
 
@@ -30,6 +33,7 @@ interface Profile {
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const queryClient = useQueryClient();
   const [showStreaks, setShowStreaks] = useState(true);
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(false);
@@ -185,7 +189,7 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>SUPPORT</Text>
         <View style={styles.card}>
-          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={() => openLink(`${API_URL}/help`)}>
+          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={() => navigation.navigate('Help')}>
             <Ionicons name="help-circle-outline" size={22} color={colors.text} />
             <Text style={styles.menuText}>Help & Support</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
