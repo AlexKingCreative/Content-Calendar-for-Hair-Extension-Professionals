@@ -59,6 +59,32 @@ export class StripeService {
     return result.rows[0] || null;
   }
 
+  async getAllSubscriptionPrices() {
+    const result = await db.execute(
+      sql`SELECT p.*, pr.id as price_id, pr.unit_amount, pr.currency, pr.recurring
+          FROM stripe.products p
+          JOIN stripe.prices pr ON pr.product = p.id
+          WHERE p.active = true AND pr.active = true
+          AND p.metadata->>'type' = 'subscription'
+          ORDER BY pr.unit_amount ASC`
+    );
+    return result.rows || [];
+  }
+
+  async getSubscriptionPriceByInterval(interval: 'month' | 'year') {
+    const result = await db.execute(
+      sql`SELECT p.*, pr.id as price_id, pr.unit_amount, pr.currency, pr.recurring
+          FROM stripe.products p
+          JOIN stripe.prices pr ON pr.product = p.id
+          WHERE p.active = true AND pr.active = true
+          AND p.metadata->>'type' = 'subscription'
+          AND pr.recurring->>'interval' = ${interval}
+          ORDER BY pr.unit_amount ASC
+          LIMIT 1`
+    );
+    return result.rows[0] || null;
+  }
+
   async getSubscription(subscriptionId: string) {
     const result = await db.execute(
       sql`SELECT * FROM stripe.subscriptions WHERE id = ${subscriptionId}`

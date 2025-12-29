@@ -1185,6 +1185,22 @@ Respond in JSON format with these fields:
     }
   });
 
+  app.get("/api/billing/subscription-prices", async (req, res) => {
+    try {
+      const prices = await stripeService.getAllSubscriptionPrices();
+      const formattedPrices = prices.map((p: any) => ({
+        price_id: p.price_id,
+        unit_amount: p.unit_amount,
+        currency: p.currency,
+        interval: p.recurring?.interval || 'month',
+      }));
+      res.json(formattedPrices);
+    } catch (error) {
+      console.error("Error getting subscription prices:", error);
+      res.status(500).json({ error: "Failed to get subscription prices" });
+    }
+  });
+
   app.get("/api/billing/access-status", isAuthenticated, async (req: any, res) => {
     try {
       const userId = getUserId(req);
@@ -1233,7 +1249,7 @@ Respond in JSON format with these fields:
   app.post("/api/billing/checkout", isAuthenticated, async (req: any, res) => {
     try {
       const userId = getUserId(req);
-      const { withTrial } = req.body;
+      const { withTrial, interval = 'month' } = req.body;
       
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
@@ -1254,9 +1270,15 @@ Respond in JSON format with these fields:
         customerId = customer.id;
       }
 
-      const priceInfo = await stripeService.getActiveSubscriptionPrice();
+      // Get price based on interval (month or year)
+      const validInterval = interval === 'year' ? 'year' : 'month';
+      let priceInfo = await stripeService.getSubscriptionPriceByInterval(validInterval);
       if (!priceInfo?.price_id) {
-        return res.status(500).json({ error: "No subscription product available" });
+        // Fallback to any active price
+        priceInfo = await stripeService.getActiveSubscriptionPrice();
+        if (!priceInfo?.price_id) {
+          return res.status(500).json({ error: "No subscription product available" });
+        }
       }
 
       const baseUrl = `${req.protocol}://${req.get("host")}`;

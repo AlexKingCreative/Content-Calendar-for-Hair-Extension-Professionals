@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -57,12 +58,27 @@ export default function Subscribe() {
     enabled: !!user,
   });
 
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+
+  const { data: allPrices } = useQuery<Array<{
+    price_id: string;
+    unit_amount: number;
+    currency: string;
+    interval: string;
+  }>>({
+    queryKey: ["/api/billing/subscription-prices"],
+  });
+
   const { data: priceInfo, isLoading: priceLoading } = useQuery<{
     unit_amount?: number;
     price_id?: string;
   } | null>({
     queryKey: ["/api/billing/subscription-price"],
   });
+
+  const monthlyPrice = allPrices?.find(p => p.interval === 'month');
+  const yearlyPrice = allPrices?.find(p => p.interval === 'year');
+  const hasYearlyOption = !!yearlyPrice;
 
   const { data: accessStatus } = useQuery<{
     hasAccess?: boolean;
@@ -74,8 +90,8 @@ export default function Subscribe() {
   });
 
   const checkoutMutation = useMutation({
-    mutationFn: async (trial: boolean) => {
-      const res = await apiRequest("POST", "/api/billing/checkout", { withTrial: trial });
+    mutationFn: async ({ trial, interval }: { trial: boolean; interval: 'month' | 'year' }) => {
+      const res = await apiRequest("POST", "/api/billing/checkout", { withTrial: trial, interval });
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.error || "Failed to start checkout");
@@ -154,10 +170,15 @@ export default function Subscribe() {
       setLocation("/login");
       return;
     }
-    checkoutMutation.mutate(trial);
+    checkoutMutation.mutate({ trial, interval: billingInterval });
   };
 
   const price = priceInfo?.unit_amount ? (priceInfo.unit_amount / 100).toFixed(0) : "10";
+  const monthlyPriceDisplay = monthlyPrice ? (monthlyPrice.unit_amount / 100).toFixed(0) : "10";
+  const yearlyPriceDisplay = yearlyPrice ? (yearlyPrice.unit_amount / 100).toFixed(0) : "60";
+  const yearlySavings = monthlyPrice && yearlyPrice 
+    ? Math.round((1 - yearlyPrice.unit_amount / (monthlyPrice.unit_amount * 12)) * 100) 
+    : 50;
   
   const daysRemaining = accessStatus?.freeAccessEndsAt 
     ? Math.max(0, Math.ceil((new Date(accessStatus.freeAccessEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
@@ -244,30 +265,79 @@ export default function Subscribe() {
           </Card>
         )}
 
+        {hasYearlyOption && (
+          <div className="flex items-center justify-center gap-4 p-1 bg-muted rounded-lg w-fit mx-auto">
+            <button
+              onClick={() => setBillingInterval('month')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                billingInterval === 'month' 
+                  ? 'bg-background shadow-sm' 
+                  : 'text-muted-foreground hover-elevate'
+              }`}
+              data-testid="button-billing-monthly"
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingInterval('year')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                billingInterval === 'year' 
+                  ? 'bg-background shadow-sm' 
+                  : 'text-muted-foreground hover-elevate'
+              }`}
+              data-testid="button-billing-yearly"
+            >
+              Yearly
+              <Badge variant="secondary" className="text-xs">Save {yearlySavings}%</Badge>
+            </button>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="relative overflow-visible">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span className="text-2xl font-heading">Pro Monthly</span>
+                <span className="text-2xl font-heading">
+                  {billingInterval === 'year' ? 'Pro Annual' : 'Pro Monthly'}
+                </span>
+                {billingInterval === 'year' && (
+                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                    Best Value
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-baseline gap-1">
-                {hasCoupon ? (
+                {billingInterval === 'year' ? (
                   <>
-                    <span className="text-3xl line-through text-muted-foreground">${price}</span>
-                    <span className="text-5xl font-bold text-green-600">${(parseInt(price) / 2).toFixed(0)}</span>
+                    <span className="text-5xl font-bold">${yearlyPriceDisplay}</span>
+                    <span className="text-muted-foreground">/year</span>
+                    <span className="text-sm text-muted-foreground ml-2">
+                      (${(parseInt(yearlyPriceDisplay) / 12).toFixed(0)}/mo)
+                    </span>
+                  </>
+                ) : hasCoupon ? (
+                  <>
+                    <span className="text-3xl line-through text-muted-foreground">${monthlyPriceDisplay}</span>
+                    <span className="text-5xl font-bold text-green-600">${(parseInt(monthlyPriceDisplay) / 2).toFixed(0)}</span>
                     <span className="text-muted-foreground">/first month</span>
                   </>
                 ) : (
                   <>
-                    <span className="text-5xl font-bold">${price}</span>
+                    <span className="text-5xl font-bold">${monthlyPriceDisplay}</span>
                     <span className="text-muted-foreground">/month</span>
                   </>
                 )}
               </div>
 
-              {hasCoupon && (
+              {billingInterval === 'year' && (
+                <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                  Save ${parseInt(monthlyPriceDisplay) * 12 - parseInt(yearlyPriceDisplay)} compared to monthly
+                </Badge>
+              )}
+
+              {billingInterval === 'month' && hasCoupon && (
                 <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                   <Percent className="w-3 h-3 mr-1" />
                   50% off first month applied
@@ -288,7 +358,7 @@ export default function Subscribe() {
               <Separator />
 
               <div className="space-y-3">
-                {hasCoupon ? (
+                {billingInterval === 'month' && hasCoupon ? (
                   <Button
                     className="w-full bg-green-600 hover:bg-green-700"
                     size="lg"
@@ -297,7 +367,7 @@ export default function Subscribe() {
                     data-testid="button-subscribe-with-reward"
                   >
                     <Percent className="w-4 h-4 mr-2" />
-                    {checkoutWithRewardMutation.isPending ? "Redirecting..." : `Subscribe - $${(parseInt(price) / 2).toFixed(0)} First Month`}
+                    {checkoutWithRewardMutation.isPending ? "Redirecting..." : `Subscribe - $${(parseInt(monthlyPriceDisplay) / 2).toFixed(0)} First Month`}
                   </Button>
                 ) : (
                   <Button
@@ -307,22 +377,28 @@ export default function Subscribe() {
                     disabled={isLoading || priceLoading || userLoading}
                     data-testid="button-subscribe-now"
                   >
-                    {checkoutMutation.isPending ? "Redirecting to checkout..." : userLoading ? "Loading..." : "Subscribe Now"}
+                    {checkoutMutation.isPending ? "Redirecting to checkout..." : userLoading ? "Loading..." : 
+                      billingInterval === 'year' ? `Subscribe - $${yearlyPriceDisplay}/year` : "Subscribe Now"}
                   </Button>
                 )}
 
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  size="lg"
-                  onClick={() => handleSubscribe(true)}
-                  disabled={isLoading || priceLoading || userLoading}
-                  data-testid="button-start-trial"
-                >
-                  {checkoutMutation.isPending ? "Redirecting..." : "Start 7-Day Free Trial"}
-                </Button>
+                {billingInterval === 'month' && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                    onClick={() => handleSubscribe(true)}
+                    disabled={isLoading || priceLoading || userLoading}
+                    data-testid="button-start-trial"
+                  >
+                    {checkoutMutation.isPending ? "Redirecting..." : "Start 7-Day Free Trial"}
+                  </Button>
+                )}
                 <p className="text-xs text-center text-muted-foreground">
-                  Try free for 7 days, then ${price}/month. Cancel anytime.
+                  {billingInterval === 'year' 
+                    ? `Billed annually at $${yearlyPriceDisplay}. Cancel anytime.`
+                    : `Try free for 7 days, then $${monthlyPriceDisplay}/month. Cancel anytime.`
+                  }
                 </p>
               </div>
             </CardContent>
