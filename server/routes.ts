@@ -217,10 +217,19 @@ export async function registerRoutes(
         
         user = newUser;
         
-        // Send welcome email with credentials (async, don't block)
-        sendWelcomeEmail(email, generatedPassword).catch(err => {
-          console.error("Failed to send welcome email:", err);
-        });
+        // Send welcome email with credentials
+        console.log("Sending welcome email to:", email);
+        sendWelcomeEmail(email, generatedPassword)
+          .then(success => {
+            if (success) {
+              console.log("Welcome email sent successfully to:", email);
+            } else {
+              console.error("Welcome email failed to send to:", email);
+            }
+          })
+          .catch(err => {
+            console.error("Failed to send welcome email:", err);
+          });
       }
 
       // Create or update user profile with onboarding data
