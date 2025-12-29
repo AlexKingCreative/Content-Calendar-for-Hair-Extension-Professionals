@@ -480,7 +480,8 @@ const CERTIFIED_BRANDS = [
   "DreamCatchers",
   "Habit Hand Tied",
   "Invisible Bead",
-  "Other",
+  "Halocouture",
+  "Locks & Bonds",
 ];
 
 const EXTENSION_METHODS = [
@@ -500,7 +501,8 @@ type OnboardingData = {
   experience: string;
   goals: string[];
   instagram: string;
-  brands: string[];
+  selectedBrand: string;
+  customBrand: string;
   methods: string[];
 };
 
@@ -515,9 +517,11 @@ export default function OnboardingScreen() {
     experience: '',
     goals: [],
     instagram: '',
-    brands: [],
+    selectedBrand: '',
+    customBrand: '',
     methods: [],
   });
+  const [showBrandPicker, setShowBrandPicker] = useState(false);
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   const hasExtensions = data.services.includes('extensions');
@@ -550,13 +554,13 @@ export default function OnboardingScreen() {
     }));
   };
 
-  const toggleBrand = (brand: string) => {
+  const selectBrand = (brand: string) => {
     setData(prev => ({
       ...prev,
-      brands: prev.brands.includes(brand)
-        ? prev.brands.filter(b => b !== brand)
-        : [...prev.brands, brand],
+      selectedBrand: brand,
+      customBrand: brand === 'Other' ? prev.customBrand : '',
     }));
+    setShowBrandPicker(false);
   };
 
   const toggleMethod = (method: string) => {
@@ -610,7 +614,8 @@ export default function OnboardingScreen() {
       case 0:
         return data.services.length > 0;
       case 'brands':
-        return data.brands.length > 0 && data.methods.length > 0;
+        const hasBrand = data.selectedBrand !== '' && (data.selectedBrand !== 'Other' || data.customBrand.trim().length > 0);
+        return hasBrand && data.methods.length > 0;
       case 1:
         return data.location.trim().length > 0;
       case 2:
@@ -674,34 +679,85 @@ export default function OnboardingScreen() {
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>Extension Expertise</Text>
             <Text style={styles.stepSubtitle}>
-              Select your certified brands and methods
+              Select your certified brand and methods
             </Text>
             
-            <Text style={styles.sectionLabel}>Certified Brands</Text>
-            <View style={styles.brandGrid}>
-              {CERTIFIED_BRANDS.map((brand) => (
-                <TouchableOpacity
-                  key={brand}
-                  style={[
-                    styles.brandChip,
-                    data.brands.includes(brand) && styles.brandChipSelected,
-                  ]}
-                  onPress={() => toggleBrand(brand)}
-                >
-                  <Text
-                    style={[
-                      styles.brandChipText,
-                      data.brands.includes(brand) && styles.brandChipTextSelected,
-                    ]}
-                  >
-                    {brand}
-                  </Text>
-                  {data.brands.includes(brand) && (
-                    <Ionicons name="checkmark" size={14} color="#FFFFFF" style={{ marginLeft: 4 }} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
+            <Text style={styles.sectionLabel}>Certified Brand</Text>
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => setShowBrandPicker(true)}
+            >
+              <Text style={data.selectedBrand ? styles.dropdownButtonText : styles.dropdownPlaceholder}>
+                {data.selectedBrand || 'Select your certified brand'}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color="#A89580" />
+            </TouchableOpacity>
+            
+            {showBrandPicker && (
+              <View style={styles.pickerOverlay}>
+                <View style={styles.pickerContainer}>
+                  <View style={styles.pickerHeader}>
+                    <Text style={styles.pickerTitle}>Select Brand</Text>
+                    <TouchableOpacity onPress={() => setShowBrandPicker(false)}>
+                      <Ionicons name="close" size={24} color="#1A1A1A" />
+                    </TouchableOpacity>
+                  </View>
+                  <ScrollView style={styles.pickerList}>
+                    {CERTIFIED_BRANDS.map((brand) => (
+                      <TouchableOpacity
+                        key={brand}
+                        style={[
+                          styles.pickerItem,
+                          data.selectedBrand === brand && styles.pickerItemSelected,
+                        ]}
+                        onPress={() => selectBrand(brand)}
+                      >
+                        <Text style={[
+                          styles.pickerItemText,
+                          data.selectedBrand === brand && styles.pickerItemTextSelected,
+                        ]}>
+                          {brand}
+                        </Text>
+                        {data.selectedBrand === brand && (
+                          <Ionicons name="checkmark" size={20} color="#D4A574" />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                    <TouchableOpacity
+                      style={[
+                        styles.pickerItem,
+                        data.selectedBrand === 'Other' && styles.pickerItemSelected,
+                      ]}
+                      onPress={() => selectBrand('Other')}
+                    >
+                      <Text style={[
+                        styles.pickerItemText,
+                        data.selectedBrand === 'Other' && styles.pickerItemTextSelected,
+                      ]}>
+                        Other
+                      </Text>
+                      {data.selectedBrand === 'Other' && (
+                        <Ionicons name="checkmark" size={20} color="#D4A574" />
+                      )}
+                    </TouchableOpacity>
+                  </ScrollView>
+                </View>
+              </View>
+            )}
+            
+            {data.selectedBrand === 'Other' && (
+              <View style={styles.customBrandContainer}>
+                <Text style={styles.customBrandLabel}>Enter your brand name</Text>
+                <TextInput
+                  style={styles.customBrandInput}
+                  placeholder="e.g., Custom Brand Co."
+                  placeholderTextColor="#A89580"
+                  value={data.customBrand}
+                  onChangeText={(text) => setData(prev => ({ ...prev, customBrand: text }))}
+                />
+                <Text style={styles.customBrandHint}>This will be saved to your profile only</Text>
+              </View>
+            )}
 
             <Text style={[styles.sectionLabel, { marginTop: 20 }]}>Extension Methods</Text>
             <View style={styles.brandGrid}>
@@ -1196,5 +1252,104 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 17,
     fontWeight: '600',
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: '#E5D5C5',
+    marginBottom: 12,
+  },
+  dropdownButtonText: {
+    fontSize: 16,
+    color: '#5D4E3C',
+  },
+  dropdownPlaceholder: {
+    fontSize: 16,
+    color: '#A89580',
+  },
+  pickerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  pickerContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: width - 48,
+    maxHeight: height * 0.6,
+    overflow: 'hidden',
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5D5C5',
+  },
+  pickerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#5D4E3C',
+  },
+  pickerList: {
+    maxHeight: height * 0.5,
+  },
+  pickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F0EB',
+  },
+  pickerItemSelected: {
+    backgroundColor: '#FFF8F0',
+  },
+  pickerItemText: {
+    fontSize: 16,
+    color: '#5D4E3C',
+  },
+  pickerItemTextSelected: {
+    color: '#D4A574',
+    fontWeight: '600',
+  },
+  customBrandContainer: {
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  customBrandLabel: {
+    fontSize: 14,
+    color: '#8B7355',
+    marginBottom: 8,
+  },
+  customBrandInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#5D4E3C',
+    borderWidth: 1,
+    borderColor: '#E5D5C5',
+  },
+  customBrandHint: {
+    fontSize: 12,
+    color: '#A89580',
+    marginTop: 6,
+    fontStyle: 'italic',
   },
 });

@@ -7,6 +7,7 @@ import ashleyDianaImg from "@assets/IMG_8599_3_1766974570149.JPG";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -79,7 +80,8 @@ export default function OnboardingPage() {
   const [instagram, setInstagram] = useState("");
   const [experience, setExperience] = useState("");
   const [goals, setGoals] = useState<string[]>([]);
-  const [brands, setBrands] = useState<string[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [customBrand, setCustomBrand] = useState<string>("");
   const [methods, setMethods] = useState<string[]>([]);
   const [accountType, setAccountType] = useState<string>("");
   const [isSalonOwner, setIsSalonOwner] = useState<boolean | null>(null);
@@ -113,7 +115,8 @@ export default function OnboardingPage() {
         if (data.instagram) setInstagram(data.instagram);
         if (data.experience) setExperience(data.experience);
         if (data.goals?.length) setGoals(data.goals);
-        if (data.brands?.length) setBrands(data.brands);
+        if (data.selectedBrand) setSelectedBrand(data.selectedBrand);
+        if (data.customBrand) setCustomBrand(data.customBrand);
         if (data.methods?.length) setMethods(data.methods);
         if (data.accountType) setAccountType(data.accountType);
         if (data.isSalonOwner !== undefined) setIsSalonOwner(data.isSalonOwner);
@@ -148,7 +151,8 @@ export default function OnboardingPage() {
         contentGoals: goals,
         offeredServices: postingServices,
         postingServices: postingServices,
-        certifiedBrands: hasExtensions ? brands : [],
+        certifiedBrands: hasExtensions && selectedBrand && selectedBrand !== "Other" ? [selectedBrand] : [],
+        customBrand: hasExtensions && selectedBrand === "Other" ? customBrand : null,
         extensionMethods: hasExtensions ? methods : [],
       });
     },
@@ -181,7 +185,8 @@ export default function OnboardingPage() {
         contentGoals: goals,
         offeredServices: postingServices,
         postingServices: postingServices,
-        certifiedBrands: hasExtensions ? brands : [],
+        certifiedBrands: hasExtensions && selectedBrand && selectedBrand !== "Other" ? [selectedBrand] : [],
+        customBrand: hasExtensions && selectedBrand === "Other" ? customBrand : null,
         extensionMethods: hasExtensions ? methods : [],
       });
     },
@@ -226,12 +231,6 @@ export default function OnboardingPage() {
     );
   };
 
-  const toggleBrand = (brand: string) => {
-    setBrands(prev => 
-      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
-    );
-  };
-
   const toggleMethod = (method: string) => {
     setMethods(prev => 
       prev.includes(method) ? prev.filter(m => m !== method) : [...prev, method]
@@ -267,7 +266,8 @@ export default function OnboardingPage() {
       case "salonOwner":
         return isSalonOwner !== null;
       case "brands":
-        return brands.length > 0 && methods.length > 0;
+        const hasBrand = selectedBrand !== "" && (selectedBrand !== "Other" || customBrand.trim().length > 0);
+        return hasBrand && methods.length > 0;
       case 2:
         return city.trim().length > 0;
       case 3:
@@ -532,30 +532,39 @@ export default function OnboardingPage() {
             <div className="space-y-3">
               <h4 className="font-medium text-sm flex items-center gap-2">
                 <Award className="w-4 h-4 text-primary" />
-                Certified Brands
+                Certified Brand
               </h4>
-              <div className="grid grid-cols-2 gap-2">
-                {certifiedBrands.map((brand) => {
-                  const isSelected = brands.includes(brand);
-                  return (
-                    <button
-                      key={brand}
-                      onClick={() => toggleBrand(brand)}
-                      className={`p-3 rounded-md border-2 text-sm text-left transition-all ${
-                        isSelected 
-                          ? 'border-primary bg-primary/5 text-primary font-medium' 
-                          : 'border-border hover-elevate'
-                      }`}
-                      data-testid={`button-brand-${brand.toLowerCase().replace(/\s+/g, '-')}`}
-                    >
+              <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                <SelectTrigger className="w-full" data-testid="select-brand">
+                  <SelectValue placeholder="Select your certified brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {certifiedBrands.map((brand) => (
+                    <SelectItem key={brand} value={brand} data-testid={`option-brand-${brand.toLowerCase().replace(/\s+/g, '-')}`}>
                       {brand}
-                      {isSelected && (
-                        <Check className="w-3 h-3 inline-block ml-1" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="Other" data-testid="option-brand-other">
+                    Other
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {selectedBrand === "Other" && (
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground">Enter your brand name</label>
+                  <Input
+                    placeholder="e.g., Custom Brand Co."
+                    value={customBrand}
+                    onChange={(e) => setCustomBrand(e.target.value)}
+                    data-testid="input-custom-brand"
+                    className="text-base"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This will be saved to your profile only
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-3">
