@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, MapPin, Award, Scissors, ChevronRight, ChevronLeft, Check, X, Briefcase, MessageSquare } from "lucide-react";
+import { Sparkles, MapPin, Award, Scissors, ChevronRight, ChevronLeft, Check, X, Briefcase, MessageSquare, Mail, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface OptionsData {
   certifiedBrands: string[];
@@ -17,10 +18,18 @@ interface OptionsData {
   serviceCategories: string[];
 }
 
+interface User {
+  id: string;
+  email: string;
+}
+
 export default function OnboardingPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const [email, setEmail] = useState("");
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [city, setCity] = useState("");
   const [offeredServices, setOfferedServices] = useState<string[]>([]);
   const [postingServices, setPostingServices] = useState<string[]>([]);
@@ -28,6 +37,17 @@ export default function OnboardingPage() {
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
   const [brandSearch, setBrandSearch] = useState("");
   const [brandPopoverOpen, setBrandPopoverOpen] = useState(false);
+
+  const { data: user } = useQuery<User | null>({
+    queryKey: ["/api/auth/user"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
+  useEffect(() => {
+    if (user) {
+      setStep(2);
+    }
+  }, [user]);
 
   const { data: options, isLoading: optionsLoading } = useQuery<OptionsData>({
     queryKey: ["/api/options"],
@@ -42,7 +62,39 @@ export default function OnboardingPage() {
                              offeredServices.includes("Topper Services") || 
                              offeredServices.includes("Wig Services");
 
-  const totalSteps = showExtensionSteps ? 5 : 3;
+  const isLoggedIn = !!user;
+  const baseSteps = showExtensionSteps ? 5 : 3;
+  const totalSteps = isLoggedIn ? baseSteps : baseSteps + 1;
+
+  const magicLinkMutation = useMutation({
+    mutationFn: async () => {
+      const onboardingData = {
+        city,
+        offeredServices,
+        postingServices,
+        certifiedBrands: selectedBrands,
+        extensionMethods: selectedMethods,
+      };
+      return apiRequest("POST", "/api/auth/request-magic-link", { 
+        email, 
+        onboardingData 
+      });
+    },
+    onSuccess: () => {
+      setMagicLinkSent(true);
+      toast({
+        title: "Check your email!",
+        description: "We sent you a magic link to sign in.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to send email",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   useEffect(() => {
     const pending = localStorage.getItem("pendingOnboarding");
@@ -168,7 +220,72 @@ export default function OnboardingPage() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {step === 1 && (
+          {step === 1 && !isLoggedIn && (
+            <div className="space-y-4" data-testid="step-email">
+              {!magicLinkSent ? (
+                <>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Mail className="w-5 h-5 text-primary" />
+                    <h3 className="font-heading font-semibold text-lg">Get Started</h3>
+                  </div>
+                  <p className="text-muted-foreground">
+                    Enter your email and we'll send you a magic link to sign in. No password needed!
+                  </p>
+                  <Input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    data-testid="input-email"
+                  />
+                  <Button 
+                    onClick={() => magicLinkMutation.mutate()} 
+                    disabled={!email || magicLinkMutation.isPending}
+                    className="w-full"
+                    data-testid="button-send-magic-link"
+                  >
+                    {magicLinkMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-4 h-4 mr-2" />
+                        Send Magic Link
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Already have an account? <a href="/login" className="text-primary hover:underline">Sign in</a>
+                  </p>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Mail className="w-8 h-8 text-primary" />
+                  </div>
+                  <h3 className="font-heading font-semibold text-lg mb-2">Check your email!</h3>
+                  <p className="text-muted-foreground mb-4">
+                    We sent a magic link to <strong>{email}</strong>
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Click the link in your email to sign in and continue setting up your account.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setMagicLinkSent(false)} 
+                    className="mt-4"
+                    data-testid="button-try-different-email"
+                  >
+                    Use a different email
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {((step === 1 && isLoggedIn) || step === 2) && (
             <div className="space-y-4" data-testid="step-location">
               <div className="flex items-center gap-2 mb-4">
                 <MapPin className="w-5 h-5 text-primary" />
@@ -186,7 +303,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {step === 2 && (
+          {((step === 2 && isLoggedIn) || step === 3) && (
             <div className="space-y-4" data-testid="step-services-offered">
               <div className="flex items-center gap-2 mb-4">
                 <Briefcase className="w-5 h-5 text-primary" />
@@ -219,7 +336,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {step === 3 && (
+          {((step === 3 && isLoggedIn) || step === 4) && (
             <div className="space-y-4" data-testid="step-services-posting">
               <div className="flex items-center gap-2 mb-4">
                 <MessageSquare className="w-5 h-5 text-primary" />
@@ -260,7 +377,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {step === 4 && showExtensionSteps && (
+          {((step === 4 && isLoggedIn) || step === 5) && showExtensionSteps && (
             <div className="space-y-4" data-testid="step-brands">
               <div className="flex items-center gap-2 mb-4">
                 <Award className="w-5 h-5 text-primary" />
@@ -345,7 +462,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {step === 5 && showExtensionSteps && (
+          {((step === 5 && isLoggedIn) || step === 6) && showExtensionSteps && (
             <div className="space-y-4" data-testid="step-methods">
               <div className="flex items-center gap-2 mb-4">
                 <Scissors className="w-5 h-5 text-primary" />
@@ -377,39 +494,41 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          <div className="flex justify-between pt-4">
-            <div>
-              {step > 1 ? (
-                <Button variant="ghost" onClick={handleBack} data-testid="button-back">
-                  <ChevronLeft className="w-4 h-4 mr-1" />
-                  Back
-                </Button>
-              ) : (
-                <Button variant="ghost" onClick={handleSkip} data-testid="button-skip">
-                  Skip for now
-                </Button>
-              )}
+          {(isLoggedIn || step > 1) && (
+            <div className="flex justify-between pt-4">
+              <div>
+                {(isLoggedIn && step > 1) || (!isLoggedIn && step > 2) ? (
+                  <Button variant="ghost" onClick={handleBack} data-testid="button-back">
+                    <ChevronLeft className="w-4 h-4 mr-1" />
+                    Back
+                  </Button>
+                ) : (
+                  <Button variant="ghost" onClick={handleSkip} data-testid="button-skip">
+                    Skip for now
+                  </Button>
+                )}
+              </div>
+              <Button 
+                onClick={handleNext} 
+                disabled={saveMutation.isPending || (((step === 2 && isLoggedIn) || step === 3) && offeredServices.length === 0)} 
+                data-testid="button-next"
+              >
+                {saveMutation.isPending ? (
+                  "Saving..."
+                ) : step === totalSteps ? (
+                  <>
+                    Get Started
+                    <Check className="w-4 h-4 ml-1" />
+                  </>
+                ) : (
+                  <>
+                    Continue
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
+              </Button>
             </div>
-            <Button 
-              onClick={handleNext} 
-              disabled={saveMutation.isPending || (step === 2 && offeredServices.length === 0)} 
-              data-testid="button-next"
-            >
-              {saveMutation.isPending ? (
-                "Saving..."
-              ) : step === totalSteps ? (
-                <>
-                  Get Started
-                  <Check className="w-4 h-4 ml-1" />
-                </>
-              ) : (
-                <>
-                  Continue
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </>
-              )}
-            </Button>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

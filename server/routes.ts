@@ -10,6 +10,7 @@ import { z } from "zod";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import mobileAuthRoutes from "./mobileAuth";
+import magicLinkAuthRoutes from "./magicLinkAuth";
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(
@@ -61,6 +62,7 @@ export async function registerRoutes(
   registerAuthRoutes(app);
   
   app.use('/api/mobile', mobileAuthRoutes);
+  app.use('/api/auth', magicLinkAuthRoutes);
   
   // Web email/password authentication routes
   app.post("/api/auth/register", async (req: any, res) => {
