@@ -234,11 +234,11 @@ export default function LandingPage() {
                 </Badge>
               </motion.div>
               <motion.h1 
-                className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6"
+                className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6 overflow-visible"
                 variants={fadeInUp}
               >
                 <span className="block">Know What to Post.</span>
-                <span className="block bg-gradient-to-r from-primary via-rose-500 to-amber-500 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-primary via-rose-500 to-amber-500 bg-clip-text text-transparent leading-tight py-1">
                   Every Single Day.
                 </span>
               </motion.h1>
