@@ -21,22 +21,38 @@ interface UserProfile {
 
 const salonTiers = [
   {
-    id: "5-seats",
-    name: "Small Team",
+    id: "salon-start",
+    name: "Salon Start",
     seats: 5,
-    pricePerSeat: 8,
-    totalPrice: 40,
-    description: "Perfect for boutique salons with a small team",
+    pricePerSeat: 9.80,
+    totalPrice: 49,
+    description: "Perfect for boutique salons and small teams",
     popular: false,
+    features: [
+      "Up to 5 stylists included",
+      "Team posting streak tracking",
+      "Stylist activity dashboard",
+      "Easy email invitations",
+      "Create incentive rewards",
+    ],
   },
   {
-    id: "10-plus-seats",
-    name: "Growing Salon",
+    id: "salon-grow",
+    name: "Salon Grow",
     seats: 10,
-    pricePerSeat: 5,
-    totalPrice: 50,
-    description: "Best value for larger teams",
+    pricePerSeat: 7.90,
+    totalPrice: 79,
+    description: "Best value for growing salons",
     popular: true,
+    features: [
+      "Up to 10 stylists included",
+      "Everything in Salon Start",
+      "Team leaderboard",
+      "Automated reward notifications",
+      "Monthly performance reports",
+      "Priority support",
+    ],
+    extraSeatPrice: 8,
   },
 ];
 
@@ -187,32 +203,43 @@ export default function SalonPricingPage() {
                 <CardDescription>{tier.description}</CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                   <Users className="w-4 h-4" />
                   <span>Up to {tier.seats} stylists</span>
-                  <span className="text-primary font-medium">(${tier.pricePerSeat}/seat)</span>
+                  <span className="text-primary font-medium">(${tier.pricePerSeat.toFixed(2)}/seat)</span>
                 </div>
-                <ul className="mt-3 space-y-1">
-                  {[
-                    "All stylists get full access",
-                    "Team posting streak tracking",
-                    "Easy invitation system",
-                    "Owner management dashboard",
-                  ].map((feature) => (
+                <ul className="space-y-1.5">
+                  {tier.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Check className="w-3 h-3 text-primary flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
                 </ul>
+                {tier.extraSeatPrice && (
+                  <p className="mt-3 text-xs text-muted-foreground border-t pt-2">
+                    Additional stylists: <span className="text-primary font-medium">${tier.extraSeatPrice}/month each</span>
+                  </p>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <p className="text-xs text-muted-foreground text-center">
-          Need more than 10 seats? Contact us for enterprise pricing.
-        </p>
+        <Card className="p-4 bg-muted/50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-medium text-sm text-foreground">Salon Pro - Enterprise</h4>
+              <p className="text-xs text-muted-foreground">10+ stylists with custom onboarding and integrations</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setLocation("/contact")} data-testid="button-contact-enterprise">
+              Contact Us
+            </Button>
+          </div>
+        </Card>
       </main>
 
       <MobileNav isLoggedIn={!!user} />
