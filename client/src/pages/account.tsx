@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  ArrowLeft, MapPin, Award, Scissors, Check, X, Crown, CreditCard, ExternalLink, Briefcase, Megaphone, Users, Trophy, Gift, Target, Instagram, RefreshCw, Link2, Link2Off, Loader2
+  ArrowLeft, MapPin, Award, Scissors, Check, X, Crown, CreditCard, ExternalLink, Briefcase, Megaphone, Users, Trophy, Gift, Target, Instagram, RefreshCw, Link2, Link2Off, Loader2, GraduationCap, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Progress } from "@/components/ui/progress";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { postingGoals, postingGoalDescriptions, serviceCategories, type VoiceOption, type ToneOption, type PostingGoal, type ServiceCategory } from "@shared/schema";
+import { postingGoals, postingGoalDescriptions, serviceCategories, experienceLevelDescriptions, contentGoalOptions, type VoiceOption, type ToneOption, type PostingGoal, type ServiceCategory, type ExperienceLevel } from "@shared/schema";
 
 interface OptionsData {
   certifiedBrands: string[];
@@ -33,6 +33,10 @@ interface UserProfile {
   id: number;
   userId: string;
   city: string | null;
+  instagram: string | null;
+  experience: string | null;
+  accountType: string | null;
+  contentGoals: string[];
   certifiedBrands: string[];
   extensionMethods: string[];
   offeredServices: string[];
@@ -92,6 +96,10 @@ export default function AccountPage() {
   const { toast } = useToast();
 
   const [city, setCity] = useState("");
+  const [instagramHandle, setInstagramHandle] = useState("");
+  const [experience, setExperience] = useState<ExperienceLevel | "">("");
+  const [accountType, setAccountType] = useState<"solo" | "salon">("solo");
+  const [contentGoals, setContentGoals] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
   const [offeredServices, setOfferedServices] = useState<string[]>([]);
@@ -243,6 +251,10 @@ export default function AccountPage() {
   useEffect(() => {
     if (profile) {
       setCity(profile.city || "");
+      setInstagramHandle(profile.instagram || "");
+      setExperience((profile.experience as ExperienceLevel) || "");
+      setAccountType((profile.accountType as "solo" | "salon") || "solo");
+      setContentGoals(profile.contentGoals || []);
       setSelectedBrands(profile.certifiedBrands || []);
       setSelectedMethods(profile.extensionMethods || []);
       setOfferedServices(profile.offeredServices || []);
@@ -277,6 +289,10 @@ export default function AccountPage() {
   const handleSave = () => {
     saveMutation.mutate({
       city: city || null,
+      instagram: instagramHandle || null,
+      experience: experience || null,
+      accountType: accountType,
+      contentGoals: contentGoals,
       certifiedBrands: selectedBrands,
       extensionMethods: selectedMethods,
       offeredServices,
@@ -285,6 +301,12 @@ export default function AccountPage() {
       tone,
       postingGoal,
     });
+  };
+
+  const toggleContentGoal = (goal: string) => {
+    setContentGoals((prev) =>
+      prev.includes(goal) ? prev.filter((g) => g !== goal) : [...prev, goal]
+    );
   };
 
   const toggleOfferedService = (service: string) => {
@@ -389,43 +411,118 @@ export default function AccountPage() {
       <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
         <div className="glass-card rounded-2xl p-4 space-y-4">
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Business Type</Label>
+            <Label className="text-sm font-medium">Who's Posting?</Label>
+            <p className="text-xs text-muted-foreground">
+              This determines whether AI captions use "I/me" or "we/us"
+            </p>
             <RadioGroup
-              value={voice}
-              onValueChange={(value) => setVoice(value as VoiceOption)}
+              value={accountType}
+              onValueChange={(value) => setAccountType(value as "solo" | "salon")}
               className="grid grid-cols-2 gap-3"
             >
               <Label
-                htmlFor="solo_stylist"
+                htmlFor="account-solo"
                 className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer fluid-transition ${
-                  voice === "solo_stylist"
+                  accountType === "solo"
                     ? "border-primary bg-primary/5"
                     : "border-border hover-elevate"
                 }`}
               >
-                <RadioGroupItem value="solo_stylist" id="solo_stylist" />
+                <RadioGroupItem value="solo" id="account-solo" />
                 <div>
                   <div className="font-medium text-sm">Solo Stylist</div>
-                  <div className="text-xs text-muted-foreground">Uses "I"</div>
+                  <div className="text-xs text-muted-foreground">Uses "I, me"</div>
                 </div>
               </Label>
               <Label
-                htmlFor="salon"
+                htmlFor="account-salon"
                 className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer fluid-transition ${
-                  voice === "salon"
+                  accountType === "salon"
                     ? "border-primary bg-primary/5"
                     : "border-border hover-elevate"
                 }`}
               >
-                <RadioGroupItem value="salon" id="salon" />
+                <RadioGroupItem value="salon" id="account-salon" />
                 <div>
-                  <div className="font-medium text-sm">Salon</div>
-                  <div className="text-xs text-muted-foreground">Uses "We"</div>
+                  <div className="font-medium text-sm">Salon / Team</div>
+                  <div className="text-xs text-muted-foreground">Uses "we, us"</div>
                 </div>
               </Label>
             </RadioGroup>
           </div>
+        </div>
 
+        <div className="glass-card rounded-2xl p-4 space-y-4">
+          <div className="space-y-3">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <GraduationCap className="w-4 h-4" />
+              Experience Level
+            </Label>
+            <RadioGroup
+              value={experience}
+              onValueChange={(value) => setExperience(value as ExperienceLevel)}
+              className="space-y-2"
+            >
+              {(Object.entries(experienceLevelDescriptions) as [ExperienceLevel, { label: string; description: string }][]).map(([level, info]) => (
+                <Label
+                  key={level}
+                  htmlFor={`exp-${level}`}
+                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer fluid-transition ${
+                    experience === level
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover-elevate"
+                  }`}
+                >
+                  <RadioGroupItem value={level} id={`exp-${level}`} />
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">{info.label}</div>
+                    <div className="text-xs text-muted-foreground">{info.description}</div>
+                  </div>
+                </Label>
+              ))}
+            </RadioGroup>
+          </div>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 space-y-4">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <Sparkles className="w-4 h-4" />
+            Content Goals
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            What do you want to achieve with your posts? Select all that apply.
+          </p>
+          <div className="space-y-2">
+            {contentGoalOptions.map((goal) => {
+              const isSelected = contentGoals.includes(goal.id);
+              return (
+                <button
+                  key={goal.id}
+                  onClick={() => toggleContentGoal(goal.id)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover-elevate"
+                  }`}
+                  data-testid={`button-goal-${goal.id}`}
+                >
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                    isSelected ? "bg-primary border-primary" : "border-muted-foreground/30"
+                  }`}>
+                    {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </div>
+                  <div className="flex-1">
+                    <div className={`font-medium text-sm ${isSelected ? "text-primary" : ""}`}>
+                      {goal.label}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 space-y-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium">Tone</Label>
@@ -449,7 +546,7 @@ export default function AccountPage() {
         </div>
 
         <div className="glass-card rounded-2xl p-4 space-y-4">
-          <Label className="text-sm font-medium">Posting Goal</Label>
+          <Label className="text-sm font-medium">Posting Frequency Goal</Label>
           <RadioGroup
             value={postingGoal}
             onValueChange={(value) => setPostingGoal(value as PostingGoal)}
@@ -550,6 +647,26 @@ export default function AccountPage() {
               onChange={(e) => setCity(e.target.value)}
               data-testid="input-city"
             />
+            <p className="text-xs text-muted-foreground">
+              Used for personalized hashtags like #YourCityHairstylist
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Instagram className="w-4 h-4" />
+              Instagram Handle
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+              <Input
+                placeholder="yourusername"
+                value={instagramHandle}
+                onChange={(e) => setInstagramHandle(e.target.value.replace(/^@/, ""))}
+                className="pl-7"
+                data-testid="input-instagram"
+              />
+            </div>
           </div>
         </div>
 
