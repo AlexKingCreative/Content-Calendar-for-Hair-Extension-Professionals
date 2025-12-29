@@ -30,6 +30,7 @@ interface UserProfile {
   salonId?: number;
   salonRole?: string;
   subscriptionStatus?: string;
+  city?: string;
 }
 
 interface Salon {
@@ -201,8 +202,18 @@ export default function TodayPage() {
 
   const handleCopyHashtags = async () => {
     if (!todayPost) return;
-    const displayHashtags = todayPost.hashtags.slice(0, 5);
-    const hashtagsText = displayHashtags.join(" ");
+    const userCity = profile?.city?.toLowerCase().replace(/[^a-z]/g, '') || '';
+    const hasExtensions = profile?.postingServices?.includes('Extension Services');
+    const personalTags: string[] = [];
+    if (userCity) {
+      personalTags.push(`#${userCity}hairstylist`);
+      if (hasExtensions) {
+        personalTags.push(`#${userCity}hairextensions`);
+      }
+    }
+    const baseTags = todayPost.hashtags.slice(0, 5 - personalTags.length);
+    const allHashtags = [...personalTags, ...baseTags];
+    const hashtagsText = allHashtags.join(" ");
     await navigator.clipboard.writeText(hashtagsText);
     setCopied(true);
     toast({
@@ -264,7 +275,24 @@ export default function TodayPage() {
 
   const ContentIcon = contentTypeIcons[todayPost.contentType];
   const CategoryIcon = categoryIcons[todayPost.category];
-  const displayHashtags = todayPost.hashtags.slice(0, 5);
+  
+  const getPersonalizedHashtags = () => {
+    const personalizedTags: string[] = [];
+    const userCity = profile?.city?.toLowerCase().replace(/[^a-z]/g, '') || '';
+    const hasExtensions = profile?.postingServices?.includes('Extension Services');
+    
+    if (userCity) {
+      personalizedTags.push(`#${userCity}hairstylist`);
+      if (hasExtensions) {
+        personalizedTags.push(`#${userCity}hairextensions`);
+      }
+    }
+    return personalizedTags;
+  };
+  
+  const personalizedHashtags = getPersonalizedHashtags();
+  const baseHashtags = todayPost.hashtags.slice(0, 5 - personalizedHashtags.length);
+  const displayHashtags = [...personalizedHashtags, ...baseHashtags];
 
   return (
     <div className="min-h-screen bg-background pb-32">

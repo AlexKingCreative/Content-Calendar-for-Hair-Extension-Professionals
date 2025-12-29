@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { postsApi, streakApi } from '../services/api';
+import { postsApi, streakApi, profileApi } from '../services/api';
 
 interface Post {
   id: number;
@@ -31,6 +31,11 @@ interface StreakData {
   postingGoal: string;
 }
 
+interface UserProfile {
+  city?: string;
+  postingServices?: string[];
+}
+
 export default function TodayScreen() {
   const queryClient = useQueryClient();
   const [markedToday, setMarkedToday] = useState(false);
@@ -44,6 +49,25 @@ export default function TodayScreen() {
     queryKey: ['streak'],
     queryFn: streakApi.get,
   });
+
+  const { data: profile } = useQuery<UserProfile>({
+    queryKey: ['profile'],
+    queryFn: profileApi.get,
+  });
+
+  const getPersonalizedHashtags = () => {
+    const personalizedTags: string[] = [];
+    const userCity = profile?.city?.toLowerCase().replace(/[^a-z]/g, '') || '';
+    const hasExtensions = profile?.postingServices?.includes('Extension Services');
+    
+    if (userCity) {
+      personalizedTags.push(`#${userCity}hairstylist`);
+      if (hasExtensions) {
+        personalizedTags.push(`#${userCity}hairextensions`);
+      }
+    }
+    return personalizedTags;
+  };
 
   const markCompleteMutation = useMutation({
     mutationFn: (postId: number) => streakApi.logPost(postId),
@@ -59,8 +83,11 @@ export default function TodayScreen() {
 
   const handleShare = async (post: Post) => {
     try {
+      const personalTags = getPersonalizedHashtags();
+      const baseTags = post.hashtags.slice(0, 5 - personalTags.length);
+      const allHashtags = [...personalTags, ...baseTags];
       await Share.share({
-        message: `${post.description}\n\n${post.hashtags.join(' ')}`,
+        message: `${post.description}\n\n${allHashtags.join(' ')}`,
         title: post.title,
       });
     } catch (error) {
@@ -69,7 +96,10 @@ export default function TodayScreen() {
   };
 
   const handleCopyCaption = async (post: Post) => {
-    const caption = `${post.description}\n\n${post.hashtags.join(' ')}`;
+    const personalTags = getPersonalizedHashtags();
+    const baseTags = post.hashtags.slice(0, 5 - personalTags.length);
+    const allHashtags = [...personalTags, ...baseTags];
+    const caption = `${post.description}\n\n${allHashtags.join(' ')}`;
     await Share.share({ message: caption });
   };
 
@@ -134,11 +164,16 @@ export default function TodayScreen() {
         <Text style={styles.description}>{todayPost.description}</Text>
 
         <View style={styles.hashtagsContainer}>
-          {todayPost.hashtags.map((tag: string, index: number) => (
-            <View key={index} style={styles.hashtag}>
-              <Text style={styles.hashtagText}>{tag}</Text>
-            </View>
-          ))}
+          {(() => {
+            const personalTags = getPersonalizedHashtags();
+            const baseTags = todayPost.hashtags.slice(0, 5 - personalTags.length);
+            const allHashtags = [...personalTags, ...baseTags];
+            return allHashtags.map((tag: string, index: number) => (
+              <View key={index} style={styles.hashtag}>
+                <Text style={styles.hashtagText}>{tag}</Text>
+              </View>
+            ));
+          })()}
         </View>
 
         <View style={styles.actions}>

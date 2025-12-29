@@ -11,8 +11,13 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useRoute } from '@react-navigation/native';
-import { postsApi } from '../services/api';
+import { postsApi, profileApi } from '../services/api';
 import { RootStackParamList } from '../navigation';
+
+interface UserProfile {
+  city?: string;
+  postingServices?: string[];
+}
 
 type PostDetailRouteProp = RouteProp<RootStackParamList, 'PostDetail'>;
 
@@ -25,16 +30,41 @@ export default function PostDetailScreen() {
     queryFn: () => postsApi.getById(postId),
   });
 
+  const { data: profile } = useQuery<UserProfile>({
+    queryKey: ['profile'],
+    queryFn: profileApi.get,
+  });
+
+  const getPersonalizedHashtags = () => {
+    const personalizedTags: string[] = [];
+    const userCity = profile?.city?.toLowerCase().replace(/[^a-z]/g, '') || '';
+    const hasExtensions = profile?.postingServices?.includes('Extension Services');
+    
+    if (userCity) {
+      personalizedTags.push(`#${userCity}hairstylist`);
+      if (hasExtensions) {
+        personalizedTags.push(`#${userCity}hairextensions`);
+      }
+    }
+    return personalizedTags;
+  };
+
   const handleCopyCaption = async () => {
     if (!post) return;
-    const caption = `${post.description}\n\n${post.hashtags.join(' ')}`;
+    const personalTags = getPersonalizedHashtags();
+    const baseTags = post.hashtags.slice(0, 5 - personalTags.length);
+    const allHashtags = [...personalTags, ...baseTags];
+    const caption = `${post.description}\n\n${allHashtags.join(' ')}`;
     await Share.share({ message: caption });
   };
 
   const handleShare = async () => {
     if (!post) return;
+    const personalTags = getPersonalizedHashtags();
+    const baseTags = post.hashtags.slice(0, 5 - personalTags.length);
+    const allHashtags = [...personalTags, ...baseTags];
     await Share.share({
-      message: `${post.description}\n\n${post.hashtags.join(' ')}`,
+      message: `${post.description}\n\n${allHashtags.join(' ')}`,
       title: post.title,
     });
   };
@@ -79,11 +109,16 @@ export default function PostDetailScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Hashtags</Text>
         <View style={styles.hashtagsContainer}>
-          {post.hashtags.map((tag: string, index: number) => (
-            <View key={index} style={styles.hashtag}>
-              <Text style={styles.hashtagText}>{tag}</Text>
-            </View>
-          ))}
+          {(() => {
+            const personalTags = getPersonalizedHashtags();
+            const baseTags = post.hashtags.slice(0, 5 - personalTags.length);
+            const allHashtags = [...personalTags, ...baseTags];
+            return allHashtags.map((tag: string, index: number) => (
+              <View key={index} style={styles.hashtag}>
+                <Text style={styles.hashtagText}>{tag}</Text>
+              </View>
+            ));
+          })()}
         </View>
       </View>
 

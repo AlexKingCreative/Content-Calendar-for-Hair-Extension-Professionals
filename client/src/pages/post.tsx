@@ -24,6 +24,8 @@ interface User {
 
 interface UserProfile {
   onboardingComplete: boolean;
+  postingServices?: string[];
+  city?: string;
 }
 
 const contentTypeIcons: Record<ContentType, typeof Camera> = {
@@ -156,8 +158,18 @@ export default function PostPage() {
 
   const handleCopyHashtags = async () => {
     if (!post) return;
-    const displayHashtags = post.hashtags.slice(0, 5);
-    const hashtagsText = displayHashtags.join(" ");
+    const userCity = profile?.city?.toLowerCase().replace(/[^a-z]/g, '') || '';
+    const hasExtensions = profile?.postingServices?.includes('Extension Services');
+    const personalTags: string[] = [];
+    if (userCity) {
+      personalTags.push(`#${userCity}hairstylist`);
+      if (hasExtensions) {
+        personalTags.push(`#${userCity}hairextensions`);
+      }
+    }
+    const baseTags = post.hashtags.slice(0, 5 - personalTags.length);
+    const allHashtags = [...personalTags, ...baseTags];
+    const hashtagsText = allHashtags.join(" ");
     await navigator.clipboard.writeText(hashtagsText);
     setCopied(true);
     toast({
@@ -228,7 +240,24 @@ export default function PostPage() {
 
   const ContentIcon = contentTypeIcons[post.contentType as ContentType];
   const CategoryIcon = categoryIcons[post.category as Category];
-  const displayHashtags = post.hashtags.slice(0, 5);
+  
+  const getPersonalizedHashtags = () => {
+    const personalizedTags: string[] = [];
+    const userCity = profile?.city?.toLowerCase().replace(/[^a-z]/g, '') || '';
+    const hasExtensions = profile?.postingServices?.includes('Extension Services');
+    
+    if (userCity) {
+      personalizedTags.push(`#${userCity}hairstylist`);
+      if (hasExtensions) {
+        personalizedTags.push(`#${userCity}hairextensions`);
+      }
+    }
+    return personalizedTags;
+  };
+  
+  const personalizedHashtags = getPersonalizedHashtags();
+  const baseHashtags = post.hashtags.slice(0, 5 - personalizedHashtags.length);
+  const displayHashtags = [...personalizedHashtags, ...baseHashtags];
   const postDate = new Date(2025, post.month - 1, post.day);
 
   return (
