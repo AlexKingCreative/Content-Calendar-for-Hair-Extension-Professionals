@@ -792,8 +792,11 @@ export default function LandingPage() {
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">Support</h4>
+              <h4 className="font-semibold mb-4">Company</h4>
               <div className="space-y-2 text-sm">
+                <Link href="/about" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-about">
+                  About
+                </Link>
                 <Link href="/contact" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-contact">
                   Contact Us
                 </Link>
