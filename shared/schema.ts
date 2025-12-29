@@ -137,6 +137,8 @@ export const userProfiles = pgTable("user_profiles", {
   stripeCustomerId: text("stripe_customer_id"),
   subscriptionStatus: text("subscription_status").default("free"),
   freeAccessEndsAt: timestamp("free_access_ends_at"),
+  firstStreakRewardClaimed: boolean("first_streak_reward_claimed").default(false),
+  firstStreakRewardCoupon: text("first_streak_reward_coupon"),
   salonId: integer("salon_id"),
   salonRole: text("salon_role"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
