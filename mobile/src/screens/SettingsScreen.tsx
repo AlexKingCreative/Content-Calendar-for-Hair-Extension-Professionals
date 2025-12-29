@@ -55,7 +55,11 @@ export default function SettingsScreen() {
     },
   });
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = () => {
+    navigation.navigate('Upgrade');
+  };
+
+  const handleUpgradeOld = async () => {
     try {
       const { url } = await stripeApi.createCheckoutSession();
       if (url) {

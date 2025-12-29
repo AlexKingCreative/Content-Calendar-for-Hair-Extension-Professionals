@@ -100,8 +100,8 @@ export const streakApi = {
 };
 
 export const stripeApi = {
-  createCheckoutSession: async () => {
-    const response = await api.post('/api/mobile/stripe/checkout');
+  createCheckoutSession: async (plan: 'monthly' | 'annual' = 'monthly') => {
+    const response = await api.post('/api/mobile/stripe/checkout', { plan });
     return response.data;
   },
 };

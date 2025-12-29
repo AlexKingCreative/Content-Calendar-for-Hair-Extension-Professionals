@@ -355,6 +355,10 @@ router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
       return res.status(503).json({ message: 'Payment service not configured' });
     }
     
+    const { plan } = req.body;
+    const priceId = plan === 'annual' ? 'price_pro_annual' : 'price_pro_monthly';
+    const withTrial = plan === 'monthly';
+    
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeSecretKey, { apiVersion: '2025-11-17.clover' });
     
@@ -362,17 +366,25 @@ router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
       ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
       : 'https://contentcalendarforhairpros.com';
     
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{
-        price: 'price_pro_monthly',
+        price: priceId,
         quantity: 1,
       }],
       success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/subscription/cancel`,
       client_reference_id: req.mobileUserId,
-    });
+    };
+    
+    if (withTrial) {
+      sessionParams.subscription_data = {
+        trial_period_days: 7,
+      };
+    }
+    
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     res.json({ url: session.url });
   } catch (error: any) {

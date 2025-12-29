@@ -19,6 +19,7 @@ import OnboardingScreen from '../screens/OnboardingScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import HelpScreen from '../screens/HelpScreen';
 import AccountScreen from '../screens/AccountScreen';
+import UpgradeScreen from '../screens/UpgradeScreen';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -27,6 +28,7 @@ export type RootStackParamList = {
   PostDetail: { postId: number };
   Help: undefined;
   Account: undefined;
+  Upgrade: undefined;
 };
 
 export type AuthStackParamList = {
@@ -161,6 +163,11 @@ export default function Navigation() {
             <Stack.Screen 
               name="Account" 
               component={AccountScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="Upgrade" 
+              component={UpgradeScreen}
               options={{ headerShown: false }}
             />
           </>
