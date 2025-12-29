@@ -33,14 +33,14 @@
     "extra": {
       "apiUrl": "https://content-calendar-hair-pro.replit.app",
       "eas": {
-        "projectId": "01f55345-227d-44b6-acb1-bbf2849fbaa2"
+        "projectId": "01f553d5-9c43-4d74-89c0-70adbe93df53"
       }
     },
     "runtimeVersion": {
       "policy": "sdkVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/01f55345-227d-44b6-acb1-bbf2849fbaa2"
+      "url": "https://u.expo.dev/01f553d5-9c43-4d74-89c0-70adbe93df53"
     }
   }
 }
