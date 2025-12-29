@@ -190,11 +190,11 @@ export default function Subscribe() {
           </Badge>
           
           <h1 className="text-3xl md:text-4xl font-heading font-bold">
-            Never Miss a Special Day Again
+            Try Free for 7 Days
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Hair pros trust our calendar to stay ahead with daily content ideas,
-            industry holidays, and AI-powered captions.
+            Get full access to 365 days of content ideas, AI-powered captions,
+            and earn 50% off by completing a 7-day posting streak.
           </p>
         </div>
 
