@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { db } from './db';
 import { users } from '@shared/models/auth';
-import { userProfiles } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { userProfiles, magicLinkTokens } from '@shared/schema';
+import { eq, and, gt } from 'drizzle-orm';
 import { storage } from './storage';
 import { generateMonthPDF } from './pdfExport';
+import { sendMagicLinkEmail } from './emailService';
 
 const router = Router();
 
@@ -121,6 +123,117 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Login failed' });
+  }
+});
+
+router.post('/request-magic-link', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    await db.insert(magicLinkTokens).values({
+      email: normalizedEmail,
+      token,
+      expiresAt,
+      onboardingData: JSON.stringify({ verificationCode }),
+    });
+
+    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+      : 'https://content-calendar-hair-pro.replit.app';
+    
+    const magicLinkUrl = `${baseUrl}/api/auth/verify-magic-link?token=${token}`;
+    
+    const emailSent = await sendMagicLinkEmail(normalizedEmail, magicLinkUrl, verificationCode);
+    
+    if (!emailSent) {
+      return res.status(500).json({ message: 'Failed to send email. Please try again.' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Magic link sent! Check your email.',
+      token
+    });
+  } catch (error) {
+    console.error('Mobile magic link request error:', error);
+    res.status(500).json({ message: 'Failed to send magic link' });
+  }
+});
+
+router.post('/verify-magic-link', async (req, res) => {
+  try {
+    const { token, code } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ message: 'Token is required' });
+    }
+
+    const [magicLink] = await db.select()
+      .from(magicLinkTokens)
+      .where(and(
+        eq(magicLinkTokens.token, token),
+        eq(magicLinkTokens.used, false),
+        gt(magicLinkTokens.expiresAt, new Date())
+      ));
+
+    if (!magicLink) {
+      return res.status(400).json({ message: 'Invalid or expired link' });
+    }
+
+    const storedData = magicLink.onboardingData ? JSON.parse(magicLink.onboardingData) : {};
+    if (code && storedData.verificationCode && code !== storedData.verificationCode) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    await db.update(magicLinkTokens)
+      .set({ used: true })
+      .where(eq(magicLinkTokens.id, magicLink.id));
+
+    let [existingUser] = await db.select()
+      .from(users)
+      .where(eq(users.email, magicLink.email));
+
+    if (!existingUser) {
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+      const passwordHash = await bcrypt.hash(randomPassword, 10);
+      
+      [existingUser] = await db.insert(users).values({
+        email: magicLink.email,
+        passwordHash,
+        firstName: null,
+        lastName: null,
+      }).returning();
+
+      await db.insert(userProfiles).values({
+        userId: existingUser.id,
+        onboardingComplete: false,
+      });
+    }
+
+    const jwtToken = generateToken(existingUser.id);
+
+    res.json({
+      success: true,
+      token: jwtToken,
+      user: {
+        id: existingUser.id,
+        email: existingUser.email,
+        name: `${existingUser.firstName || ''}${existingUser.lastName ? ' ' + existingUser.lastName : ''}`.trim() || null,
+      },
+    });
+  } catch (error) {
+    console.error('Mobile magic link verification error:', error);
+    res.status(500).json({ message: 'Verification failed' });
   }
 });
 

@@ -38,14 +38,23 @@ export async function getResendClient() {
   };
 }
 
-export async function sendMagicLinkEmail(email: string, magicLinkUrl: string): Promise<boolean> {
+export async function sendMagicLinkEmail(email: string, magicLinkUrl: string, verificationCode?: string): Promise<boolean> {
   try {
     const { client, fromEmail } = await getResendClient();
+    
+    const codeSection = verificationCode ? `
+            <div style="background: #FFF8F0; border-radius: 8px; padding: 20px; margin-bottom: 24px; text-align: center;">
+              <p style="color: #8B7355; font-size: 14px; margin: 0 0 8px;">Your verification code for the mobile app:</p>
+              <p style="color: #D4A574; font-size: 32px; font-weight: bold; letter-spacing: 4px; margin: 0;">${verificationCode}</p>
+            </div>
+    ` : '';
     
     await client.emails.send({
       from: fromEmail || 'Content Calendar <hello@contentcalendarforhairpros.com>',
       to: email,
-      subject: 'Your Magic Login Link - Content Calendar for Hair Pros',
+      subject: verificationCode 
+        ? `Your Code: ${verificationCode} - Content Calendar for Hair Pros`
+        : 'Your Magic Login Link - Content Calendar for Hair Pros',
       html: `
         <!DOCTYPE html>
         <html>
@@ -61,11 +70,15 @@ export async function sendMagicLinkEmail(email: string, magicLinkUrl: string): P
             </div>
             
             <h2 style="color: #5D4E3C; font-size: 20px; text-align: center; margin-bottom: 16px;">
-              Your magic link is ready!
+              ${verificationCode ? 'Your sign-in code is ready!' : 'Your magic link is ready!'}
             </h2>
             
+            ${codeSection}
+            
             <p style="color: #5D4E3C; font-size: 16px; line-height: 1.6; text-align: center; margin-bottom: 32px;">
-              Click the button below to sign in to your account. This link will expire in 15 minutes.
+              ${verificationCode 
+                ? 'Enter this code in the app, or click the button below to sign in. This expires in 15 minutes.'
+                : 'Click the button below to sign in to your account. This link will expire in 15 minutes.'}
             </p>
             
             <div style="text-align: center; margin-bottom: 32px;">

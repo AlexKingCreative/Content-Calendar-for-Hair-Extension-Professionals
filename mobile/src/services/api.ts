@@ -38,6 +38,14 @@ export const authApi = {
     const response = await api.post('/api/mobile/register', { email, password, name });
     return response.data;
   },
+  requestMagicLink: async (email: string) => {
+    const response = await api.post('/api/mobile/request-magic-link', { email });
+    return response.data;
+  },
+  verifyMagicLink: async (token: string, code?: string) => {
+    const response = await api.post('/api/mobile/verify-magic-link', { token, code });
+    return response.data;
+  },
   getUser: async () => {
     const response = await api.get('/api/mobile/user');
     return response.data;
