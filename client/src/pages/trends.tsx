@@ -1,7 +1,7 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { ArrowLeft, TrendingUp, Clock, Video, ExternalLink } from "lucide-react";
+import { ArrowLeft, TrendingUp, Clock, Video, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ interface User {
 
 export default function TrendsPage() {
   const [, setLocation] = useLocation();
+  const [showExpired, setShowExpired] = useState(false);
 
   const { data: user } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
@@ -53,12 +54,47 @@ export default function TrendsPage() {
     return null;
   };
 
+  const getExpirationBadge = (trend: TrendWithStatus) => {
+    if (trend.isExpired) {
+      return (
+        <Badge variant="secondary" className="text-xs flex-shrink-0">
+          Expired {trend.daysSinceExpired}d ago
+        </Badge>
+      );
+    }
+    
+    if (trend.daysRemaining <= 1) {
+      return (
+        <Badge variant="destructive" className="text-xs flex-shrink-0 animate-pulse">
+          <Clock className="w-3 h-3 mr-1" />
+          Expires today
+        </Badge>
+      );
+    }
+    
+    if (trend.daysRemaining <= 2) {
+      return (
+        <Badge className="text-xs flex-shrink-0 bg-amber-500 hover:bg-amber-600">
+          <Clock className="w-3 h-3 mr-1" />
+          {trend.daysRemaining}d left
+        </Badge>
+      );
+    }
+    
+    return (
+      <Badge variant="default" className="text-xs flex-shrink-0">
+        <Clock className="w-3 h-3 mr-1" />
+        {trend.daysRemaining}d left
+      </Badge>
+    );
+  };
+
   const TrendCard = ({ trend, isExpired }: { trend: TrendWithStatus; isExpired: boolean }) => {
     const embedUrl = getVideoEmbedUrl(trend.videoUrl || "");
     
     return (
       <Card 
-        className={`overflow-hidden ${isExpired ? "opacity-70" : ""}`} 
+        className={`overflow-hidden ${isExpired ? "opacity-60" : ""}`} 
         data-testid={`card-trend-${trend.id}`}
       >
         <CardHeader className="pb-2">
@@ -67,16 +103,7 @@ export default function TrendsPage() {
               <TrendingUp className={`w-4 h-4 flex-shrink-0 ${isExpired ? "text-muted-foreground" : "text-primary"}`} />
               {trend.title}
             </CardTitle>
-            {isExpired ? (
-              <Badge variant="secondary" className="text-xs flex-shrink-0">
-                Expired {trend.daysSinceExpired}d ago
-              </Badge>
-            ) : (
-              <Badge variant="default" className="text-xs flex-shrink-0">
-                <Clock className="w-3 h-3 mr-1" />
-                {trend.daysRemaining}d left
-              </Badge>
-            )}
+            {getExpirationBadge(trend)}
           </div>
           <CardDescription className="text-xs">
             {trend.description}
@@ -132,7 +159,7 @@ export default function TrendsPage() {
               <TrendingUp className="w-5 h-5 text-primary" />
               Trend Alerts
             </h1>
-            <p className="text-xs text-muted-foreground">Hot trends for your content</p>
+            <p className="text-xs text-muted-foreground">Hot trends expire in 7 days</p>
           </div>
         </div>
       </header>
@@ -156,7 +183,7 @@ export default function TrendsPage() {
           </div>
         ) : (
           <>
-            {activeTrends.length > 0 && (
+            {activeTrends.length > 0 ? (
               <section className="space-y-3">
                 <div className="flex items-center gap-2 px-1">
                   <TrendingUp className="w-4 h-4 text-primary" />
@@ -167,18 +194,44 @@ export default function TrendsPage() {
                   <TrendCard key={trend.id} trend={trend} isExpired={false} />
                 ))}
               </section>
+            ) : (
+              <div className="text-center py-8 bg-muted/30 rounded-xl">
+                <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                <h3 className="font-heading text-base font-medium text-foreground mb-1">
+                  No Active Trends
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Check back soon for new trending content ideas!
+                </p>
+              </div>
             )}
 
             {expiredTrends.length > 0 && (
               <section className="space-y-3">
-                <div className="flex items-center gap-2 px-1">
+                <button
+                  onClick={() => setShowExpired(!showExpired)}
+                  className="flex items-center gap-2 px-1 w-full text-left group"
+                  data-testid="button-toggle-expired"
+                >
                   <Clock className="w-4 h-4 text-muted-foreground" />
-                  <h2 className="font-heading font-medium text-muted-foreground text-sm">Past Trends</h2>
+                  <h2 className="font-heading font-medium text-muted-foreground text-sm group-hover:text-foreground transition-colors">
+                    {showExpired ? "Hide" : "See"} Past Trends
+                  </h2>
                   <Badge variant="secondary" className="text-xs">{expiredTrends.length}</Badge>
-                </div>
-                {expiredTrends.map(trend => (
-                  <TrendCard key={trend.id} trend={trend} isExpired={true} />
-                ))}
+                  {showExpired ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground ml-auto" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
+                  )}
+                </button>
+                
+                {showExpired && (
+                  <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {expiredTrends.map(trend => (
+                      <TrendCard key={trend.id} trend={trend} isExpired={true} />
+                    ))}
+                  </div>
+                )}
               </section>
             )}
           </>
