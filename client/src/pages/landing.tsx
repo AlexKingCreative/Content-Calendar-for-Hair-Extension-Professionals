@@ -635,11 +635,15 @@ export default function LandingPage() {
               },
               {
                 q: "I'm a salon owner. Can my whole team use this?",
-                a: "Yes! We have salon plans starting at $49/month for up to 5 stylists. Each stylist gets their own account with personalized hashtags, and you get a dashboard to track everyone's posting activity and streaks."
+                a: "Yes! We have salon plans starting at $49/month for up to 5 stylists. Each stylist gets their own account with personalized hashtags, and you get a dashboard to track everyone's posting activity and streaks.",
+                link: "/salon-pricing",
+                linkText: "View salon plans"
               },
               {
                 q: "How do I get my stylists to actually post?",
-                a: "Our salon plans include streak tracking and incentive rewards. You can see who's posting consistently and reward your top performers. Many owners offer bonuses or prizes for maintaining posting streaks - it gamifies the whole process."
+                a: "Our salon plans include streak tracking and incentive rewards. You can see who's posting consistently and reward your top performers. Many owners offer bonuses or prizes for maintaining posting streaks - it gamifies the whole process.",
+                link: "/salon-pricing",
+                linkText: "See how it works"
               },
               {
                 q: "Can I manage my team's content from one place?",
@@ -648,7 +652,17 @@ export default function LandingPage() {
             ].map((faq, index) => (
               <Card key={index} className="p-6" data-testid={`faq-card-${index}`}>
                 <h3 className="font-semibold mb-2">{faq.q}</h3>
-                <p className="text-muted-foreground">{faq.a}</p>
+                <p className="text-muted-foreground">
+                  {faq.a}
+                  {faq.link && (
+                    <>
+                      {" "}
+                      <Link href={faq.link} className="text-primary hover:underline font-medium">
+                        {faq.linkText}
+                      </Link>
+                    </>
+                  )}
+                </p>
               </Card>
             ))}
           </div>
