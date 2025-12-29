@@ -633,6 +633,18 @@ export default function LandingPage() {
                 q: "What's the streak reward?",
                 a: "If you post for 7 days straight during your trial, you earn 50% off your first month. It's our way of rewarding you for being consistent!"
               },
+              {
+                q: "I'm a salon owner. Can my whole team use this?",
+                a: "Yes! We have salon plans starting at $49/month for up to 5 stylists. Each stylist gets their own account with personalized hashtags, and you get a dashboard to track everyone's posting activity and streaks."
+              },
+              {
+                q: "How do I get my stylists to actually post?",
+                a: "Our salon plans include streak tracking and incentive rewards. You can see who's posting consistently and reward your top performers. Many owners offer bonuses or prizes for maintaining posting streaks - it gamifies the whole process."
+              },
+              {
+                q: "Can I manage my team's content from one place?",
+                a: "Yes! The salon owner dashboard shows you each stylist's activity, their current streak, and their posting history. You can invite new team members with a simple link and remove access anytime."
+              },
             ].map((faq, index) => (
               <Card key={index} className="p-6" data-testid={`faq-card-${index}`}>
                 <h3 className="font-semibold mb-2">{faq.q}</h3>
