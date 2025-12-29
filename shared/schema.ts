@@ -421,3 +421,60 @@ export const insertTrendAlertSchema = createInsertSchema(trendAlerts).omit({
 
 export type TrendAlert = typeof trendAlerts.$inferSelect;
 export type InsertTrendAlert = z.infer<typeof insertTrendAlertSchema>;
+
+// Salon Challenges - owner-created challenges for stylists
+export const salonChallengeStatuses = ["active", "paused", "completed"] as const;
+export type SalonChallengeStatus = typeof salonChallengeStatuses[number];
+
+export const salonChallenges = pgTable("salon_challenges", {
+  id: serial("id").primaryKey(),
+  salonId: integer("salon_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  durationDays: integer("duration_days").notNull(),
+  rewardText: text("reward_text").notNull(),
+  status: text("status").default("active").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertSalonChallengeSchema = createInsertSchema(salonChallenges).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type SalonChallenge = typeof salonChallenges.$inferSelect;
+export type InsertSalonChallenge = z.infer<typeof insertSalonChallengeSchema>;
+
+// Stylist Challenge Assignments - tracks stylist progress on salon challenges
+export const stylistChallengeStatuses = ["active", "completed", "expired", "abandoned"] as const;
+export type StylistChallengeStatus = typeof stylistChallengeStatuses[number];
+
+export const stylistChallenges = pgTable("stylist_challenges", {
+  id: serial("id").primaryKey(),
+  salonChallengeId: integer("salon_challenge_id").notNull(),
+  stylistUserId: varchar("stylist_user_id").notNull(),
+  salonId: integer("salon_id").notNull(),
+  startDate: timestamp("start_date").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  targetDays: integer("target_days").notNull(),
+  completedDays: integer("completed_days").default(0).notNull(),
+  currentStreak: integer("current_streak").default(0).notNull(),
+  lastPostDate: text("last_post_date"),
+  status: text("status").default("active").notNull(),
+  completedAt: timestamp("completed_at"),
+  ownerNotifiedAt: timestamp("owner_notified_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertStylistChallengeSchema = createInsertSchema(stylistChallenges).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  completedAt: true,
+  ownerNotifiedAt: true,
+});
+
+export type StylistChallenge = typeof stylistChallenges.$inferSelect;
+export type InsertStylistChallenge = z.infer<typeof insertStylistChallengeSchema>;

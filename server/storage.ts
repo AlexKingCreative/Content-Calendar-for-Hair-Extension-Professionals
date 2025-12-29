@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, postSubmissions, salons, salonMembers, challenges, userChallenges, trendAlerts, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog, type PostSubmission, type InsertPostSubmission, type Salon, type InsertSalon, type SalonMember, type InsertSalonMember, type Challenge, type InsertChallenge, type UserChallenge, type InsertUserChallenge, type TrendAlert, type InsertTrendAlert } from "@shared/schema";
+import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, postSubmissions, salons, salonMembers, challenges, userChallenges, trendAlerts, salonChallenges, stylistChallenges, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog, type PostSubmission, type InsertPostSubmission, type Salon, type InsertSalon, type SalonMember, type InsertSalonMember, type Challenge, type InsertChallenge, type UserChallenge, type InsertUserChallenge, type TrendAlert, type InsertTrendAlert, type SalonChallenge, type InsertSalonChallenge, type StylistChallenge, type InsertStylistChallenge } from "@shared/schema";
 import { eq, and, sql, desc, asc } from "drizzle-orm";
 
 export interface IStorage {
@@ -87,6 +87,24 @@ export interface IStorage {
   createTrendAlert(alert: InsertTrendAlert): Promise<TrendAlert>;
   updateTrendAlert(id: number, data: Partial<InsertTrendAlert>): Promise<TrendAlert | undefined>;
   deleteTrendAlert(id: number): Promise<boolean>;
+  
+  // Salon Challenges
+  createSalonChallenge(challenge: InsertSalonChallenge): Promise<SalonChallenge>;
+  getSalonChallenges(salonId: number): Promise<SalonChallenge[]>;
+  getSalonChallengeById(id: number): Promise<SalonChallenge | undefined>;
+  updateSalonChallenge(id: number, data: Partial<InsertSalonChallenge>): Promise<SalonChallenge | undefined>;
+  deleteSalonChallenge(id: number): Promise<boolean>;
+  
+  // Stylist Challenges
+  createStylistChallenge(challenge: InsertStylistChallenge): Promise<StylistChallenge>;
+  getStylistChallenges(stylistUserId: string): Promise<StylistChallenge[]>;
+  getStylistChallengesBySalon(salonId: number): Promise<StylistChallenge[]>;
+  getStylistChallengeById(id: number): Promise<StylistChallenge | undefined>;
+  getActiveStylistChallenge(stylistUserId: string, salonChallengeId: number): Promise<StylistChallenge | undefined>;
+  updateStylistChallenge(id: number, data: Partial<StylistChallenge>): Promise<StylistChallenge | undefined>;
+  incrementStylistChallengeProgress(id: number): Promise<StylistChallenge | undefined>;
+  markStylistChallengeCompleted(id: number): Promise<StylistChallenge | undefined>;
+  markOwnerNotified(id: number): Promise<StylistChallenge | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -563,6 +581,102 @@ export class DatabaseStorage implements IStorage {
   async deleteTrendAlert(id: number): Promise<boolean> {
     const result = await db.delete(trendAlerts).where(eq(trendAlerts.id, id)).returning();
     return result.length > 0;
+  }
+  
+  async createSalonChallenge(challenge: InsertSalonChallenge): Promise<SalonChallenge> {
+    const [created] = await db.insert(salonChallenges).values(challenge).returning();
+    return created;
+  }
+  
+  async getSalonChallenges(salonId: number): Promise<SalonChallenge[]> {
+    return db.select().from(salonChallenges).where(eq(salonChallenges.salonId, salonId)).orderBy(desc(salonChallenges.createdAt));
+  }
+  
+  async getSalonChallengeById(id: number): Promise<SalonChallenge | undefined> {
+    const [challenge] = await db.select().from(salonChallenges).where(eq(salonChallenges.id, id));
+    return challenge;
+  }
+  
+  async updateSalonChallenge(id: number, data: Partial<InsertSalonChallenge>): Promise<SalonChallenge | undefined> {
+    const [updated] = await db.update(salonChallenges).set({ ...data, updatedAt: new Date() }).where(eq(salonChallenges.id, id)).returning();
+    return updated;
+  }
+  
+  async deleteSalonChallenge(id: number): Promise<boolean> {
+    const result = await db.delete(salonChallenges).where(eq(salonChallenges.id, id)).returning();
+    return result.length > 0;
+  }
+  
+  async createStylistChallenge(challenge: InsertStylistChallenge): Promise<StylistChallenge> {
+    const [created] = await db.insert(stylistChallenges).values(challenge).returning();
+    return created;
+  }
+  
+  async getStylistChallenges(stylistUserId: string): Promise<StylistChallenge[]> {
+    return db.select().from(stylistChallenges).where(eq(stylistChallenges.stylistUserId, stylistUserId)).orderBy(desc(stylistChallenges.createdAt));
+  }
+  
+  async getStylistChallengesBySalon(salonId: number): Promise<StylistChallenge[]> {
+    return db.select().from(stylistChallenges).where(eq(stylistChallenges.salonId, salonId)).orderBy(desc(stylistChallenges.createdAt));
+  }
+  
+  async getStylistChallengeById(id: number): Promise<StylistChallenge | undefined> {
+    const [challenge] = await db.select().from(stylistChallenges).where(eq(stylistChallenges.id, id));
+    return challenge;
+  }
+  
+  async getActiveStylistChallenge(stylistUserId: string, salonChallengeId: number): Promise<StylistChallenge | undefined> {
+    const [challenge] = await db.select().from(stylistChallenges)
+      .where(and(
+        eq(stylistChallenges.stylistUserId, stylistUserId),
+        eq(stylistChallenges.salonChallengeId, salonChallengeId),
+        eq(stylistChallenges.status, "active")
+      ));
+    return challenge;
+  }
+  
+  async updateStylistChallenge(id: number, data: Partial<StylistChallenge>): Promise<StylistChallenge | undefined> {
+    const [updated] = await db.update(stylistChallenges).set({ ...data, updatedAt: new Date() }).where(eq(stylistChallenges.id, id)).returning();
+    return updated;
+  }
+  
+  async incrementStylistChallengeProgress(id: number): Promise<StylistChallenge | undefined> {
+    const challenge = await this.getStylistChallengeById(id);
+    if (!challenge) return undefined;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const newCompletedDays = (challenge.completedDays || 0) + 1;
+    const newStreak = challenge.lastPostDate === today ? challenge.currentStreak : (challenge.currentStreak || 0) + 1;
+    
+    const isCompleted = newCompletedDays >= challenge.targetDays;
+    
+    const [updated] = await db.update(stylistChallenges).set({
+      completedDays: newCompletedDays,
+      currentStreak: newStreak,
+      lastPostDate: today,
+      status: isCompleted ? "completed" : "active",
+      completedAt: isCompleted ? new Date() : null,
+      updatedAt: new Date()
+    }).where(eq(stylistChallenges.id, id)).returning();
+    
+    return updated;
+  }
+  
+  async markStylistChallengeCompleted(id: number): Promise<StylistChallenge | undefined> {
+    const [updated] = await db.update(stylistChallenges).set({
+      status: "completed",
+      completedAt: new Date(),
+      updatedAt: new Date()
+    }).where(eq(stylistChallenges.id, id)).returning();
+    return updated;
+  }
+  
+  async markOwnerNotified(id: number): Promise<StylistChallenge | undefined> {
+    const [updated] = await db.update(stylistChallenges).set({
+      ownerNotifiedAt: new Date(),
+      updatedAt: new Date()
+    }).where(eq(stylistChallenges.id, id)).returning();
+    return updated;
   }
 }
 
