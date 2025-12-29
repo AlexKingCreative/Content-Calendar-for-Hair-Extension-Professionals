@@ -164,6 +164,32 @@ export const magicLinkTokens = pgTable("magic_link_tokens", {
 
 export type MagicLinkToken = typeof magicLinkTokens.$inferSelect;
 
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  city: text("city"),
+  offeredServices: text("offered_services").array().default(sql`'{}'::text[]`),
+  postingServices: text("posting_services").array().default(sql`'{}'::text[]`),
+  certifiedBrands: text("certified_brands").array().default(sql`'{}'::text[]`),
+  extensionMethods: text("extension_methods").array().default(sql`'{}'::text[]`),
+  onboardingComplete: boolean("onboarding_complete").default(false),
+  convertedToUser: boolean("converted_to_user").default(false),
+  reminderSentAt: timestamp("reminder_sent_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertLeadSchema = createInsertSchema(leads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  reminderSentAt: true,
+  convertedToUser: true,
+});
+
+export type Lead = typeof leads.$inferSelect;
+export type InsertLead = z.infer<typeof insertLeadSchema>;
+
 export const pushSubscriptions = pgTable("push_subscriptions", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id"),

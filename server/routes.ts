@@ -3,7 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, registerAuthRoutes } from "./replit_integrations/auth";
 import { seedPosts } from "./seed";
-import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories } from "@shared/schema";
+import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import OpenAI from "openai";
 import webpush from "web-push";
 import { z } from "zod";
@@ -375,6 +377,55 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete method" });
+    }
+  });
+
+  // Lead capture for onboarding (unauthenticated users)
+  app.post("/api/leads", async (req, res) => {
+    try {
+      const { email, city, offeredServices, postingServices, certifiedBrands, extensionMethods } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+
+      // Check if lead already exists
+      const existingLead = await db.select().from(leads).where(eq(leads.email, email)).limit(1);
+      
+      if (existingLead.length > 0) {
+        // Update existing lead
+        const [updatedLead] = await db.update(leads)
+          .set({
+            city: city || null,
+            offeredServices: offeredServices || [],
+            postingServices: postingServices || [],
+            certifiedBrands: certifiedBrands || [],
+            extensionMethods: extensionMethods || [],
+            onboardingComplete: true,
+            updatedAt: new Date(),
+          })
+          .where(eq(leads.email, email))
+          .returning();
+        return res.json({ success: true, lead: updatedLead });
+      }
+
+      // Create new lead
+      const [newLead] = await db.insert(leads)
+        .values({
+          email,
+          city: city || null,
+          offeredServices: offeredServices || [],
+          postingServices: postingServices || [],
+          certifiedBrands: certifiedBrands || [],
+          extensionMethods: extensionMethods || [],
+          onboardingComplete: true,
+        })
+        .returning();
+
+      res.json({ success: true, lead: newLead });
+    } catch (error) {
+      console.error("Error saving lead:", error);
+      res.status(500).json({ error: "Failed to save lead" });
     }
   });
 
