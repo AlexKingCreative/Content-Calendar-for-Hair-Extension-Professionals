@@ -212,7 +212,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section - Clear One-Liner */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-x-clip">
         <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-background to-amber-50/30 dark:from-rose-950/20 dark:via-background dark:to-amber-950/10" />
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/15 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
