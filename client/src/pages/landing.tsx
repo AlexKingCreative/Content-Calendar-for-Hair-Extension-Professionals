@@ -186,7 +186,7 @@ export default function LandingPage() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-rose-400 flex items-center justify-center">
                 <Calendar className="w-4 h-4 text-white" />
               </div>
-              <span className="font-heading font-bold text-lg hidden sm:block">Content Calendar</span>
+              <span className="font-heading font-bold text-lg hidden sm:block">Content Calendar for Hair Pros</span>
             </div>
           </Link>
           
@@ -964,9 +964,6 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-4">Product</h4>
               <div className="space-y-2 text-sm">
-                <Link href="/calendar" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-calendar">
-                  Calendar
-                </Link>
                 <Link href="/pricing" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-pricing">
                   Pricing
                 </Link>
