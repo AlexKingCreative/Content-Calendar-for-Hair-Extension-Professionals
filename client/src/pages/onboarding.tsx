@@ -101,9 +101,9 @@ export default function OnboardingPage() {
     },
   });
 
-  const leadMutation = useMutation({
+  const onboardMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", "/api/leads", {
+      return apiRequest("POST", "/api/auth/onboard", {
         email,
         city: city || null,
         offeredServices,
@@ -112,10 +112,15 @@ export default function OnboardingPage() {
         extensionMethods: selectedMethods,
       });
     },
-    onSuccess: () => {
+    onSuccess: async (data: any) => {
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      
       toast({
-        title: "You're all set!",
-        description: "Check your email for next steps to start your free trial.",
+        title: "Welcome!",
+        description: data.isNewUser 
+          ? "Your account is ready! Check your email for your login credentials." 
+          : "Welcome back! You're now signed in.",
       });
       setLocation("/calendar");
     },
@@ -168,7 +173,7 @@ export default function OnboardingPage() {
       if (isLoggedIn) {
         saveMutation.mutate();
       } else {
-        leadMutation.mutate();
+        onboardMutation.mutate();
       }
     }
   };
@@ -183,7 +188,7 @@ export default function OnboardingPage() {
     if (isLoggedIn) {
       saveMutation.mutate();
     } else if (email) {
-      leadMutation.mutate();
+      onboardMutation.mutate();
     } else {
       setLocation("/calendar");
     }
@@ -485,13 +490,13 @@ export default function OnboardingPage() {
               onClick={handleNext} 
               disabled={
                 saveMutation.isPending || 
-                leadMutation.isPending ||
+                onboardMutation.isPending ||
                 (step === 1 && !isLoggedIn && !email) ||
                 (((step === 2 && isLoggedIn) || step === 3) && offeredServices.length === 0)
               } 
               data-testid="button-next"
             >
-              {(saveMutation.isPending || leadMutation.isPending) ? (
+              {(saveMutation.isPending || onboardMutation.isPending) ? (
                 "Saving..."
               ) : step === totalSteps ? (
                 <>
