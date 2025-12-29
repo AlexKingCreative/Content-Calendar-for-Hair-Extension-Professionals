@@ -2,7 +2,7 @@
   "expo": {
     "name": "Hair Pro Content Calendar",
     "slug": "hairpro-content-calendar",
-    "version": "1.0.1",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hairpro360.contentcalendar",
-      "buildNumber": "1",
+      "buildNumber": "5",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
