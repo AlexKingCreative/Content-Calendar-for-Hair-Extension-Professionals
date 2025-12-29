@@ -2,7 +2,14 @@
 
 ## Overview
 
-A social media content calendar application designed specifically for hair extension professionals. The app provides a 12-month calendar with 365 days of pre-generated social media post ideas, including titles, descriptions, categories, content types, and hashtags. Users can browse by month, filter by category and content type, and view detailed post information in a modal.
+A comprehensive social media content calendar application designed specifically for hair extension professionals. Features include:
+- 365 days of pre-generated social media post ideas with titles, descriptions, categories, content types, and hashtags
+- Browse by month, filter by category and content type
+- Posting challenges with progress tracking and streak/milestone rewards
+- Native Instagram integration with OAuth, automatic post detection, and analytics dashboard
+- Trend alerts with 7-day expiration
+- Stripe subscriptions for premium features
+- Email-only onboarding with automatic password generation
 
 ## User Preferences
 
@@ -35,6 +42,14 @@ Preferred communication style: Simple, everyday language.
 - `GET /api/posts` - Fetch all posts
 - `GET /api/posts/month/:month` - Fetch posts for a specific month (1-12)
 - `GET /api/posts/:id` - Fetch single post by ID
+
+### Instagram Integration
+- **OAuth Flow**: Facebook/Instagram OAuth with CSRF protection via session-stored state tokens
+- **Token Management**: Long-lived tokens (60-day expiry) with automatic refresh when within 7 days of expiration
+- **Media Sync**: Fetches recent posts with engagement metrics (likes, comments, reach, impressions)
+- **Auto-logging**: Instagram posts automatically logged for streak tracking when new posts detected during sync
+- **Analytics Dashboard**: Dedicated page at `/instagram` showing engagement stats, post grid, and activity metrics
+- **Service**: `InstagramService` class in `server/instagramService.ts` handles all Meta Graph API interactions
 
 ### Key Design Patterns
 - **Monorepo Structure**: Client code in `/client`, server in `/server`, shared types in `/shared`
