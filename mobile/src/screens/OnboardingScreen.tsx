@@ -490,6 +490,7 @@ const EXTENSION_METHODS = [
 
 type OnboardingData = {
   services: string[];
+  postingServices: string[];
   location: string;
   goals: string[];
   instagram: string;
@@ -505,6 +506,7 @@ export default function OnboardingScreen() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [data, setData] = useState<OnboardingData>({
     services: [],
+    postingServices: [],
     location: '',
     goals: [],
     instagram: '',
@@ -516,7 +518,7 @@ export default function OnboardingScreen() {
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   const hasExtensions = data.services.includes('extensions');
-  const baseSteps = 3;
+  const baseSteps = 4;
   const totalSteps = hasExtensions ? baseSteps + 1 : baseSteps;
 
   const animateProgress = (toStep: number) => {
@@ -533,6 +535,15 @@ export default function OnboardingScreen() {
       services: prev.services.includes(id)
         ? prev.services.filter(s => s !== id)
         : [...prev.services, id],
+    }));
+  };
+
+  const togglePostingService = (id: string) => {
+    setData(prev => ({
+      ...prev,
+      postingServices: prev.postingServices.includes(id)
+        ? prev.postingServices.filter(s => s !== id)
+        : [...prev.postingServices, id],
     }));
   };
 
@@ -565,7 +576,8 @@ export default function OnboardingScreen() {
 
   const getLogicalStep = () => {
     if (step === 0) return 0;
-    if (hasExtensions && step === 1) return 'brands';
+    if (step === 1) return 'postingServices';
+    if (hasExtensions && step === 2) return 'brands';
     if (hasExtensions) return step - 1;
     return step;
   };
@@ -604,12 +616,14 @@ export default function OnboardingScreen() {
     switch (logicalStep) {
       case 0:
         return data.services.length > 0;
+      case 'postingServices':
+        return data.postingServices.length > 0;
       case 'brands':
         const hasBrand = data.selectedBrand !== '' && (data.selectedBrand !== 'Other' || data.customBrand.trim().length > 0);
         return hasBrand && data.methods.length > 0;
-      case 1:
-        return data.location.trim().length > 0;
       case 2:
+        return data.location.trim().length > 0;
+      case 3:
         return data.goals.length > 0;
       default:
         return false;
@@ -659,6 +673,65 @@ export default function OnboardingScreen() {
                   )}
                 </TouchableOpacity>
               ))}
+            </View>
+          </View>
+        );
+
+      case 'postingServices':
+        return (
+          <View style={styles.stepContent}>
+            <Text style={styles.stepTitle}>Which services do you want to attract?</Text>
+            <Text style={styles.stepSubtitle}>
+              Select the services you want more clients for
+            </Text>
+            <View style={styles.servicesGrid}>
+              {SERVICE_CATEGORIES.filter(s => data.services.includes(s.id)).map((service) => (
+                <TouchableOpacity
+                  key={service.id}
+                  style={[
+                    styles.serviceCard,
+                    data.postingServices.includes(service.id) && styles.serviceCardSelected,
+                  ]}
+                  onPress={() => togglePostingService(service.id)}
+                >
+                  <ServiceIcon 
+                    iconIndex={service.iconIndex} 
+                    size={52} 
+                    selected={data.postingServices.includes(service.id)}
+                  />
+                  <View style={styles.serviceTextContainer}>
+                    <Text
+                      style={[
+                        styles.serviceLabel,
+                        data.postingServices.includes(service.id) && styles.serviceLabelSelected,
+                      ]}
+                    >
+                      {service.label}
+                    </Text>
+                    <Text style={styles.serviceDescription}>{service.description}</Text>
+                  </View>
+                  {data.postingServices.includes(service.id) && (
+                    <View style={styles.checkmark}>
+                      <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            <View style={styles.quoteContainer}>
+              <Image 
+                source={{ uri: 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=100' }}
+                style={styles.quoteAvatar}
+              />
+              <View style={styles.quoteTextContainer}>
+                <Text style={styles.quoteText}>
+                  "What you post about, you will bring about!"
+                </Text>
+                <Text style={styles.quoteAuthor}>
+                  — Ashley Diana, Hair Extension Business Coach
+                </Text>
+              </View>
             </View>
           </View>
         );
@@ -776,7 +849,7 @@ export default function OnboardingScreen() {
           </View>
         );
 
-      case 1:
+      case 2:
         return (
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>Where are you located?</Text>
@@ -809,7 +882,7 @@ export default function OnboardingScreen() {
           </View>
         );
 
-      case 2:
+      case 3:
         return (
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>What are your content goals?</Text>
@@ -1172,6 +1245,36 @@ const styles = StyleSheet.create({
   },
   brandChipTextSelected: {
     color: '#FFFFFF',
+  },
+  quoteContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FDF5F0',
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 20,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#E5D5C5',
+  },
+  quoteAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  quoteTextContainer: {
+    flex: 1,
+  },
+  quoteText: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: '#5D4E3C',
+    lineHeight: 20,
+  },
+  quoteAuthor: {
+    fontSize: 12,
+    color: '#A89580',
+    marginTop: 4,
   },
   footer: {
     padding: 24,

@@ -70,6 +70,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [services, setServices] = useState<string[]>([]);
+  const [postingServices, setPostingServices] = useState<string[]>([]);
   const [city, setCity] = useState("");
   const [instagram, setInstagram] = useState("");
   const [goals, setGoals] = useState<string[]>([]);
@@ -89,7 +90,7 @@ export default function OnboardingPage() {
   });
 
   const isLoggedIn = !!user;
-  const baseSteps = isLoggedIn ? 5 : 6;
+  const baseSteps = isLoggedIn ? 6 : 7;
   const totalSteps = hasExtensions ? baseSteps + 1 : baseSteps;
 
   useEffect(() => {
@@ -104,6 +105,7 @@ export default function OnboardingPage() {
       try {
         const data = JSON.parse(pending);
         if (data.services?.length) setServices(data.services);
+        if (data.postingServices?.length) setPostingServices(data.postingServices);
         if (data.city) setCity(data.city);
         if (data.instagram) setInstagram(data.instagram);
         if (data.goals?.length) setGoals(data.goals);
@@ -121,18 +123,18 @@ export default function OnboardingPage() {
 
   const progress = (step / totalSteps) * 100;
 
+  const serviceMap: Record<string, string> = {
+    'extensions': 'Extension Services',
+    'toppers': 'Topper Services',
+    'wigs': 'Wig Services',
+    'coloring': 'Coloring Services',
+    'cutting': 'Cutting Services',
+  };
+
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const postingServices = services.map(s => {
-        const serviceMap: Record<string, string> = {
-          'extensions': 'Extension Services',
-          'toppers': 'Topper Services',
-          'wigs': 'Wig Services',
-          'coloring': 'Coloring Services',
-          'cutting': 'Cutting Services',
-        };
-        return serviceMap[s] || s;
-      });
+      const offeredServicesMapped = services.map(s => serviceMap[s] || s);
+      const postingServicesMapped = postingServices.map(s => serviceMap[s] || s);
       
       return apiRequest("PUT", "/api/profile", {
         city: city || null,
@@ -140,8 +142,8 @@ export default function OnboardingPage() {
         accountType: accountType || "solo",
         isSalonOwner: isSalonOwner || false,
         contentGoals: goals,
-        offeredServices: postingServices,
-        postingServices: postingServices,
+        offeredServices: offeredServicesMapped,
+        postingServices: postingServicesMapped,
         certifiedBrands: hasExtensions && selectedBrand && selectedBrand !== "Other" ? [selectedBrand] : [],
         customBrand: hasExtensions && selectedBrand === "Other" ? customBrand : null,
         extensionMethods: hasExtensions ? methods : [],
@@ -155,16 +157,8 @@ export default function OnboardingPage() {
 
   const onboardMutation = useMutation({
     mutationFn: async () => {
-      const postingServices = services.map(s => {
-        const serviceMap: Record<string, string> = {
-          'extensions': 'Extension Services',
-          'toppers': 'Topper Services',
-          'wigs': 'Wig Services',
-          'coloring': 'Coloring Services',
-          'cutting': 'Cutting Services',
-        };
-        return serviceMap[s] || s;
-      });
+      const offeredServicesMapped = services.map(s => serviceMap[s] || s);
+      const postingServicesMapped = postingServices.map(s => serviceMap[s] || s);
       
       return apiRequest("POST", "/api/auth/onboard", {
         email,
@@ -173,8 +167,8 @@ export default function OnboardingPage() {
         accountType: accountType || "solo",
         isSalonOwner: isSalonOwner || false,
         contentGoals: goals,
-        offeredServices: postingServices,
-        postingServices: postingServices,
+        offeredServices: offeredServicesMapped,
+        postingServices: postingServicesMapped,
         certifiedBrands: hasExtensions && selectedBrand && selectedBrand !== "Other" ? [selectedBrand] : [],
         customBrand: hasExtensions && selectedBrand === "Other" ? customBrand : null,
         extensionMethods: hasExtensions ? methods : [],
@@ -215,6 +209,12 @@ export default function OnboardingPage() {
     );
   };
 
+  const togglePostingService = (id: string) => {
+    setPostingServices(prev => 
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    );
+  };
+
   const toggleGoal = (id: string) => {
     setGoals(prev => 
       prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
@@ -236,11 +236,12 @@ export default function OnboardingPage() {
   const getLogicalStep = () => {
     const adjusted = getAdjustedStep();
     if (adjusted <= 1) return adjusted;
-    if (adjusted === 2) return "accountType";
-    if (adjusted === 3) return "salonOwner";
-    if (hasExtensions && adjusted === 4) return "brands";
-    if (hasExtensions) return adjusted - 2;
-    return adjusted - 2;
+    if (adjusted === 2) return "postingServices";
+    if (adjusted === 3) return "accountType";
+    if (adjusted === 4) return "salonOwner";
+    if (hasExtensions && adjusted === 5) return "brands";
+    if (hasExtensions) return adjusted - 3;
+    return adjusted - 3;
   };
 
   const canContinue = () => {
@@ -251,6 +252,8 @@ export default function OnboardingPage() {
     switch (logicalStep) {
       case 1:
         return services.length > 0;
+      case "postingServices":
+        return postingServices.length > 0;
       case "accountType":
         return accountType !== '';
       case "salonOwner":
@@ -290,6 +293,7 @@ export default function OnboardingPage() {
     const logicalStep = getLogicalStep();
     switch (logicalStep) {
       case 1: return "What services do you offer?";
+      case "postingServices": return "Which services do you want to attract?";
       case "accountType": return "Who's posting?";
       case "salonOwner": return "Do you have a team?";
       case "brands": return "Extension Expertise";
@@ -304,6 +308,7 @@ export default function OnboardingPage() {
     const logicalStep = getLogicalStep();
     switch (logicalStep) {
       case 1: return "Select all that apply - we'll personalize your content";
+      case "postingServices": return "Select the services you want more clients for";
       case "accountType": return "This helps us write captions in your voice";
       case "salonOwner": return "This helps us understand your business setup";
       case "brands": return "Select the brands you're certified in and methods you specialize in";
@@ -378,6 +383,67 @@ export default function OnboardingPage() {
                   </button>
                 );
               })}
+            </div>
+          </div>
+        );
+
+      case "postingServices":
+        return (
+          <div className="space-y-4" data-testid="step-posting-services">
+            <div className="grid gap-3">
+              {SERVICE_CATEGORIES.filter(s => services.includes(s.id)).map((service) => {
+                const Icon = service.icon;
+                const isSelected = postingServices.includes(service.id);
+                return (
+                  <button
+                    key={service.id}
+                    onClick={() => togglePostingService(service.id)}
+                    className={`relative flex items-center gap-4 p-4 rounded-md border-2 text-left transition-all ${
+                      isSelected 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border hover-elevate'
+                    }`}
+                    data-testid={`button-posting-${service.id}`}
+                  >
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
+                      isSelected ? 'bg-primary/20' : 'bg-muted'
+                    }`}>
+                      <Icon className={`w-6 h-6 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-medium ${isSelected ? 'text-primary' : ''}`}>
+                        {service.label}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {service.description}
+                      </p>
+                    </div>
+                    {isSelected && (
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="w-4 h-4 text-primary-foreground" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <div className="mt-6 p-4 bg-muted/50 rounded-md border border-border/50">
+              <div className="flex items-center gap-3 justify-center">
+                <img 
+                  src={ashleyDianaImg} 
+                  alt="Ashley Diana" 
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                />
+                <div>
+                  <p className="text-sm text-muted-foreground italic">
+                    "What you post about, you will bring about!"
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">
+                    — Ashley Diana, Hair Extension Business Coach
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -657,24 +723,6 @@ export default function OnboardingPage() {
                   </button>
                 );
               })}
-            </div>
-            
-            <div className="mt-6 p-4 bg-muted/50 rounded-md border border-border/50">
-              <div className="flex items-center gap-3 justify-center">
-                <img 
-                  src={ashleyDianaImg} 
-                  alt="Ashley Diana" 
-                  className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                />
-                <div>
-                  <p className="text-sm text-muted-foreground italic">
-                    "What you post about, you will bring about!"
-                  </p>
-                  <p className="text-xs text-muted-foreground/70 mt-0.5">
-                    — Ashley Diana, Hair Extension Business Coach
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         );
