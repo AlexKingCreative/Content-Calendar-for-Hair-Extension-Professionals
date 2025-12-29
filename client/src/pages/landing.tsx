@@ -448,15 +448,15 @@ export default function LandingPage() {
             >
               <div className="inline-block p-10 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-3xl border border-primary/10">
                 <div className="text-6xl sm:text-7xl font-bold bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent mb-2">
-                  <AnimatedCounter value={2000} />+
+                  <AnimatedCounter value={365} />
                 </div>
-                <p className="text-muted-foreground text-lg">stylists already using this app</p>
+                <p className="text-muted-foreground text-lg">days of content ideas ready for you</p>
                 <div className="flex justify-center gap-1 mt-6">
                   {[1,2,3,4,5].map((i) => (
                     <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">Average rating: 4.9/5</p>
+                <p className="text-sm text-muted-foreground mt-2">Created by hair pros, for hair pros</p>
               </div>
             </motion.div>
           </div>
