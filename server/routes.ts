@@ -175,6 +175,110 @@ export async function registerRoutes(
       res.json({ success: true });
     });
   });
+
+  // Onboarding endpoint - creates account with auto-generated password and logs in
+  app.post("/api/auth/onboard", async (req: any, res) => {
+    try {
+      const { email, city, offeredServices, postingServices, certifiedBrands: userBrands, extensionMethods: userMethods } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const bcrypt = await import("bcryptjs");
+      const crypto = await import("crypto");
+      const { sendWelcomeEmail } = await import("./emailService");
+      const { users } = await import("@shared/models/auth");
+
+      // Check if user already exists
+      const [existingUser] = await db.select().from(users).where(eq(users.email, email));
+      
+      let user;
+      let generatedPassword: string | null = null;
+      
+      if (existingUser) {
+        // User exists - just log them in
+        user = existingUser;
+      } else {
+        // Generate a random 12-character password
+        generatedPassword = crypto.randomBytes(6).toString('base64').replace(/[+/=]/g, 'x').slice(0, 12);
+        const passwordHash = await bcrypt.default.hash(generatedPassword, 10);
+        
+        // Create new user
+        const [newUser] = await db.insert(users).values({
+          email,
+          passwordHash,
+          firstName: null,
+          lastName: null,
+        }).returning();
+        
+        user = newUser;
+        
+        // Send welcome email with credentials (async, don't block)
+        sendWelcomeEmail(email, generatedPassword).catch(err => {
+          console.error("Failed to send welcome email:", err);
+        });
+      }
+
+      // Create or update user profile with onboarding data
+      await storage.upsertUserProfile({
+        userId: user.id,
+        city: city || null,
+        offeredServices: offeredServices || [],
+        postingServices: postingServices || [],
+        certifiedBrands: userBrands || [],
+        extensionMethods: userMethods || [],
+        onboardingComplete: true,
+      });
+
+      // Also update the leads table if the lead exists
+      const existingLead = await db.select().from(leads).where(eq(leads.email, email)).limit(1);
+      if (existingLead.length > 0) {
+        await db.update(leads)
+          .set({
+            city: city || null,
+            offeredServices: offeredServices || [],
+            postingServices: postingServices || [],
+            certifiedBrands: userBrands || [],
+            extensionMethods: userMethods || [],
+            onboardingComplete: true,
+            convertedToUser: true,
+            updatedAt: new Date(),
+          })
+          .where(eq(leads.email, email));
+      } else {
+        // Create a lead entry for tracking
+        await db.insert(leads).values({
+          email,
+          city: city || null,
+          offeredServices: offeredServices || [],
+          postingServices: postingServices || [],
+          certifiedBrands: userBrands || [],
+          extensionMethods: userMethods || [],
+          onboardingComplete: true,
+          convertedToUser: true,
+        });
+      }
+
+      // Create session (auto-login)
+      req.session.userId = user.id;
+      req.session.userEmail = user.email;
+      req.session.userName = user.firstName ? `${user.firstName}${user.lastName ? " " + user.lastName : ""}` : email.split("@")[0];
+
+      res.json({
+        success: true,
+        isNewUser: !existingUser,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: req.session.userName,
+        }
+      });
+    } catch (error) {
+      console.error("Onboarding error:", error);
+      res.status(500).json({ message: "Failed to complete onboarding" });
+    }
+  });
   
   await seedPosts();
 

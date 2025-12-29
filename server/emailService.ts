@@ -98,3 +98,73 @@ export async function sendMagicLinkEmail(email: string, magicLinkUrl: string): P
     return false;
   }
 }
+
+export async function sendWelcomeEmail(email: string, password: string): Promise<boolean> {
+  try {
+    const { client, fromEmail } = await getResendClient();
+    const loginUrl = process.env.REPLIT_DEV_DOMAIN 
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}/login`
+      : 'https://contentcalendarforhairpros.com/login';
+    
+    await client.emails.send({
+      from: fromEmail || 'Content Calendar <hello@contentcalendarforhairpros.com>',
+      to: email,
+      subject: 'Welcome to Content Calendar for Hair Pros - Your Account is Ready!',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FFF8F0; padding: 40px 20px; margin: 0;">
+          <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <h1 style="color: #5D4E3C; font-size: 24px; margin: 0 0 8px;">Content Calendar</h1>
+              <p style="color: #8B7355; font-size: 14px; margin: 0;">for Hair Extension Professionals</p>
+            </div>
+            
+            <h2 style="color: #5D4E3C; font-size: 20px; text-align: center; margin-bottom: 16px;">
+              Welcome! Your account is ready.
+            </h2>
+            
+            <p style="color: #5D4E3C; font-size: 16px; line-height: 1.6; text-align: center; margin-bottom: 24px;">
+              We're excited to have you! Here are your login credentials:
+            </p>
+            
+            <div style="background: #FFF8F0; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+              <p style="color: #5D4E3C; font-size: 14px; margin: 0 0 8px;">
+                <strong>Email:</strong> ${email}
+              </p>
+              <p style="color: #5D4E3C; font-size: 14px; margin: 0;">
+                <strong>Password:</strong> ${password}
+              </p>
+            </div>
+            
+            <p style="color: #8B7355; font-size: 14px; text-align: center; margin-bottom: 24px;">
+              We recommend changing your password after your first login for security.
+            </p>
+            
+            <div style="text-align: center; margin-bottom: 32px;">
+              <a href="${loginUrl}" style="display: inline-block; background-color: #D4A574; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                Sign In Now
+              </a>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid #F5EDE4; margin: 32px 0;">
+            
+            <p style="color: #8B7355; font-size: 12px; text-align: center;">
+              365 days of content ideas, AI-powered captions, and trend alerts await you!
+            </p>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to send welcome email:', error);
+    return false;
+  }
+}
