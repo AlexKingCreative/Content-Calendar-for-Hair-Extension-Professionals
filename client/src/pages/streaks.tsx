@@ -1,16 +1,20 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { ArrowLeft, Flame, Star, Trophy, Crown, Gem, Medal, Rocket, Sparkles, Check, Calendar, Target, TrendingUp, Award } from "lucide-react";
+import { format, differenceInDays } from "date-fns";
+import { ArrowLeft, Flame, Star, Trophy, Crown, Gem, Medal, Rocket, Sparkles, Check, Calendar, Target, TrendingUp, Award, Play, X, Heart, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { MobileNav } from "@/components/MobileNav";
 import { navigateToLogin } from "@/lib/auth-utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
-import { streakMilestones, postingGoalDescriptions, type PostingGoal } from "@shared/schema";
+import { streakMilestones, postingGoalDescriptions, type PostingGoal, type Challenge, type UserChallenge } from "@shared/schema";
 
 interface StreakData {
   currentStreak: number;
@@ -25,6 +29,10 @@ interface User {
   id: string;
 }
 
+interface UserChallengeWithDetails extends UserChallenge {
+  challenge: Challenge | null;
+}
+
 const iconMap: Record<string, typeof Flame> = {
   flame: Flame,
   star: Star,
@@ -34,7 +42,14 @@ const iconMap: Record<string, typeof Flame> = {
   medal: Medal,
   rocket: Rocket,
   sparkles: Sparkles,
+  target: Target,
+  heart: Heart,
 };
+
+function ChallengeIcon({ icon, className }: { icon: string; className?: string }) {
+  const IconComponent = iconMap[icon] || Target;
+  return <IconComponent className={className} />;
+}
 
 function getEarnedBadges(currentStreak: number) {
   return streakMilestones.filter(m => currentStreak >= m.days);
@@ -48,6 +63,8 @@ export default function StreaksPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
+  const [startingChallengeId, setStartingChallengeId] = useState<number | null>(null);
 
   const { data: user } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
@@ -56,6 +73,15 @@ export default function StreaksPage() {
 
   const { data: streak, isLoading } = useQuery<StreakData>({
     queryKey: ["/api/streak"],
+    enabled: !!user,
+  });
+
+  const { data: challenges } = useQuery<Challenge[]>({
+    queryKey: ["/api/challenges"],
+  });
+
+  const { data: userChallenges } = useQuery<UserChallengeWithDetails[]>({
+    queryKey: ["/api/user/challenges"],
     enabled: !!user,
   });
 
@@ -80,6 +106,53 @@ export default function StreaksPage() {
       });
     },
   });
+
+  const startChallengeMutation = useMutation({
+    mutationFn: async (challengeId: number) => {
+      setStartingChallengeId(challengeId);
+      return apiRequest("POST", `/api/challenges/${challengeId}/start`, {});
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/user/challenges"] });
+      toast({ title: "Challenge started!", description: "Good luck! You've got this." });
+      setStartingChallengeId(null);
+    },
+    onError: (error: any) => {
+      toast({ title: "Couldn't start challenge", description: error?.message || "Please try again.", variant: "destructive" });
+      setStartingChallengeId(null);
+    },
+  });
+
+  const logProgressMutation = useMutation({
+    mutationFn: async (userChallengeId: number) => {
+      return apiRequest("POST", `/api/user/challenges/${userChallengeId}/progress`, {});
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/user/challenges"] });
+      toast({ title: "Progress logged!", description: "Keep up the great work!" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Couldn't log progress", description: error?.message || "Please try again.", variant: "destructive" });
+    },
+  });
+
+  const abandonMutation = useMutation({
+    mutationFn: async (userChallengeId: number) => {
+      return apiRequest("POST", `/api/user/challenges/${userChallengeId}/abandon`, {});
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/user/challenges"] });
+      toast({ title: "Challenge abandoned", description: "You can start again anytime." });
+    },
+    onError: () => {
+      toast({ title: "Couldn't abandon challenge", description: "Please try again.", variant: "destructive" });
+    },
+  });
+
+  const activeChallenges = userChallenges?.filter(uc => uc.status === "active") || [];
+  const completedChallenges = userChallenges?.filter(uc => uc.status === "completed") || [];
+  const getUserChallengeForChallenge = (challengeId: number) => userChallenges?.find(uc => uc.challengeId === challengeId && uc.status === "active");
+  const getCompletedChallengeForChallenge = (challengeId: number) => userChallenges?.find(uc => uc.challengeId === challengeId && uc.status === "completed");
 
   const earnedBadges = streak ? getEarnedBadges(streak.currentStreak) : [];
   const nextMilestone = streak ? getNextMilestone(streak.currentStreak) : null;
@@ -157,7 +230,23 @@ export default function StreaksPage() {
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-6 space-y-4 animate-page-enter">
+      <main className="max-w-lg mx-auto px-4 py-4 animate-page-enter">
+        <Tabs defaultValue="streaks" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="streaks" data-testid="tab-streaks">
+              <Flame className="w-4 h-4 mr-2" />
+              Streaks
+            </TabsTrigger>
+            <TabsTrigger value="challenges" data-testid="tab-challenges">
+              <Target className="w-4 h-4 mr-2" />
+              Challenges
+              {activeChallenges.length > 0 && (
+                <Badge variant="secondary" className="ml-2 text-xs">{activeChallenges.length}</Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="streaks" className="space-y-4">
         <div className="glass-card rounded-2xl p-5 animate-fade-in-up stagger-1">
           <div className="flex items-center justify-center mb-4">
             <div className="relative">
@@ -309,6 +398,183 @@ export default function StreaksPage() {
             </div>
           </div>
         )}
+          </TabsContent>
+
+          <TabsContent value="challenges" className="space-y-4">
+            {activeChallenges.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-heading font-medium text-foreground flex items-center gap-2">
+                  <Play className="w-5 h-5 text-primary" />
+                  Active Challenges
+                </h3>
+                {activeChallenges.map((uc) => {
+                  const challenge = uc.challenge;
+                  if (!challenge) return null;
+                  const startDate = new Date(uc.startedAt);
+                  const daysElapsed = differenceInDays(new Date(), startDate) + 1;
+                  const progress = ((uc.postsCompleted || 0) / (challenge.postsRequired || challenge.durationDays)) * 100;
+                  const today = new Date().toISOString().split('T')[0];
+                  const hasLoggedToday = uc.lastPostDate === today;
+                  
+                  return (
+                    <Card key={uc.id} className="border-primary">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <ChallengeIcon icon={challenge.icon} className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-base font-heading">{challenge.name}</CardTitle>
+                            <CardDescription>Started {format(startDate, "MMM d")}</CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div>
+                            <div className="text-lg font-bold text-primary">{uc.postsCompleted || 0}</div>
+                            <div className="text-xs text-muted-foreground">Posts</div>
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold">{daysElapsed}</div>
+                            <div className="text-xs text-muted-foreground">Days</div>
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold text-emerald-600">{uc.currentStreak || 0}</div>
+                            <div className="text-xs text-muted-foreground">Streak</div>
+                          </div>
+                        </div>
+                        <Progress value={progress} className="h-2" />
+                        <div className="flex gap-2">
+                          <Button 
+                            className="flex-1" 
+                            onClick={() => logProgressMutation.mutate(uc.id)}
+                            disabled={hasLoggedToday || logProgressMutation.isPending}
+                            data-testid={`button-log-challenge-${uc.id}`}
+                          >
+                            {logProgressMutation.isPending ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : hasLoggedToday ? (
+                              <><Check className="w-4 h-4 mr-2" />Done Today</>
+                            ) : (
+                              <><Check className="w-4 h-4 mr-2" />Log Post</>
+                            )}
+                          </Button>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Abandon challenge?</DialogTitle>
+                                <DialogDescription>Your progress will be saved but the challenge will be marked as abandoned.</DialogDescription>
+                              </DialogHeader>
+                              <DialogFooter>
+                                <Button variant="destructive" onClick={() => abandonMutation.mutate(uc.id)} disabled={abandonMutation.isPending}>
+                                  {abandonMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                                  Abandon
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <h3 className="font-heading font-medium text-foreground flex items-center gap-2">
+                <Target className="w-5 h-5 text-muted-foreground" />
+                Available Challenges
+              </h3>
+              {challenges?.map((challenge) => {
+                const activeUC = getUserChallengeForChallenge(challenge.id);
+                const completedUC = getCompletedChallengeForChallenge(challenge.id);
+                const isActive = !!activeUC;
+                const isCompleted = !!completedUC;
+                
+                return (
+                  <Card 
+                    key={challenge.id} 
+                    className={`hover-elevate ${isActive ? "border-primary" : ""} ${isCompleted ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20" : ""}`}
+                    data-testid={`card-challenge-${challenge.id}`}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isCompleted ? "bg-emerald-100 dark:bg-emerald-900" : "bg-primary/10"}`}>
+                            <ChallengeIcon icon={challenge.icon} className={`w-5 h-5 ${isCompleted ? "text-emerald-600" : "text-primary"}`} />
+                          </div>
+                          <div>
+                            <CardTitle className="text-base font-heading">{challenge.name}</CardTitle>
+                            <CardDescription>{challenge.durationDays} days</CardDescription>
+                          </div>
+                        </div>
+                        {isActive && <Badge><Play className="w-3 h-3 mr-1" />Active</Badge>}
+                        {isCompleted && <Badge className="bg-emerald-600"><Check className="w-3 h-3 mr-1" />Done</Badge>}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{challenge.description}</p>
+                      {!isActive && (
+                        <Button 
+                          className="w-full" 
+                          variant={isCompleted ? "outline" : "default"}
+                          onClick={() => startChallengeMutation.mutate(challenge.id)}
+                          disabled={startingChallengeId === challenge.id}
+                          data-testid={`button-start-challenge-${challenge.id}`}
+                        >
+                          {startingChallengeId === challenge.id ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Play className="w-4 h-4 mr-2" />
+                          )}
+                          {isCompleted ? "Start Again" : "Start Challenge"}
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {completedChallenges.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-heading font-medium text-foreground flex items-center gap-2">
+                  <Award className="w-5 h-5 text-emerald-600" />
+                  Completed
+                  <Badge variant="secondary" className="ml-auto">{completedChallenges.length}</Badge>
+                </h3>
+                {completedChallenges.map((uc) => (
+                  <Card key={uc.id} className="bg-emerald-50/30 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800">
+                    <CardContent className="py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
+                          {uc.challenge && <ChallengeIcon icon={uc.challenge.badgeIcon || uc.challenge.icon} className="w-4 h-4 text-emerald-600" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{uc.challenge?.name}</div>
+                          <div className="text-xs text-muted-foreground">{uc.postsCompleted} posts</div>
+                        </div>
+                        {uc.challenge?.badgeName && (
+                          <Badge className="bg-emerald-600 text-xs">
+                            <Trophy className="w-3 h-3 mr-1" />
+                            {uc.challenge.badgeName}
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
 
       <MobileNav isLoggedIn={!!user} />

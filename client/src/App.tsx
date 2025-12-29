@@ -14,7 +14,6 @@ import SettingsPage from "@/pages/settings";
 import AccountPage from "@/pages/account";
 import TodayPage from "@/pages/today";
 import StreaksPage from "@/pages/streaks";
-import ChallengesPage from "@/pages/challenges";
 import PostPage from "@/pages/post";
 import TermsPage from "@/pages/terms";
 import PrivacyPage from "@/pages/privacy";
@@ -175,7 +174,6 @@ function Router() {
       </Route>
       <Route path="/today" component={TodayPage} />
       <Route path="/streaks" component={StreaksPage} />
-      <Route path="/challenges" component={ChallengesPage} />
       <Route path="/post/:id" component={PostPage} />
       <Route path="/subscribe">
         <ProtectedRoute>

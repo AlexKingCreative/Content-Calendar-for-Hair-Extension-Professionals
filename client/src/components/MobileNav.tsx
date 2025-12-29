@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Settings, Sparkles, Flame, Target } from "lucide-react";
+import { Calendar, Settings, Sparkles, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navigateToLogin } from "@/lib/auth-utils";
 
@@ -63,21 +63,6 @@ export function MobileNav({ isLoggedIn }: MobileNavProps) {
             >
               <Flame className="w-5 h-5" />
               <span className="text-[10px] font-medium">Streaks</span>
-            </div>
-          </Link>
-
-          <Link href="/challenges" className="flex-1">
-            <div
-              className={cn(
-                "flex flex-col items-center justify-center gap-0.5 h-full rounded-2xl fluid-transition active:scale-95",
-                location === "/challenges" 
-                  ? "text-primary" 
-                  : "text-muted-foreground"
-              )}
-              data-testid="nav-challenges"
-            >
-              <Target className="w-5 h-5" />
-              <span className="text-[10px] font-medium">Challenges</span>
             </div>
           </Link>
 
