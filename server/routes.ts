@@ -1977,5 +1977,250 @@ Respond in JSON format with these fields:
     }
   });
 
+  // ============ SALON CHALLENGES ============
+
+  // Get salon challenges for owner's salon
+  app.get("/api/salon/challenges", isAuthenticated, async (req: any, res) => {
+    try {
+      const salon = await storage.getSalonByOwner(req.user.id);
+      if (!salon) {
+        return res.status(404).json({ error: "Salon not found" });
+      }
+      
+      const challenges = await storage.getSalonChallenges(salon.id);
+      res.json(challenges);
+    } catch (error) {
+      console.error("Error fetching salon challenges:", error);
+      res.status(500).json({ error: "Failed to fetch challenges" });
+    }
+  });
+
+  // Create salon challenge
+  app.post("/api/salon/challenges", isAuthenticated, async (req: any, res) => {
+    try {
+      const salon = await storage.getSalonByOwner(req.user.id);
+      if (!salon) {
+        return res.status(404).json({ error: "Salon not found" });
+      }
+      
+      const { title, description, durationDays, rewardText } = req.body;
+      
+      if (!title || !durationDays || !rewardText) {
+        return res.status(400).json({ error: "Title, duration, and reward are required" });
+      }
+      
+      const challenge = await storage.createSalonChallenge({
+        salonId: salon.id,
+        title,
+        description: description || null,
+        durationDays,
+        rewardText,
+        status: "active"
+      });
+      
+      // Auto-assign to all accepted salon members
+      const members = await storage.getSalonMembers(salon.id);
+      const acceptedMembers = members.filter(m => m.invitationStatus === "accepted" && m.stylistUserId);
+      
+      for (const member of acceptedMembers) {
+        await storage.createStylistChallenge({
+          salonChallengeId: challenge.id,
+          stylistUserId: member.stylistUserId!,
+          salonId: salon.id,
+          targetDays: durationDays,
+          status: "active"
+        });
+      }
+      
+      res.status(201).json(challenge);
+    } catch (error) {
+      console.error("Error creating salon challenge:", error);
+      res.status(500).json({ error: "Failed to create challenge" });
+    }
+  });
+
+  // Update salon challenge
+  app.patch("/api/salon/challenges/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const salon = await storage.getSalonByOwner(req.user.id);
+      if (!salon) {
+        return res.status(404).json({ error: "Salon not found" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid challenge ID" });
+      }
+      
+      const challenge = await storage.getSalonChallengeById(id);
+      if (!challenge || challenge.salonId !== salon.id) {
+        return res.status(404).json({ error: "Challenge not found" });
+      }
+      
+      const updated = await storage.updateSalonChallenge(id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating salon challenge:", error);
+      res.status(500).json({ error: "Failed to update challenge" });
+    }
+  });
+
+  // Delete salon challenge
+  app.delete("/api/salon/challenges/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const salon = await storage.getSalonByOwner(req.user.id);
+      if (!salon) {
+        return res.status(404).json({ error: "Salon not found" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid challenge ID" });
+      }
+      
+      const challenge = await storage.getSalonChallengeById(id);
+      if (!challenge || challenge.salonId !== salon.id) {
+        return res.status(404).json({ error: "Challenge not found" });
+      }
+      
+      await storage.deleteSalonChallenge(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting salon challenge:", error);
+      res.status(500).json({ error: "Failed to delete challenge" });
+    }
+  });
+
+  // Get stylist challenge progress for salon owner view
+  app.get("/api/salon/challenges/:id/progress", isAuthenticated, async (req: any, res) => {
+    try {
+      const salon = await storage.getSalonByOwner(req.user.id);
+      if (!salon) {
+        return res.status(404).json({ error: "Salon not found" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid challenge ID" });
+      }
+      
+      const challenge = await storage.getSalonChallengeById(id);
+      if (!challenge || challenge.salonId !== salon.id) {
+        return res.status(404).json({ error: "Challenge not found" });
+      }
+      
+      const stylistChallenges = await storage.getStylistChallengesBySalon(salon.id);
+      const progressData = stylistChallenges.filter(sc => sc.salonChallengeId === id);
+      
+      // Get member details for each progress entry
+      const members = await storage.getSalonMembers(salon.id);
+      const profiles = await storage.getAllUserProfiles();
+      
+      const progressWithDetails = progressData.map(p => {
+        const member = members.find(m => m.stylistUserId === p.stylistUserId);
+        const profile = profiles.find(pr => pr.userId === p.stylistUserId);
+        return {
+          ...p,
+          stylistName: profile?.displayName || member?.email || "Unknown",
+          email: member?.email || ""
+        };
+      });
+      
+      res.json(progressWithDetails);
+    } catch (error) {
+      console.error("Error fetching challenge progress:", error);
+      res.status(500).json({ error: "Failed to fetch progress" });
+    }
+  });
+
+  // ============ STYLIST CHALLENGES (for stylists to see their challenges) ============
+
+  // Get challenges assigned to current user as a stylist
+  app.get("/api/stylist/challenges", isAuthenticated, async (req: any, res) => {
+    try {
+      const challenges = await storage.getStylistChallenges(req.user.id);
+      
+      // Get salon challenge details for each
+      const challengesWithDetails = await Promise.all(challenges.map(async (sc) => {
+        const salonChallenge = await storage.getSalonChallengeById(sc.salonChallengeId);
+        const salon = await storage.getSalon(sc.salonId);
+        return {
+          ...sc,
+          challenge: salonChallenge,
+          salonName: salon?.name || "Unknown Salon"
+        };
+      }));
+      
+      res.json(challengesWithDetails);
+    } catch (error) {
+      console.error("Error fetching stylist challenges:", error);
+      res.status(500).json({ error: "Failed to fetch challenges" });
+    }
+  });
+
+  // Log progress for a stylist challenge (called when posting)
+  app.post("/api/stylist/challenges/:id/log", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid challenge ID" });
+      }
+      
+      const challenge = await storage.getStylistChallengeById(id);
+      if (!challenge || challenge.stylistUserId !== req.user.id) {
+        return res.status(404).json({ error: "Challenge not found" });
+      }
+      
+      if (challenge.status !== "active") {
+        return res.status(400).json({ error: "Challenge is not active" });
+      }
+      
+      // Check if already posted today
+      const today = new Date().toISOString().split('T')[0];
+      if (challenge.lastPostDate === today) {
+        return res.status(400).json({ error: "Already logged today" });
+      }
+      
+      const updated = await storage.incrementStylistChallengeProgress(id);
+      
+      // Check if completed and notify owner
+      if (updated && updated.status === "completed" && !updated.ownerNotifiedAt) {
+        // Mark owner as notified (email notification would go here)
+        await storage.markOwnerNotified(id);
+        
+        const salonChallenge = await storage.getSalonChallengeById(updated.salonChallengeId);
+        const salon = await storage.getSalon(updated.salonId);
+        const profile = await storage.getUserProfile(req.user.id);
+        
+        if (salon && salonChallenge) {
+          const ownerProfile = await storage.getUserProfile(salon.ownerUserId);
+          if (ownerProfile?.email) {
+            // Send notification email to owner
+            try {
+              const { sendEmail } = await import("./emailService");
+              await sendEmail({
+                to: ownerProfile.email,
+                subject: `Challenge Completed: ${profile?.displayName || 'A stylist'} finished "${salonChallenge.title}"`,
+                html: `
+                  <h2>Challenge Completed!</h2>
+                  <p><strong>${profile?.displayName || 'A stylist'}</strong> has completed the "${salonChallenge.title}" challenge!</p>
+                  <p><strong>Reward earned:</strong> ${salonChallenge.rewardText}</p>
+                  <p>Log in to your salon dashboard to see full details.</p>
+                `
+              });
+            } catch (emailError) {
+              console.error("Failed to send completion notification:", emailError);
+            }
+          }
+        }
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error logging challenge progress:", error);
+      res.status(500).json({ error: "Failed to log progress" });
+    }
+  });
+
   return httpServer;
 }
