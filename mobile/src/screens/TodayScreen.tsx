@@ -156,6 +156,27 @@ export default function TodayScreen() {
       )}
 
       <View style={styles.card}>
+        <TouchableOpacity
+          style={[styles.postedCircle, markedToday && styles.postedCircleDone]}
+          onPress={() => markCompleteMutation.mutate(todayPost.id)}
+          disabled={markedToday || markCompleteMutation.isPending}
+        >
+          {markCompleteMutation.isPending ? (
+            <ActivityIndicator size="small" color={markedToday ? colors.textOnPrimary : colors.primary} />
+          ) : (
+            <>
+              <Ionicons 
+                name={markedToday ? "checkmark" : "checkmark"} 
+                size={18} 
+                color={markedToday ? colors.textOnPrimary : colors.primary} 
+              />
+              <Text style={[styles.postedCircleText, markedToday && styles.postedCircleTextDone]}>
+                {markedToday ? "Posted" : "Post"}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+
         <View style={styles.header}>
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{todayPost.contentType}</Text>
@@ -199,20 +220,6 @@ export default function TodayScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          style={[styles.markCompleteButton, markedToday && styles.markCompleteButtonDone]}
-          onPress={() => markCompleteMutation.mutate(todayPost.id)}
-          disabled={markedToday || markCompleteMutation.isPending}
-        >
-          <Ionicons 
-            name={markedToday ? "checkmark-circle" : "checkmark-circle-outline"} 
-            size={24} 
-            color={markedToday ? colors.textOnPrimary : colors.primary} 
-          />
-          <Text style={[styles.markCompleteText, markedToday && styles.markCompleteTextDone]}>
-            {markedToday ? "Posted Today!" : markCompleteMutation.isPending ? "Logging..." : "Mark as Posted"}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.tipCard}>
@@ -265,6 +272,34 @@ const styles = StyleSheet.create({
   card: {
     ...glassCard,
     padding: spacing.xl,
+    position: 'relative',
+  },
+  postedCircle: {
+    position: 'absolute',
+    top: spacing.lg,
+    right: spacing.lg,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.glass.backgroundLight,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  postedCircleDone: {
+    backgroundColor: colors.success,
+    borderColor: colors.success,
+  },
+  postedCircleText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: colors.primary,
+    marginTop: 1,
+  },
+  postedCircleTextDone: {
+    color: colors.textOnPrimary,
   },
   header: {
     flexDirection: 'row',
@@ -381,30 +416,6 @@ const styles = StyleSheet.create({
     width: 1,
     height: 40,
     backgroundColor: colors.border,
-  },
-  markCompleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.glass.backgroundLight,
-    paddingVertical: 14,
-    borderRadius: borderRadius.button,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    marginTop: spacing.lg,
-  },
-  markCompleteButtonDone: {
-    backgroundColor: colors.success,
-    borderColor: colors.success,
-  },
-  markCompleteText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  markCompleteTextDone: {
-    color: colors.textOnPrimary,
   },
   tipContent: {
     flex: 1,
