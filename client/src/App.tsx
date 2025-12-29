@@ -156,11 +156,7 @@ function Router() {
       <Route path="/welcome" component={WelcomePage} />
       <Route path="/signup" component={SignupPage} />
       <Route path="/calendar" component={CalendarPage} />
-      <Route path="/onboarding">
-        <ProtectedRoute>
-          <OnboardingPage />
-        </ProtectedRoute>
-      </Route>
+      <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/admin">
         <AdminRoute>
           <AdminPage />
