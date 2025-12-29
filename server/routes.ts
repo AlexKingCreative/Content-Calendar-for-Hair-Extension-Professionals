@@ -733,15 +733,15 @@ export async function registerRoutes(
       for (const challenge of activeChallenges) {
         if (challenge.status === "active") {
           const updatedChallenge = await storage.incrementStylistChallengeProgress(challenge.id);
-          if (updatedChallenge && updatedChallenge.status === "completed" && !updatedChallenge.ownerNotified) {
+          if (updatedChallenge && updatedChallenge.status === "completed" && !updatedChallenge.ownerNotifiedAt) {
             const salonChallenge = await storage.getSalonChallengeById(challenge.salonChallengeId);
             if (salonChallenge) {
-              const salon = await storage.getSalonById(salonChallenge.salonId);
+              const salon = await storage.getSalon(salonChallenge.salonId);
               if (salon) {
-                const ownerProfile = await storage.getUserProfile(salon.ownerId);
+                const ownerProfile = await storage.getUserProfile(salon.ownerUserId);
                 if (ownerProfile?.email) {
                   const stylistProfile = await storage.getUserProfile(userId);
-                  const stylistName = stylistProfile?.name || stylistProfile?.email || "A stylist";
+                  const stylistName = stylistProfile?.displayName || stylistProfile?.email || "A stylist";
                   try {
                     await sendEmail({
                       to: ownerProfile.email,
