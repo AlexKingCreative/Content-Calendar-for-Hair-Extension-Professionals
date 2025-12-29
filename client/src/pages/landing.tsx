@@ -39,6 +39,7 @@ import { LandingAnimation } from "@/components/LandingAnimation";
 import { CalendarDemo, AICaptionDemo, StreakDemo, InstagramDemo, HashtagDemo } from "@/components/LandingDemos";
 import denaePhoto from "@assets/Denae_Tafoya_1767024771840.jpg";
 import danniPhoto from "@assets/Dannielle_Vizzini_1767024800600.jpg";
+import maryPhoto from "@assets/mary_james_square_1767024880276.png";
 
 function AnimatedCounter({ value, duration = 2000 }: { value: number; duration?: number }) {
   const [count, setCount] = useState(0);
@@ -92,13 +93,14 @@ const testimonials = [
     transformation: "Now we use the app to inspire and reward our team members. The streak challenges turned social media into a fun competition and everyone's engaged!",
   },
   {
-    name: "Amanda Rodriguez",
-    role: "Hair Artist",
-    location: "New York, NY",
-    avatar: "AR",
+    name: "Mary James",
+    role: "Hair Extensionist",
+    location: "Ohio",
+    avatar: "MJ",
+    photo: maryPhoto,
     rating: 5,
-    problem: "I kept attracting clients who didn't value my work.",
-    transformation: "Consistent posting positioned me as an expert. Now I get DMs from people saying 'I've been following you for months - I NEED to book with you!'",
+    problem: "I didn't have time to plan content while running my business.",
+    transformation: "Now I give my virtual assistant access to the app and they know exactly what to post for my business. It's like having a content manager on autopilot!",
   },
   {
     name: "Brittany Chen",
