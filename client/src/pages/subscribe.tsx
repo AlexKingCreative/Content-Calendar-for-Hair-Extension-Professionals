@@ -14,9 +14,14 @@ import {
   Crown,
   Clock
 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+
+interface User {
+  id: string;
+  email?: string;
+}
 
 const features = [
   { icon: Calendar, text: "365 days of pre-planned content ideas" },
@@ -31,8 +36,9 @@ export default function Subscribe() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const { data: user } = useQuery<{ id?: string } | null>({
+  const { data: user, isLoading: userLoading } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
   const { data: priceInfo, isLoading: priceLoading } = useQuery<{
@@ -149,10 +155,10 @@ export default function Subscribe() {
                   className="w-full"
                   size="lg"
                   onClick={() => handleSubscribe(false)}
-                  disabled={checkoutMutation.isPending || priceLoading}
+                  disabled={checkoutMutation.isPending || priceLoading || userLoading}
                   data-testid="button-subscribe-now"
                 >
-                  {checkoutMutation.isPending ? "Loading..." : "Subscribe Now"}
+                  {checkoutMutation.isPending ? "Redirecting to checkout..." : userLoading ? "Loading..." : "Subscribe Now"}
                 </Button>
 
                 <Button
@@ -160,10 +166,10 @@ export default function Subscribe() {
                   className="w-full"
                   size="lg"
                   onClick={() => handleSubscribe(true)}
-                  disabled={checkoutMutation.isPending || priceLoading}
+                  disabled={checkoutMutation.isPending || priceLoading || userLoading}
                   data-testid="button-start-trial"
                 >
-                  Start 7-Day Free Trial
+                  {checkoutMutation.isPending ? "Redirecting..." : "Start 7-Day Free Trial"}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
                   Try free for 7 days, then ${price}/month. Cancel anytime.

@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   ArrowLeft, User, ChevronRight, 
-  Bell, HelpCircle, Info, Shield, LogOut, Flame, Check, Instagram
+  Bell, HelpCircle, Info, Shield, LogOut, Flame, Check, Instagram, Crown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -197,6 +197,12 @@ export default function SettingsPage() {
             icon={User} 
             label="Manage Account" 
             onClick={() => setLocation("/account")}
+          />
+          <Separator className="my-1" />
+          <SettingsRow 
+            icon={Crown} 
+            label="Upgrade Plan" 
+            onClick={() => setLocation("/subscribe")}
           />
           <Separator className="my-1" />
           <SettingsRow 
