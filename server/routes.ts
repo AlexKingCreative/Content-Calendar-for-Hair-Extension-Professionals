@@ -728,6 +728,41 @@ export async function registerRoutes(
       
       await storage.logPost(userId, today, postId);
       const profile = await storage.updateStreak(userId);
+
+      const activeChallenges = await storage.getStylistChallenges(userId);
+      for (const challenge of activeChallenges) {
+        if (challenge.status === "active") {
+          const updatedChallenge = await storage.incrementStylistChallengeProgress(challenge.id);
+          if (updatedChallenge && updatedChallenge.status === "completed" && !updatedChallenge.ownerNotified) {
+            const salonChallenge = await storage.getSalonChallengeById(challenge.salonChallengeId);
+            if (salonChallenge) {
+              const salon = await storage.getSalonById(salonChallenge.salonId);
+              if (salon) {
+                const ownerProfile = await storage.getUserProfile(salon.ownerId);
+                if (ownerProfile?.email) {
+                  const stylistProfile = await storage.getUserProfile(userId);
+                  const stylistName = stylistProfile?.name || stylistProfile?.email || "A stylist";
+                  try {
+                    await sendEmail({
+                      to: ownerProfile.email,
+                      subject: `Challenge Completed: ${salonChallenge.title}`,
+                      html: `
+                        <h2>Congratulations!</h2>
+                        <p><strong>${stylistName}</strong> has completed the challenge: <strong>${salonChallenge.title}</strong></p>
+                        <p>They've earned the reward: <strong>${salonChallenge.rewardText}</strong></p>
+                        <p>Check your salon dashboard to see all progress.</p>
+                      `
+                    });
+                    await storage.markOwnerNotified(challenge.id);
+                  } catch (emailErr) {
+                    console.error("Failed to send challenge completion email:", emailErr);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
       
       res.json({
         currentStreak: profile.currentStreak,

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  ArrowLeft, MapPin, Award, Scissors, Check, X, Crown, CreditCard, ExternalLink, Briefcase, Megaphone, Users 
+  ArrowLeft, MapPin, Award, Scissors, Check, X, Crown, CreditCard, ExternalLink, Briefcase, Megaphone, Users, Trophy, Gift, Target 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Progress } from "@/components/ui/progress";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { postingGoals, postingGoalDescriptions, serviceCategories, type VoiceOption, type ToneOption, type PostingGoal, type ServiceCategory } from "@shared/schema";
@@ -46,6 +47,27 @@ interface UserProfile {
 interface User {
   id: string;
   email?: string;
+}
+
+interface StylistChallenge {
+  id: number;
+  salonId: number;
+  salonChallengeId: number;
+  stylistUserId: string;
+  targetDays: number;
+  completedDays: number;
+  currentStreak: number;
+  status: string;
+  completedAt?: string;
+  challenge?: {
+    id: number;
+    title: string;
+    description?: string;
+    durationDays: number;
+    rewardText: string;
+    status: string;
+  };
+  salonName: string;
 }
 
 const toneLabels: Record<ToneOption, string> = {
@@ -89,6 +111,12 @@ export default function AccountPage() {
 
   const { data: options, isLoading: optionsLoading } = useQuery<OptionsData>({
     queryKey: ["/api/options"],
+  });
+
+  const { data: stylistChallenges = [] } = useQuery<StylistChallenge[]>({
+    queryKey: ["/api/stylist/challenges"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!user && profile?.salonRole === "stylist",
   });
 
   const certifiedBrands = options?.certifiedBrands ?? [];
@@ -575,6 +603,64 @@ export default function AccountPage() {
             </div>
           )}
         </div>
+
+        {profile?.salonRole === "stylist" && stylistChallenges.length > 0 && (
+          <div className="glass-card rounded-2xl p-4 animate-fade-in-up stagger-4">
+            <Label className="text-sm font-medium flex items-center gap-2 mb-3">
+              <Trophy className="w-4 h-4" />
+              My Salon Challenges
+            </Label>
+            <div className="space-y-3">
+              {stylistChallenges.filter(c => c.status === "active").map((challenge) => (
+                <div
+                  key={challenge.id}
+                  className="p-3 rounded-md border bg-background"
+                  data-testid={`stylist-challenge-${challenge.id}`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                    <h4 className="text-sm font-medium">{challenge.challenge?.title}</h4>
+                    <Badge variant="default">Active</Badge>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2 flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <Target className="w-3 h-3" />
+                      {challenge.completedDays}/{challenge.targetDays} days
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Gift className="w-3 h-3" />
+                      {challenge.challenge?.rewardText}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(challenge.completedDays / challenge.targetDays) * 100} 
+                    className="h-2"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    From: {challenge.salonName}
+                  </p>
+                </div>
+              ))}
+              {stylistChallenges.filter(c => c.status === "completed").length > 0 && (
+                <div className="pt-2 border-t">
+                  <p className="text-xs text-muted-foreground mb-2">Completed Challenges</p>
+                  {stylistChallenges.filter(c => c.status === "completed").slice(0, 3).map((challenge) => (
+                    <div
+                      key={challenge.id}
+                      className="flex items-center justify-between gap-2 py-2"
+                      data-testid={`stylist-challenge-completed-${challenge.id}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-primary" />
+                        <span className="text-sm">{challenge.challenge?.title}</span>
+                      </div>
+                      <Badge variant="secondary">Completed</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="glass-card rounded-2xl p-4 animate-fade-in-up stagger-4">
           <Label className="text-sm font-medium flex items-center gap-2">
