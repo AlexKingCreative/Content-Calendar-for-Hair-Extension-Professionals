@@ -14,7 +14,11 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+            "ios": {
+                      "autoSubmit": true,
+                      "submitProfile": "production"
+                    }
     }
   },
   "submit": {
