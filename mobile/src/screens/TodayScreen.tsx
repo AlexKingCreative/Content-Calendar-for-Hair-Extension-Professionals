@@ -107,7 +107,7 @@ export default function TodayScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#D4A574" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -115,7 +115,7 @@ export default function TodayScreen() {
   if (error || !posts || posts.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Ionicons name="calendar-outline" size={64} color="#D4A574" />
+        <Ionicons name="calendar-outline" size={64} color={colors.primary} />
         <Text style={styles.emptyTitle}>No Post for Today</Text>
         <Text style={styles.emptyText}>Check back tomorrow for new content ideas!</Text>
       </View>
@@ -129,7 +129,7 @@ export default function TodayScreen() {
       {streakData && (
         <View style={styles.streakCard}>
           <View style={styles.streakHeader}>
-            <Ionicons name="flame" size={24} color="#D4A574" />
+            <Ionicons name="flame" size={24} color={colors.primary} />
             <Text style={styles.streakTitle}>Your Streak</Text>
           </View>
           <View style={styles.streakStats}>
@@ -182,7 +182,7 @@ export default function TodayScreen() {
             style={styles.actionButton}
             onPress={() => handleCopyCaption(todayPost)}
           >
-            <Ionicons name="copy-outline" size={20} color="#D4A574" />
+            <Ionicons name="copy-outline" size={20} color={colors.primary} />
             <Text style={styles.actionText}>Copy Caption</Text>
           </TouchableOpacity>
 
@@ -190,7 +190,7 @@ export default function TodayScreen() {
             style={styles.actionButton}
             onPress={() => handleShare(todayPost)}
           >
-            <Ionicons name="share-outline" size={20} color="#D4A574" />
+            <Ionicons name="share-outline" size={20} color={colors.primary} />
             <Text style={styles.actionText}>Share</Text>
           </TouchableOpacity>
         </View>
@@ -203,7 +203,7 @@ export default function TodayScreen() {
           <Ionicons 
             name={markedToday ? "checkmark-circle" : "checkmark-circle-outline"} 
             size={24} 
-            color={markedToday ? "#FFFFFF" : "#D4A574"} 
+            color={markedToday ? colors.textOnPrimary : colors.primary} 
           />
           <Text style={[styles.markCompleteText, markedToday && styles.markCompleteTextDone]}>
             {markedToday ? "Posted Today!" : markCompleteMutation.isPending ? "Logging..." : "Mark as Posted"}
@@ -212,7 +212,7 @@ export default function TodayScreen() {
       </View>
 
       <View style={styles.tipCard}>
-        <Ionicons name="bulb-outline" size={24} color="#D4A574" />
+        <Ionicons name="bulb-outline" size={24} color={colors.primary} />
         <View style={styles.tipContent}>
           <Text style={styles.tipTitle}>Pro Tip</Text>
           <Text style={styles.tipText}>
