@@ -59,7 +59,7 @@ function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused, color }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'home';
           
           if (route.name === 'Today') {
@@ -74,11 +74,7 @@ function MainTabs() {
             iconName = focused ? 'settings' : 'settings-outline';
           }
           
-          return (
-            <View style={focused ? tabStyles.iconContainerActive : tabStyles.iconContainer}>
-              <Ionicons name={iconName} size={22} color={color} />
-            </View>
-          );
+          return <Ionicons name={iconName} size={24} color={color} />;
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textTertiary,
@@ -93,14 +89,17 @@ function MainTabs() {
           bottom: Platform.OS === 'ios' ? 24 : 16,
           left: 16,
           right: 16,
-          height: 70,
+          height: 64,
           backgroundColor: colors.glass.backgroundLight,
           borderRadius: borderRadius.xxl,
           borderWidth: 1,
           borderColor: colors.glass.border,
-          paddingBottom: 8,
-          paddingTop: 8,
+          paddingBottom: 6,
+          paddingTop: 10,
           ...shadows.glass,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 4,
         },
         headerStyle: {
           backgroundColor: colors.glass.backgroundDark,
@@ -126,17 +125,6 @@ function MainTabs() {
   );
 }
 
-const tabStyles = StyleSheet.create({
-  iconContainer: {
-    padding: 6,
-    borderRadius: borderRadius.md,
-  },
-  iconContainerActive: {
-    padding: 6,
-    borderRadius: borderRadius.md,
-    backgroundColor: 'rgba(212, 165, 116, 0.15)',
-  },
-});
 
 export default function Navigation() {
   const { isLoading, isAuthenticated } = useAuth();
