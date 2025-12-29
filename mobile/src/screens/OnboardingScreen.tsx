@@ -89,6 +89,182 @@ const ConfettiPiece = ({ delay, color, startX }: { delay: number; color: string;
   );
 };
 
+const BuildingScheduleAnimation = ({ onComplete }: { onComplete: () => void }) => {
+  const spinAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [statusText, setStatusText] = useState('Analyzing your preferences...');
+  const [progressPercent, setProgressPercent] = useState(0);
+  
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+    
+    Animated.loop(
+      Animated.timing(spinAnim, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true,
+      })
+    ).start();
+    
+    Animated.timing(progressAnim, {
+      toValue: 1,
+      duration: 2500,
+      useNativeDriver: false,
+    }).start();
+    
+    const statusUpdates = [
+      { time: 600, text: 'Building your content calendar...', percent: 35 },
+      { time: 1200, text: 'Customizing post ideas...', percent: 60 },
+      { time: 1800, text: 'Adding personalized hashtags...', percent: 85 },
+      { time: 2200, text: 'Finalizing your schedule...', percent: 100 },
+    ];
+    
+    const timers = statusUpdates.map(update => 
+      setTimeout(() => {
+        setStatusText(update.text);
+        setProgressPercent(update.percent);
+      }, update.time)
+    );
+    
+    const completeTimer = setTimeout(onComplete, 2800);
+    
+    return () => {
+      timers.forEach(t => clearTimeout(t));
+      clearTimeout(completeTimer);
+    };
+  }, []);
+  
+  const spin = spinAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+  
+  return (
+    <Animated.View style={[buildingStyles.container, { opacity: fadeAnim }]}>
+      <View style={buildingStyles.content}>
+        <View style={buildingStyles.iconContainer}>
+          <Animated.View style={{ transform: [{ rotate: spin }] }}>
+            <Ionicons name="calendar" size={40} color="#FFFFFF" />
+          </Animated.View>
+        </View>
+        
+        <Text style={buildingStyles.title}>Building Your Schedule</Text>
+        <Text style={buildingStyles.statusText}>{statusText}</Text>
+        
+        <View style={buildingStyles.progressContainer}>
+          <Animated.View 
+            style={[
+              buildingStyles.progressBar,
+              { 
+                width: progressAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0%', '100%'],
+                })
+              }
+            ]} 
+          />
+        </View>
+        <Text style={buildingStyles.percentText}>{progressPercent}%</Text>
+        
+        <View style={buildingStyles.featuresRow}>
+          <View style={buildingStyles.featureItem}>
+            <Ionicons name="checkmark-circle" size={16} color="#D4A574" />
+            <Text style={buildingStyles.featureText}>365 Days</Text>
+          </View>
+          <View style={buildingStyles.featureItem}>
+            <Ionicons name="checkmark-circle" size={16} color="#D4A574" />
+            <Text style={buildingStyles.featureText}>Custom Hashtags</Text>
+          </View>
+          <View style={buildingStyles.featureItem}>
+            <Ionicons name="checkmark-circle" size={16} color="#D4A574" />
+            <Text style={buildingStyles.featureText}>AI Captions</Text>
+          </View>
+        </View>
+      </View>
+    </Animated.View>
+  );
+};
+
+const buildingStyles = StyleSheet.create({
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#FAF7F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  content: {
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  iconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#D4A574',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    shadowColor: '#D4A574',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#2D1810',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  statusText: {
+    fontSize: 15,
+    color: '#8B7355',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  progressContainer: {
+    width: 200,
+    height: 8,
+    backgroundColor: '#E8E0D8',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#D4A574',
+    borderRadius: 4,
+  },
+  percentText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#D4A574',
+    marginBottom: 32,
+  },
+  featuresRow: {
+    flexDirection: 'row',
+    gap: 16,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  featureText: {
+    fontSize: 12,
+    color: '#5D4E3C',
+  },
+});
+
 const CelebrationAnimation = ({ onComplete }: { onComplete: () => void }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -331,6 +507,7 @@ type OnboardingData = {
 export default function OnboardingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [step, setStep] = useState(0);
+  const [showBuildingSchedule, setShowBuildingSchedule] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [data, setData] = useState<OnboardingData>({
     services: [],
@@ -404,8 +581,13 @@ export default function OnboardingScreen() {
       setStep(nextStep);
       animateProgress(nextStep);
     } else {
-      setShowCelebration(true);
+      setShowBuildingSchedule(true);
     }
+  };
+  
+  const handleBuildingComplete = () => {
+    setShowBuildingSchedule(false);
+    setShowCelebration(true);
   };
   
   const handleCelebrationComplete = () => {
@@ -667,6 +849,10 @@ export default function OnboardingScreen() {
     }
   };
 
+  if (showBuildingSchedule) {
+    return <BuildingScheduleAnimation onComplete={handleBuildingComplete} />;
+  }
+  
   if (showCelebration) {
     return <CelebrationAnimation onComplete={handleCelebrationComplete} />;
   }
