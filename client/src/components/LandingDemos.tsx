@@ -51,20 +51,18 @@ export function CalendarDemo() {
             const dayData = days.find(d => d.day === i + 1);
             const isActive = dayData && days.indexOf(dayData) === currentDay;
             return (
-              <motion.div
+              <div
                 key={i}
                 data-testid={`calendar-day-${i + 1}`}
-                className={`aspect-square rounded-md flex items-center justify-center text-xs relative cursor-pointer
-                  ${isActive ? "bg-primary text-primary-foreground" : dayData?.hasPost ? "bg-primary/20" : "hover:bg-muted"}
+                className={`aspect-square rounded-md flex items-center justify-center text-xs relative cursor-pointer transition-colors duration-200
+                  ${isActive ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-1" : dayData?.hasPost ? "bg-primary/20" : "hover:bg-muted"}
                 `}
-                animate={isActive ? { scale: [1, 1.1, 1] } : {}}
-                transition={{ duration: 0.3 }}
               >
                 {i + 1}
                 {dayData?.hasPost && (
                   <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
                 )}
-              </motion.div>
+              </div>
             );
           })}
         </div>
@@ -149,72 +147,76 @@ export function AICaptionDemo() {
             </div>
           </div>
 
-          <AnimatePresence mode="wait">
-            {stage === 0 && (
-              <motion.div
-                key="select"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-center py-6"
-              >
-                <Button size="sm" className="gap-2" data-testid="button-generate-caption">
-                  <Zap className="w-4 h-4" />
-                  Generate Caption
-                </Button>
-              </motion.div>
-            )}
-            {stage === 1 && (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-center py-6"
-                data-testid="status-generating"
-              >
+          <div className="min-h-[160px]">
+            <AnimatePresence mode="wait">
+              {stage === 0 && (
                 <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"
-                />
-                <div className="text-sm text-muted-foreground">Creating your caption...</div>
-              </motion.div>
-            )}
-            {(stage === 2 || stage === 3) && (
-              <motion.div
-                key="result"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="bg-primary/5 rounded-lg p-3 border border-primary/20"
-                data-testid="caption-result"
-              >
-                <div className="flex items-center gap-1 mb-2">
-                  <Sparkles className="w-3 h-3 text-primary" />
-                  <span className="text-xs font-medium text-primary">AI Generated</span>
-                </div>
-                <p className="text-sm leading-relaxed" data-testid="text-generated-caption">
-                  {stage === 2 ? displayedText : caption}
-                  {stage === 2 && <span className="animate-pulse">|</span>}
-                </p>
-                {stage === 3 && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex gap-2 mt-3"
-                  >
-                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1" data-testid="button-copy-caption">
-                      <Copy className="w-3 h-3" /> Copy
-                    </Button>
-                    <Button size="sm" className="h-7 text-xs gap-1" data-testid="button-use-caption">
-                      <Check className="w-3 h-3" /> Use This
-                    </Button>
-                  </motion.div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  key="select"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-center py-6"
+                >
+                  <Button size="sm" className="gap-2" data-testid="button-generate-caption">
+                    <Zap className="w-4 h-4" />
+                    Generate Caption
+                  </Button>
+                </motion.div>
+              )}
+              {stage === 1 && (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-center py-6"
+                  data-testid="status-generating"
+                >
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"
+                  />
+                  <div className="text-sm text-muted-foreground">Creating your caption...</div>
+                </motion.div>
+              )}
+              {(stage === 2 || stage === 3) && (
+                <motion.div
+                  key="result"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="bg-primary/5 rounded-lg p-3 border border-primary/20"
+                  data-testid="caption-result"
+                >
+                  <div className="flex items-center gap-1 mb-2">
+                    <Sparkles className="w-3 h-3 text-primary" />
+                    <span className="text-xs font-medium text-primary">AI Generated</span>
+                  </div>
+                  <p className="text-sm leading-relaxed" data-testid="text-generated-caption">
+                    {stage === 2 ? displayedText : caption}
+                    {stage === 2 && <span className="animate-pulse">|</span>}
+                  </p>
+                  <div className="h-10 flex items-center">
+                    {stage === 3 && (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex gap-2"
+                      >
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" data-testid="button-copy-caption">
+                          <Copy className="w-3 h-3" /> Copy
+                        </Button>
+                        <Button size="sm" className="h-7 text-xs gap-1" data-testid="button-use-caption">
+                          <Check className="w-3 h-3" /> Use This
+                        </Button>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </Card>
     </div>
@@ -251,27 +253,27 @@ export function StreakDemo() {
               <div className="text-xs text-muted-foreground">Keep it going!</div>
             </div>
           </div>
-          <motion.div
-            key={streak}
-            initial={{ scale: 0.5 }}
-            animate={{ scale: 1 }}
-            className="text-2xl font-bold text-orange-500"
-            data-testid="text-streak-count"
-          >
-            {streak}
-          </motion.div>
+          <div className="w-8 h-8 flex items-center justify-center">
+            <motion.div
+              key={streak}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-2xl font-bold text-orange-500"
+              data-testid="text-streak-count"
+            >
+              {streak}
+            </motion.div>
+          </div>
         </div>
 
         <div className="flex gap-1 mb-4" data-testid="streak-progress-bar">
           {Array.from({ length: maxStreak }, (_, i) => (
-            <motion.div
+            <div
               key={i}
               data-testid={`streak-day-${i + 1}`}
-              className={`flex-1 h-2 rounded-full ${
+              className={`flex-1 h-2 rounded-full transition-colors duration-300 ${
                 i < streak ? "bg-gradient-to-r from-orange-500 to-red-500" : "bg-muted"
               }`}
-              animate={i < streak ? { scale: [1, 1.1, 1] } : {}}
-              transition={{ duration: 0.3, delay: i * 0.1 }}
             />
           ))}
         </div>
@@ -280,35 +282,36 @@ export function StreakDemo() {
           {rewards.map((reward, i) => {
             const unlocked = streak >= reward.day;
             return (
-              <motion.div
+              <div
                 key={i}
                 data-testid={`reward-${reward.day}-day`}
-                className={`flex items-center gap-3 p-2 rounded-lg ${
+                className={`flex items-center gap-3 p-2 rounded-lg transition-colors duration-300 ${
                   unlocked ? "bg-primary/10 border border-primary/20" : "bg-muted/50"
                 }`}
-                animate={unlocked && streak === reward.day ? { scale: [1, 1.05, 1] } : {}}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 ${
                   unlocked ? "bg-primary text-primary-foreground" : "bg-muted-foreground/20"
                 }`}>
                   <reward.icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
-                  <div className={`text-sm font-medium ${unlocked ? "" : "text-muted-foreground"}`} data-testid={`text-reward-label-${reward.day}`}>
+                  <div className={`text-sm font-medium transition-colors duration-300 ${unlocked ? "" : "text-muted-foreground"}`} data-testid={`text-reward-label-${reward.day}`}>
                     {reward.label}
                   </div>
                   <div className="text-xs text-muted-foreground">{reward.day}-day streak</div>
                 </div>
-                {unlocked && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    data-testid={`icon-reward-unlocked-${reward.day}`}
-                  >
-                    <Check className="w-5 h-5 text-primary" />
-                  </motion.div>
-                )}
-              </motion.div>
+                <div className="w-5 h-5 flex items-center justify-center">
+                  {unlocked && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      data-testid={`icon-reward-unlocked-${reward.day}`}
+                    >
+                      <Check className="w-5 h-5 text-primary" />
+                    </motion.div>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>
@@ -341,104 +344,98 @@ export function InstagramDemo() {
           </div>
         </div>
 
-        <AnimatePresence mode="wait">
-          {stage === 0 && (
-            <motion.div
-              key="connect"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-3"
-              data-testid="instagram-stage-connect"
-            >
-              <div className="text-center py-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 mx-auto mb-3 flex items-center justify-center">
-                  <Instagram className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-sm font-medium mb-1">Connect Your Account</div>
-                <div className="text-xs text-muted-foreground mb-3">Track your posting activity</div>
-              </div>
-              <Button className="w-full gap-2" data-testid="button-connect-instagram">
-                <Instagram className="w-4 h-4" />
-                Connect Instagram
-              </Button>
-            </motion.div>
-          )}
-          {stage === 1 && (
-            <motion.div
-              key="syncing"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="text-center py-6"
-              data-testid="instagram-stage-syncing"
-            >
+        <div className="min-h-[200px]">
+          <AnimatePresence mode="wait">
+            {stage === 0 && (
               <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full mx-auto mb-3"
-              />
-              <div className="text-sm text-muted-foreground">Syncing your posts...</div>
-            </motion.div>
-          )}
-          {stage === 2 && (
-            <motion.div
-              key="synced"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="text-center py-6"
-              data-testid="instagram-stage-synced"
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", bounce: 0.5 }}
-                className="w-16 h-16 rounded-full bg-green-500 mx-auto mb-3 flex items-center justify-center"
+                key="connect"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-3"
+                data-testid="instagram-stage-connect"
               >
-                <Check className="w-8 h-8 text-white" />
+                <div className="text-center py-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 mx-auto mb-3 flex items-center justify-center">
+                    <Instagram className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-sm font-medium mb-1">Connect Your Account</div>
+                  <div className="text-xs text-muted-foreground mb-3">Track your posting activity</div>
+                </div>
+                <Button className="w-full gap-2" data-testid="button-connect-instagram">
+                  <Instagram className="w-4 h-4" />
+                  Connect Instagram
+                </Button>
               </motion.div>
-              <div className="text-lg font-semibold" data-testid="text-synced-status">Synced!</div>
-              <div className="text-sm text-muted-foreground">12 posts tracked this month</div>
-            </motion.div>
-          )}
-          {stage === 3 && (
-            <motion.div
-              key="stats"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-3"
-              data-testid="instagram-stage-stats"
-            >
-              <div className="text-xs text-muted-foreground mb-2">Engagement Stats</div>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { icon: Heart, label: "Likes", value: "247" },
-                  { icon: MessageSquare, label: "Comments", value: "18" },
-                  { icon: Share2, label: "Shares", value: "12" },
-                ].map((stat, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="bg-muted/50 rounded-lg p-2 text-center"
-                    data-testid={`stat-${stat.label.toLowerCase()}`}
-                  >
-                    <stat.icon className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
-                    <div className="text-lg font-bold" data-testid={`text-${stat.label.toLowerCase()}-value`}>{stat.value}</div>
-                    <div className="text-[10px] text-muted-foreground">{stat.label}</div>
-                  </motion.div>
-                ))}
-              </div>
-              <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg" data-testid="status-engagement-change">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                <span className="text-xs">+23% engagement vs last week</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+            {stage === 1 && (
+              <motion.div
+                key="syncing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center py-6"
+                data-testid="instagram-stage-syncing"
+              >
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full mx-auto mb-3"
+                />
+                <div className="text-sm text-muted-foreground">Syncing your posts...</div>
+              </motion.div>
+            )}
+            {stage === 2 && (
+              <motion.div
+                key="synced"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center py-6"
+                data-testid="instagram-stage-synced"
+              >
+                <div className="w-16 h-16 rounded-full bg-green-500 mx-auto mb-3 flex items-center justify-center">
+                  <Check className="w-8 h-8 text-white" />
+                </div>
+                <div className="text-lg font-semibold" data-testid="text-synced-status">Synced!</div>
+                <div className="text-sm text-muted-foreground">12 posts tracked this month</div>
+              </motion.div>
+            )}
+            {stage === 3 && (
+              <motion.div
+                key="stats"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-3"
+                data-testid="instagram-stage-stats"
+              >
+                <div className="text-xs text-muted-foreground mb-2">Engagement Stats</div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { icon: Heart, label: "Likes", value: "247" },
+                    { icon: MessageSquare, label: "Comments", value: "18" },
+                    { icon: Share2, label: "Shares", value: "12" },
+                  ].map((stat, i) => (
+                    <div
+                      key={i}
+                      className="bg-muted/50 rounded-lg p-2 text-center"
+                      data-testid={`stat-${stat.label.toLowerCase()}`}
+                    >
+                      <stat.icon className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
+                      <div className="text-lg font-bold" data-testid={`text-${stat.label.toLowerCase()}-value`}>{stat.value}</div>
+                      <div className="text-[10px] text-muted-foreground">{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg" data-testid="status-engagement-change">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  <span className="text-xs">+23% engagement vs last week</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </Card>
     </div>
   );
@@ -484,12 +481,13 @@ export function HashtagDemo() {
         </div>
 
         <div className="flex flex-wrap gap-2 min-h-[120px]" data-testid="hashtag-container">
-          {hashtags.slice(0, visible).map((h, i) => (
+          {hashtags.map((h, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, scale: 0.5, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ type: "spring", bounce: 0.4 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: i < visible ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              className={i >= visible ? "invisible" : ""}
             >
               <Badge 
                 variant="secondary" 
