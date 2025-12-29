@@ -429,7 +429,7 @@ export default function LandingPage() {
               <InstagramDemo />
               <div className="text-center mt-4">
                 <h3 className="font-semibold mb-1">Instagram Integration</h3>
-                <p className="text-sm text-muted-foreground">Post directly and track engagement</p>
+                <p className="text-sm text-muted-foreground">Track your posts and measure your growth</p>
               </div>
             </motion.div>
           </div>

@@ -337,65 +337,58 @@ export function InstagramDemo() {
           </div>
           <div>
             <div className="text-sm font-semibold">Instagram Integration</div>
-            <div className="text-xs text-muted-foreground">Post directly from the app</div>
+            <div className="text-xs text-muted-foreground">Track your posts and growth</div>
           </div>
         </div>
 
         <AnimatePresence mode="wait">
           {stage === 0 && (
             <motion.div
-              key="select"
+              key="connect"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               className="space-y-3"
-              data-testid="instagram-stage-select"
+              data-testid="instagram-stage-connect"
             >
-              <div className="aspect-video bg-gradient-to-br from-rose-200 to-amber-100 dark:from-rose-900 dark:to-amber-900 rounded-lg flex items-center justify-center">
-                <Camera className="w-8 h-8 text-muted-foreground" />
+              <div className="text-center py-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 mx-auto mb-3 flex items-center justify-center">
+                  <Instagram className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-sm font-medium mb-1">Connect Your Account</div>
+                <div className="text-xs text-muted-foreground mb-3">Track your posting activity</div>
               </div>
-              <Button className="w-full gap-2" data-testid="button-post-instagram">
-                <Send className="w-4 h-4" />
-                Post to Instagram
+              <Button className="w-full gap-2" data-testid="button-connect-instagram">
+                <Instagram className="w-4 h-4" />
+                Connect Instagram
               </Button>
             </motion.div>
           )}
           {stage === 1 && (
             <motion.div
-              key="preview"
+              key="syncing"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-3"
-              data-testid="instagram-stage-preview"
+              className="text-center py-6"
+              data-testid="instagram-stage-syncing"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pink-500 to-purple-500" />
-                <span className="text-sm font-medium" data-testid="text-username">@yoursalon</span>
-              </div>
-              <div className="aspect-video bg-gradient-to-br from-rose-200 to-amber-100 dark:from-rose-900 dark:to-amber-900 rounded-lg" />
-              <div className="text-xs text-muted-foreground line-clamp-2">
-                Show your clients the magic of volume! These tape-in extensions...
-              </div>
               <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ repeat: Infinity, duration: 1 }}
-              >
-                <Button className="w-full gap-2" variant="default" data-testid="button-posting">
-                  <Clock className="w-4 h-4" />
-                  Posting...
-                </Button>
-              </motion.div>
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full mx-auto mb-3"
+              />
+              <div className="text-sm text-muted-foreground">Syncing your posts...</div>
             </motion.div>
           )}
           {stage === 2 && (
             <motion.div
-              key="posted"
+              key="synced"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               className="text-center py-6"
-              data-testid="instagram-stage-posted"
+              data-testid="instagram-stage-synced"
             >
               <motion.div
                 initial={{ scale: 0 }}
@@ -405,8 +398,8 @@ export function InstagramDemo() {
               >
                 <Check className="w-8 h-8 text-white" />
               </motion.div>
-              <div className="text-lg font-semibold" data-testid="text-posted-status">Posted!</div>
-              <div className="text-sm text-muted-foreground">Your content is now live</div>
+              <div className="text-lg font-semibold" data-testid="text-synced-status">Synced!</div>
+              <div className="text-sm text-muted-foreground">12 posts tracked this month</div>
             </motion.div>
           )}
           {stage === 3 && (
