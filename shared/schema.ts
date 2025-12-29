@@ -63,6 +63,26 @@ export const extensionMethods = [
 ] as const;
 export type ExtensionMethod = typeof extensionMethods[number];
 
+export const experienceLevels = ["new", "growing", "established", "expert"] as const;
+export type ExperienceLevel = typeof experienceLevels[number];
+
+export const experienceLevelDescriptions: Record<ExperienceLevel, { label: string; description: string }> = {
+  new: { label: "Just Starting Out", description: "Less than 1 year" },
+  growing: { label: "Building My Business", description: "1-3 years" },
+  established: { label: "Established Pro", description: "3-5 years" },
+  expert: { label: "Industry Expert", description: "5+ years" },
+};
+
+export const contentGoalOptions = [
+  { id: "clients", label: "Attract More Clients" },
+  { id: "premium", label: "Book Premium Services" },
+  { id: "consistent", label: "Post Consistently" },
+  { id: "brand", label: "Build My Brand" },
+  { id: "education", label: "Educate My Audience" },
+  { id: "engagement", label: "Increase Engagement" },
+] as const;
+export type ContentGoal = typeof contentGoalOptions[number]["id"];
+
 export const voiceOptions = ["solo_stylist", "salon"] as const;
 export type VoiceOption = typeof voiceOptions[number];
 
@@ -119,6 +139,9 @@ export const userProfiles = pgTable("user_profiles", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().unique(),
   city: text("city"),
+  instagram: text("instagram"),
+  experience: text("experience"),
+  contentGoals: text("content_goals").array().default(sql`'{}'::text[]`),
   certifiedBrands: text("certified_brands").array().default(sql`'{}'::text[]`),
   extensionMethods: text("extension_methods").array().default(sql`'{}'::text[]`),
   offeredServices: text("offered_services").array().default(sql`'{}'::text[]`),
@@ -170,6 +193,9 @@ export const leads = pgTable("leads", {
   id: serial("id").primaryKey(),
   email: text("email").notNull(),
   city: text("city"),
+  instagram: text("instagram"),
+  experience: text("experience"),
+  contentGoals: text("content_goals").array().default(sql`'{}'::text[]`),
   offeredServices: text("offered_services").array().default(sql`'{}'::text[]`),
   postingServices: text("posting_services").array().default(sql`'{}'::text[]`),
   certifiedBrands: text("certified_brands").array().default(sql`'{}'::text[]`),

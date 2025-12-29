@@ -194,7 +194,7 @@ export async function registerRoutes(
   // Onboarding endpoint - creates account with auto-generated password and logs in
   app.post("/api/auth/onboard", async (req: any, res) => {
     try {
-      const { email, city, offeredServices, postingServices, certifiedBrands: userBrands, extensionMethods: userMethods } = req.body;
+      const { email, city, instagram, experience, contentGoals, offeredServices, postingServices, certifiedBrands: userBrands, extensionMethods: userMethods } = req.body;
       
       if (!email) {
         return res.status(400).json({ message: "Email is required" });
@@ -251,6 +251,9 @@ export async function registerRoutes(
       await storage.upsertUserProfile({
         userId: user.id,
         city: city || null,
+        instagram: instagram || null,
+        experience: experience || null,
+        contentGoals: contentGoals || [],
         offeredServices: offeredServices || [],
         postingServices: postingServices || [],
         certifiedBrands: userBrands || [],
@@ -264,6 +267,9 @@ export async function registerRoutes(
         await db.update(leads)
           .set({
             city: city || null,
+            instagram: instagram || null,
+            experience: experience || null,
+            contentGoals: contentGoals || [],
             offeredServices: offeredServices || [],
             postingServices: postingServices || [],
             certifiedBrands: userBrands || [],
@@ -278,6 +284,9 @@ export async function registerRoutes(
         await db.insert(leads).values({
           email,
           city: city || null,
+          instagram: instagram || null,
+          experience: experience || null,
+          contentGoals: contentGoals || [],
           offeredServices: offeredServices || [],
           postingServices: postingServices || [],
           certifiedBrands: userBrands || [],
@@ -515,7 +524,7 @@ export async function registerRoutes(
   // Lead capture for onboarding (unauthenticated users)
   app.post("/api/leads", async (req, res) => {
     try {
-      const { email, city, offeredServices, postingServices, certifiedBrands, extensionMethods } = req.body;
+      const { email, city, instagram, experience, contentGoals, offeredServices, postingServices, certifiedBrands, extensionMethods } = req.body;
       
       if (!email) {
         return res.status(400).json({ error: "Email is required" });
@@ -529,6 +538,9 @@ export async function registerRoutes(
         const [updatedLead] = await db.update(leads)
           .set({
             city: city || null,
+            instagram: instagram || null,
+            experience: experience || null,
+            contentGoals: contentGoals || [],
             offeredServices: offeredServices || [],
             postingServices: postingServices || [],
             certifiedBrands: certifiedBrands || [],
@@ -546,6 +558,9 @@ export async function registerRoutes(
         .values({
           email,
           city: city || null,
+          instagram: instagram || null,
+          experience: experience || null,
+          contentGoals: contentGoals || [],
           offeredServices: offeredServices || [],
           postingServices: postingServices || [],
           certifiedBrands: certifiedBrands || [],
@@ -595,6 +610,9 @@ export async function registerRoutes(
       }
       const { 
         city, 
+        instagram,
+        experience,
+        contentGoals,
         certifiedBrands, 
         extensionMethods,
         offeredServices,
@@ -613,6 +631,9 @@ export async function registerRoutes(
       };
 
       if (city !== undefined) updateData.city = city || null;
+      if (instagram !== undefined) updateData.instagram = instagram || null;
+      if (experience !== undefined) updateData.experience = experience || null;
+      if (contentGoals !== undefined) updateData.contentGoals = contentGoals || [];
       if (certifiedBrands !== undefined) updateData.certifiedBrands = certifiedBrands || [];
       if (extensionMethods !== undefined) updateData.extensionMethods = extensionMethods || [];
       if (offeredServices !== undefined) updateData.offeredServices = offeredServices || [];
