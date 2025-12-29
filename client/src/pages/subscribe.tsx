@@ -12,21 +12,11 @@ import {
   Gift, 
   Star, 
   Crown,
-  Clock,
-  CalendarDays
+  Clock
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-
-const specialDays = [
-  { name: "National Hairstylist Appreciation Day", date: "April 30" },
-  { name: "Hair Loss Awareness Month", date: "August" },
-  { name: "Extensions Week", date: "February" },
-  { name: "Beauty Professional Day", date: "June 26" },
-  { name: "World Hair Day", date: "October 1" },
-  { name: "National Hair Day", date: "October 1" },
-];
 
 const features = [
   { icon: Calendar, text: "365 days of pre-planned content ideas" },
@@ -127,28 +117,6 @@ export default function Subscribe() {
             industry holidays, and AI-powered captions.
           </p>
         </div>
-
-        <Card className="border-primary/20">
-          <CardHeader className="text-center pb-2">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Badge variant="secondary" className="text-xs">
-                <CalendarDays className="w-3 h-3 mr-1" />
-                Special Days Include
-              </Badge>
-            </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {specialDays.map((day) => (
-                <Badge 
-                  key={day.name} 
-                  variant="outline" 
-                  className="text-xs whitespace-nowrap"
-                >
-                  {day.name}
-                </Badge>
-              ))}
-            </div>
-          </CardHeader>
-        </Card>
 
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="relative overflow-visible">
