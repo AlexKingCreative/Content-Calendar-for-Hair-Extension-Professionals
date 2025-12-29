@@ -21,6 +21,19 @@ export const colors = {
   success: '#4CAF50',
   warning: '#FF9800',
   error: '#F44336',
+
+  categories: {
+    Educational: { bg: '#DBEAFE', text: '#1E40AF' },
+    'Before & After': { bg: '#F3E8FF', text: '#7C3AED' },
+    'Behind the Scenes': { bg: '#FEF3C7', text: '#B45309' },
+    'Client Spotlight': { bg: '#FCE7F3', text: '#BE185D' },
+    'Product Showcase': { bg: '#D1FAE5', text: '#047857' },
+    Promotional: { bg: '#FEE2E2', text: '#B91C1C' },
+    Engagement: { bg: '#CFFAFE', text: '#0E7490' },
+    Inspiration: { bg: '#E0E7FF', text: '#4338CA' },
+    'Tips & Tricks': { bg: '#FFEDD5', text: '#C2410C' },
+    Trending: { bg: '#FFE4E6', text: '#BE123C' },
+  } as Record<string, { bg: string; text: string }>,
   
   glass: {
     background: 'rgba(255, 255, 255, 0.7)',

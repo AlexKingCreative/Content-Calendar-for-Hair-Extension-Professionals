@@ -37,6 +37,10 @@ interface UserProfile {
   postingServices?: string[];
 }
 
+const getCategoryColor = (category: string) => {
+  return colors.categories[category] || { bg: colors.surfaceSecondary, text: colors.textSecondary };
+};
+
 export default function TodayScreen() {
   const queryClient = useQueryClient();
   const [markedToday, setMarkedToday] = useState(false);
@@ -156,8 +160,8 @@ export default function TodayScreen() {
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{todayPost.contentType}</Text>
           </View>
-          <View style={[styles.badge, styles.categoryBadge]}>
-            <Text style={styles.categoryBadgeText}>{todayPost.category}</Text>
+          <View style={[styles.badge, { backgroundColor: getCategoryColor(todayPost.category).bg }]}>
+            <Text style={[styles.badgeText, { color: getCategoryColor(todayPost.category).text }]}>{todayPost.category}</Text>
           </View>
         </View>
 
@@ -275,16 +279,6 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: colors.textOnPrimary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  categoryBadge: {
-    backgroundColor: colors.glass.background,
-    borderWidth: 1,
-    borderColor: colors.glass.borderAccent,
-  },
-  categoryBadgeText: {
-    color: colors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },

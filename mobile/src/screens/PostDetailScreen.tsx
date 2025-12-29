@@ -24,6 +24,10 @@ interface UserProfile {
 
 type PostDetailRouteProp = RouteProp<RootStackParamList, 'PostDetail'>;
 
+const getCategoryColor = (category: string) => {
+  return colors.categories[category] || { bg: colors.surfaceSecondary, text: colors.textSecondary };
+};
+
 export default function PostDetailScreen() {
   const route = useRoute<PostDetailRouteProp>();
   const { postId } = route.params;
@@ -104,8 +108,8 @@ export default function PostDetailScreen() {
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{post.contentType}</Text>
         </View>
-        <View style={[styles.badge, styles.categoryBadge]}>
-          <Text style={styles.categoryBadgeText}>{post.category}</Text>
+        <View style={[styles.badge, { backgroundColor: getCategoryColor(post.category).bg }]}>
+          <Text style={[styles.badgeText, { color: getCategoryColor(post.category).text }]}>{post.category}</Text>
         </View>
       </View>
 
@@ -243,14 +247,6 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: colors.textOnPrimary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  categoryBadge: {
-    backgroundColor: colors.surfaceSecondary,
-  },
-  categoryBadgeText: {
-    color: colors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },

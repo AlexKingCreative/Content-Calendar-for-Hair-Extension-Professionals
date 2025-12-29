@@ -44,29 +44,36 @@ export default function CalendarScreen() {
     navigation.navigate('PostDetail', { postId });
   };
 
-  const renderPost = ({ item }: { item: Post }) => (
-    <TouchableOpacity
-      style={styles.postCard}
-      onPress={() => handlePostPress(item.id)}
-    >
-      <View style={styles.postDate}>
-        <Text style={styles.postDay}>{item.day}</Text>
-      </View>
-      <View style={styles.postContent}>
-        <Text style={styles.postTitle} numberOfLines={1}>{item.title}</Text>
-        <Text style={styles.postDescription} numberOfLines={2}>{item.description}</Text>
-        <View style={styles.postMeta}>
-          <View style={styles.metaBadge}>
-            <Text style={styles.metaText}>{item.contentType}</Text>
-          </View>
-          <View style={[styles.metaBadge, styles.categoryMeta]}>
-            <Text style={styles.categoryMetaText}>{item.category}</Text>
+  const getCategoryColor = (category: string) => {
+    return colors.categories[category] || { bg: colors.surfaceSecondary, text: colors.textSecondary };
+  };
+
+  const renderPost = ({ item }: { item: Post }) => {
+    const categoryColor = getCategoryColor(item.category);
+    return (
+      <TouchableOpacity
+        style={styles.postCard}
+        onPress={() => handlePostPress(item.id)}
+      >
+        <View style={styles.postDate}>
+          <Text style={styles.postDay}>{item.day}</Text>
+        </View>
+        <View style={styles.postContent}>
+          <Text style={styles.postTitle} numberOfLines={1}>{item.title}</Text>
+          <Text style={styles.postDescription} numberOfLines={2}>{item.description}</Text>
+          <View style={styles.postMeta}>
+            <View style={styles.metaBadge}>
+              <Text style={styles.metaText}>{item.contentType}</Text>
+            </View>
+            <View style={[styles.metaBadge, { backgroundColor: categoryColor.bg }]}>
+              <Text style={[styles.metaText, { color: categoryColor.text }]}>{item.category}</Text>
+            </View>
           </View>
         </View>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color={colors.primary} />
-    </TouchableOpacity>
-  );
+        <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -188,14 +195,6 @@ const styles = StyleSheet.create({
   },
   metaText: {
     color: colors.textOnPrimary,
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  categoryMeta: {
-    backgroundColor: colors.surfaceSecondary,
-  },
-  categoryMetaText: {
-    color: colors.textSecondary,
     fontSize: 10,
     fontWeight: '600',
   },
