@@ -36,6 +36,7 @@ interface UserProfile {
   instagram: string | null;
   experience: string | null;
   accountType: string | null;
+  isSalonOwner: boolean | null;
   contentGoals: string[];
   certifiedBrands: string[];
   extensionMethods: string[];
@@ -99,6 +100,7 @@ export default function AccountPage() {
   const [instagramHandle, setInstagramHandle] = useState("");
   const [experience, setExperience] = useState<ExperienceLevel | "">("");
   const [accountType, setAccountType] = useState<"solo" | "salon">("solo");
+  const [isSalonOwner, setIsSalonOwner] = useState<boolean>(false);
   const [contentGoals, setContentGoals] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
@@ -254,6 +256,7 @@ export default function AccountPage() {
       setInstagramHandle(profile.instagram || "");
       setExperience((profile.experience as ExperienceLevel) || "");
       setAccountType((profile.accountType as "solo" | "salon") || "solo");
+      setIsSalonOwner(profile.isSalonOwner || false);
       setContentGoals(profile.contentGoals || []);
       setSelectedBrands(profile.certifiedBrands || []);
       setSelectedMethods(profile.extensionMethods || []);
@@ -292,6 +295,7 @@ export default function AccountPage() {
       instagram: instagramHandle || null,
       experience: experience || null,
       accountType: accountType,
+      isSalonOwner: isSalonOwner,
       contentGoals: contentGoals,
       certifiedBrands: selectedBrands,
       extensionMethods: selectedMethods,
@@ -447,6 +451,44 @@ export default function AccountPage() {
                   <div className="font-medium text-sm">Salon / Team</div>
                   <div className="text-xs text-muted-foreground">Uses "we, us"</div>
                 </div>
+              </Label>
+            </RadioGroup>
+          </div>
+
+          <div className="space-y-3 pt-3 border-t border-border">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Do you manage stylists?
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Are you a salon owner or manager with employees?
+            </p>
+            <RadioGroup
+              value={isSalonOwner ? "yes" : "no"}
+              onValueChange={(value) => setIsSalonOwner(value === "yes")}
+              className="grid grid-cols-2 gap-3"
+            >
+              <Label
+                htmlFor="salon-owner-yes"
+                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer fluid-transition ${
+                  isSalonOwner
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover-elevate"
+                }`}
+              >
+                <RadioGroupItem value="yes" id="salon-owner-yes" />
+                <div className="font-medium text-sm">Yes</div>
+              </Label>
+              <Label
+                htmlFor="salon-owner-no"
+                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer fluid-transition ${
+                  !isSalonOwner
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover-elevate"
+                }`}
+              >
+                <RadioGroupItem value="no" id="salon-owner-no" />
+                <div className="font-medium text-sm">No</div>
               </Label>
             </RadioGroup>
           </div>

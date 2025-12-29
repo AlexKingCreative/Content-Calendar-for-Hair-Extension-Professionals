@@ -82,6 +82,7 @@ export default function OnboardingPage() {
   const [brands, setBrands] = useState<string[]>([]);
   const [methods, setMethods] = useState<string[]>([]);
   const [accountType, setAccountType] = useState<string>("");
+  const [isSalonOwner, setIsSalonOwner] = useState<boolean | null>(null);
   const [showTrialModal, setShowTrialModal] = useState(false);
   const [showBuildingAnimation, setShowBuildingAnimation] = useState(false);
 
@@ -93,7 +94,7 @@ export default function OnboardingPage() {
   });
 
   const isLoggedIn = !!user;
-  const baseSteps = isLoggedIn ? 5 : 6;
+  const baseSteps = isLoggedIn ? 6 : 7;
   const totalSteps = hasExtensions ? baseSteps + 1 : baseSteps;
 
   useEffect(() => {
@@ -115,6 +116,7 @@ export default function OnboardingPage() {
         if (data.brands?.length) setBrands(data.brands);
         if (data.methods?.length) setMethods(data.methods);
         if (data.accountType) setAccountType(data.accountType);
+        if (data.isSalonOwner !== undefined) setIsSalonOwner(data.isSalonOwner);
         localStorage.removeItem("pendingOnboarding");
       } catch (e) {
         console.error("Failed to parse pending onboarding data");
@@ -142,6 +144,7 @@ export default function OnboardingPage() {
         instagram: instagram || null,
         experience: experience || null,
         accountType: accountType || "solo",
+        isSalonOwner: isSalonOwner || false,
         contentGoals: goals,
         offeredServices: postingServices,
         postingServices: postingServices,
@@ -174,6 +177,7 @@ export default function OnboardingPage() {
         instagram: instagram || null,
         experience: experience || null,
         accountType: accountType || "solo",
+        isSalonOwner: isSalonOwner || false,
         contentGoals: goals,
         offeredServices: postingServices,
         postingServices: postingServices,
@@ -244,9 +248,10 @@ export default function OnboardingPage() {
     const adjusted = getAdjustedStep();
     if (adjusted <= 1) return adjusted;
     if (adjusted === 2) return "accountType";
-    if (hasExtensions && adjusted === 3) return "brands";
-    if (hasExtensions) return adjusted - 1;
-    return adjusted - 1;
+    if (adjusted === 3) return "salonOwner";
+    if (hasExtensions && adjusted === 4) return "brands";
+    if (hasExtensions) return adjusted - 2;
+    return adjusted - 2;
   };
 
   const canContinue = () => {
@@ -259,6 +264,8 @@ export default function OnboardingPage() {
         return services.length > 0;
       case "accountType":
         return accountType !== '';
+      case "salonOwner":
+        return isSalonOwner !== null;
       case "brands":
         return brands.length > 0 && methods.length > 0;
       case 2:
@@ -296,6 +303,7 @@ export default function OnboardingPage() {
     switch (logicalStep) {
       case 1: return "What services do you offer?";
       case "accountType": return "Who's posting?";
+      case "salonOwner": return "Do you have a team?";
       case "brands": return "Extension Expertise";
       case 2: return "Where are you located?";
       case 3: return "How long have you been styling?";
@@ -310,6 +318,7 @@ export default function OnboardingPage() {
     switch (logicalStep) {
       case 1: return "Select all that apply - we'll personalize your content";
       case "accountType": return "This helps us write captions in your voice";
+      case "salonOwner": return "This helps us understand your business setup";
       case "brands": return "Select the brands you're certified in and methods you specialize in";
       case 2: return "We'll include location-based hashtags for you";
       case 3: return "This helps us tailor content to your experience level";
@@ -443,6 +452,71 @@ export default function OnboardingPage() {
                   </p>
                 </div>
                 {accountType === "salon" && (
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="w-4 h-4 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
+            </div>
+          </div>
+        );
+
+      case "salonOwner":
+        return (
+          <div className="space-y-4" data-testid="step-salon-owner">
+            <div className="grid gap-4">
+              <button
+                onClick={() => setIsSalonOwner(true)}
+                className={`relative flex items-center gap-4 p-5 rounded-md border-2 text-left transition-all ${
+                  isSalonOwner === true
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover-elevate'
+                }`}
+                data-testid="button-salon-owner-yes"
+              >
+                <div className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center ${
+                  isSalonOwner === true ? 'bg-primary/20' : 'bg-muted'
+                }`}>
+                  <Users className={`w-7 h-7 ${isSalonOwner === true ? 'text-primary' : 'text-muted-foreground'}`} />
+                </div>
+                <div className="flex-1">
+                  <p className={`font-semibold text-lg ${isSalonOwner === true ? 'text-primary' : ''}`}>
+                    Yes, I manage stylists
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    I own or manage a salon with employees
+                  </p>
+                </div>
+                {isSalonOwner === true && (
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="w-4 h-4 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
+
+              <button
+                onClick={() => setIsSalonOwner(false)}
+                className={`relative flex items-center gap-4 p-5 rounded-md border-2 text-left transition-all ${
+                  isSalonOwner === false
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover-elevate'
+                }`}
+                data-testid="button-salon-owner-no"
+              >
+                <div className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center ${
+                  isSalonOwner === false ? 'bg-primary/20' : 'bg-muted'
+                }`}>
+                  <User className={`w-7 h-7 ${isSalonOwner === false ? 'text-primary' : 'text-muted-foreground'}`} />
+                </div>
+                <div className="flex-1">
+                  <p className={`font-semibold text-lg ${isSalonOwner === false ? 'text-primary' : ''}`}>
+                    No, just me
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    I work solo or rent a chair
+                  </p>
+                </div>
+                {isSalonOwner === false && (
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                     <Check className="w-4 h-4 text-primary-foreground" />
                   </div>
