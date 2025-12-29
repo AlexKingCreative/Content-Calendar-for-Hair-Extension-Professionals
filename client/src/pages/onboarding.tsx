@@ -97,7 +97,7 @@ export default function OnboardingPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
-      setLocation("/");
+      setLocation("/calendar");
     },
   });
 
@@ -117,7 +117,7 @@ export default function OnboardingPage() {
         title: "You're all set!",
         description: "Check your email for next steps to start your free trial.",
       });
-      setLocation("/");
+      setLocation("/calendar");
     },
     onError: (error: any) => {
       toast({
@@ -185,7 +185,7 @@ export default function OnboardingPage() {
     } else if (email) {
       leadMutation.mutate();
     } else {
-      setLocation("/");
+      setLocation("/calendar");
     }
   };
 
