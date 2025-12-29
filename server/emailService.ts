@@ -168,3 +168,21 @@ export async function sendWelcomeEmail(email: string, password: string): Promise
     return false;
   }
 }
+
+export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
+  try {
+    const { client, fromEmail } = await getResendClient();
+    
+    await client.emails.send({
+      from: fromEmail || 'Content Calendar <hello@contentcalendarforhairpros.com>',
+      to,
+      subject,
+      html,
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to send email:', error);
+    return false;
+  }
+}

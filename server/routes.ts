@@ -3,9 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, registerAuthRoutes } from "./replit_integrations/auth";
 import { seedPosts, seedChallenges } from "./seed";
-import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads } from "@shared/schema";
+import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads, users, salonMembers } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import OpenAI from "openai";
 import webpush from "web-push";
 import { z } from "zod";
@@ -13,6 +13,21 @@ import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import mobileAuthRoutes from "./mobileAuth";
 import magicLinkAuthRoutes from "./magicLinkAuth";
+import { sendEmail } from "./emailService";
+import { instagramService } from "./instagramService";
+
+async function getUserEmail(userId: string): Promise<string | null> {
+  const [user] = await db.select().from(users).where(eq(users.id, userId));
+  return user?.email || null;
+}
+
+async function getUserName(userId: string): Promise<string> {
+  const [user] = await db.select().from(users).where(eq(users.id, userId));
+  if (user?.firstName) {
+    return user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName;
+  }
+  return user?.email || "A stylist";
+}
 
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(
@@ -101,7 +116,7 @@ export async function registerRoutes(
         lastName,
       }).returning();
       
-      await storage.createUserProfile(newUser.id, {
+      await storage.upsertUserProfile({
         userId: newUser.id,
         onboardingComplete: false,
       });
@@ -738,21 +753,20 @@ export async function registerRoutes(
             if (salonChallenge) {
               const salon = await storage.getSalon(salonChallenge.salonId);
               if (salon) {
-                const ownerProfile = await storage.getUserProfile(salon.ownerUserId);
-                if (ownerProfile?.email) {
-                  const stylistProfile = await storage.getUserProfile(userId);
-                  const stylistName = stylistProfile?.displayName || stylistProfile?.email || "A stylist";
+                const ownerEmail = await getUserEmail(salon.ownerUserId);
+                if (ownerEmail) {
+                  const stylistName = await getUserName(userId);
                   try {
-                    await sendEmail({
-                      to: ownerProfile.email,
-                      subject: `Challenge Completed: ${salonChallenge.title}`,
-                      html: `
+                    await sendEmail(
+                      ownerEmail,
+                      `Challenge Completed: ${salonChallenge.title}`,
+                      `
                         <h2>Congratulations!</h2>
                         <p><strong>${stylistName}</strong> has completed the challenge: <strong>${salonChallenge.title}</strong></p>
                         <p>They've earned the reward: <strong>${salonChallenge.rewardText}</strong></p>
                         <p>Check your salon dashboard to see all progress.</p>
                       `
-                    });
+                    );
                     await storage.markOwnerNotified(challenge.id);
                   } catch (emailErr) {
                     console.error("Failed to send challenge completion email:", emailErr);
@@ -2151,15 +2165,15 @@ Respond in JSON format with these fields:
       const members = await storage.getSalonMembers(salon.id);
       const profiles = await storage.getAllUserProfiles();
       
-      const progressWithDetails = progressData.map(p => {
+      const progressWithDetails = await Promise.all(progressData.map(async (p) => {
         const member = members.find(m => m.stylistUserId === p.stylistUserId);
-        const profile = profiles.find(pr => pr.userId === p.stylistUserId);
+        const stylistName = p.stylistUserId ? await getUserName(p.stylistUserId) : "Unknown";
         return {
           ...p,
-          stylistName: profile?.displayName || member?.email || "Unknown",
+          stylistName,
           email: member?.email || ""
         };
-      });
+      }));
       
       res.json(progressWithDetails);
     } catch (error) {
@@ -2220,29 +2234,26 @@ Respond in JSON format with these fields:
       
       // Check if completed and notify owner
       if (updated && updated.status === "completed" && !updated.ownerNotifiedAt) {
-        // Mark owner as notified (email notification would go here)
         await storage.markOwnerNotified(id);
         
         const salonChallenge = await storage.getSalonChallengeById(updated.salonChallengeId);
         const salon = await storage.getSalon(updated.salonId);
-        const profile = await storage.getUserProfile(req.user.id);
+        const stylistName = await getUserName(req.user.id);
         
         if (salon && salonChallenge) {
-          const ownerProfile = await storage.getUserProfile(salon.ownerUserId);
-          if (ownerProfile?.email) {
-            // Send notification email to owner
+          const ownerEmail = await getUserEmail(salon.ownerUserId);
+          if (ownerEmail) {
             try {
-              const { sendEmail } = await import("./emailService");
-              await sendEmail({
-                to: ownerProfile.email,
-                subject: `Challenge Completed: ${profile?.displayName || 'A stylist'} finished "${salonChallenge.title}"`,
-                html: `
+              await sendEmail(
+                ownerEmail,
+                `Challenge Completed: ${stylistName} finished "${salonChallenge.title}"`,
+                `
                   <h2>Challenge Completed!</h2>
-                  <p><strong>${profile?.displayName || 'A stylist'}</strong> has completed the "${salonChallenge.title}" challenge!</p>
+                  <p><strong>${stylistName}</strong> has completed the "${salonChallenge.title}" challenge!</p>
                   <p><strong>Reward earned:</strong> ${salonChallenge.rewardText}</p>
                   <p>Log in to your salon dashboard to see full details.</p>
                 `
-              });
+              );
             } catch (emailError) {
               console.error("Failed to send completion notification:", emailError);
             }
@@ -2254,6 +2265,285 @@ Respond in JSON format with these fields:
     } catch (error) {
       console.error("Error logging challenge progress:", error);
       res.status(500).json({ error: "Failed to log progress" });
+    }
+  });
+
+  // ============ INSTAGRAM INTEGRATION ============
+
+  // Get Instagram connection status
+  app.get("/api/instagram/status", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const account = await storage.getInstagramAccount(userId);
+      if (!account) {
+        return res.json({ connected: false });
+      }
+      
+      res.json({
+        connected: true,
+        username: account.instagramUsername,
+        profilePictureUrl: account.profilePictureUrl,
+        followersCount: account.followersCount,
+        mediaCount: account.mediaCount,
+        lastSyncAt: account.lastSyncAt,
+        isActive: account.isActive
+      });
+    } catch (error) {
+      console.error("Error checking Instagram status:", error);
+      res.status(500).json({ error: "Failed to check status" });
+    }
+  });
+
+  // Get Instagram OAuth URL
+  app.get("/api/instagram/auth-url", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const state = Buffer.from(JSON.stringify({ userId, timestamp: Date.now() })).toString('base64');
+      const authUrl = instagramService.getAuthUrl(state);
+      
+      res.json({ authUrl });
+    } catch (error) {
+      console.error("Error generating auth URL:", error);
+      res.status(500).json({ error: "Failed to generate auth URL" });
+    }
+  });
+
+  // Instagram OAuth callback
+  app.get("/api/instagram/callback", async (req: any, res) => {
+    try {
+      const { code, state } = req.query;
+      
+      if (!code || !state) {
+        return res.redirect("/?instagram_error=missing_params");
+      }
+      
+      let stateData;
+      try {
+        stateData = JSON.parse(Buffer.from(state as string, 'base64').toString());
+      } catch {
+        return res.redirect("/?instagram_error=invalid_state");
+      }
+      
+      const userId = stateData.userId;
+      if (!userId) {
+        return res.redirect("/?instagram_error=invalid_user");
+      }
+      
+      // Exchange code for token
+      const tokenData = await instagramService.exchangeCodeForToken(code as string);
+      
+      // Get long-lived token
+      const longLivedToken = await instagramService.getLongLivedToken(tokenData.access_token);
+      
+      // Get Instagram Business Account from Pages
+      const businessAccount = await instagramService.getInstagramBusinessAccountFromPages(longLivedToken.access_token);
+      
+      if (!businessAccount) {
+        return res.redirect("/?instagram_error=no_business_account");
+      }
+      
+      // Get user data
+      const userData = await instagramService.getInstagramUserData(businessAccount.instagramAccountId, longLivedToken.access_token);
+      
+      const tokenExpiresAt = new Date(Date.now() + longLivedToken.expires_in * 1000);
+      
+      // Check if account already exists
+      const existing = await storage.getInstagramAccount(userId);
+      
+      if (existing) {
+        await storage.updateInstagramAccount(userId, {
+          instagramUserId: businessAccount.instagramAccountId,
+          instagramUsername: userData.username,
+          accessToken: longLivedToken.access_token,
+          tokenExpiresAt,
+          pageId: businessAccount.pageId,
+          pageName: businessAccount.pageName,
+          profilePictureUrl: userData.profile_picture_url,
+          followersCount: userData.followers_count || 0,
+          followingCount: userData.follows_count || 0,
+          mediaCount: userData.media_count || 0,
+          isActive: true,
+        });
+      } else {
+        await storage.createInstagramAccount({
+          userId,
+          instagramUserId: businessAccount.instagramAccountId,
+          instagramUsername: userData.username,
+          accessToken: longLivedToken.access_token,
+          tokenExpiresAt,
+          pageId: businessAccount.pageId,
+          pageName: businessAccount.pageName,
+          profilePictureUrl: userData.profile_picture_url,
+          followersCount: userData.followers_count || 0,
+          followingCount: userData.follows_count || 0,
+          mediaCount: userData.media_count || 0,
+          isActive: true,
+        });
+      }
+      
+      // Initial sync
+      try {
+        await instagramService.syncUserMedia(userId);
+      } catch (syncError) {
+        console.error("Initial sync failed:", syncError);
+      }
+      
+      res.redirect("/account?instagram_connected=true");
+    } catch (error) {
+      console.error("Instagram callback error:", error);
+      res.redirect("/?instagram_error=connection_failed");
+    }
+  });
+
+  // Disconnect Instagram
+  app.post("/api/instagram/disconnect", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      await storage.deleteInstagramAccount(userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error disconnecting Instagram:", error);
+      res.status(500).json({ error: "Failed to disconnect" });
+    }
+  });
+
+  // Sync Instagram media
+  app.post("/api/instagram/sync", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // Check and refresh token if needed
+      const tokenValid = await instagramService.checkAndRefreshToken(userId);
+      if (!tokenValid) {
+        return res.status(400).json({ error: "Instagram token expired, please reconnect" });
+      }
+      
+      const result = await instagramService.syncUserMedia(userId);
+      await instagramService.syncAccountStats(userId);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error syncing Instagram:", error);
+      res.status(500).json({ error: "Failed to sync" });
+    }
+  });
+
+  // Get Instagram media
+  app.get("/api/instagram/media", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const limit = parseInt(req.query.limit as string) || 50;
+      const media = await storage.getInstagramMedia(userId, limit);
+      
+      res.json(media);
+    } catch (error) {
+      console.error("Error fetching Instagram media:", error);
+      res.status(500).json({ error: "Failed to fetch media" });
+    }
+  });
+
+  // Get Instagram analytics
+  app.get("/api/instagram/analytics", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const account = await storage.getInstagramAccount(userId);
+      if (!account) {
+        return res.status(404).json({ error: "Instagram not connected" });
+      }
+      
+      // Get recent media for analytics
+      const media = await storage.getInstagramMedia(userId, 30);
+      
+      // Calculate aggregate stats
+      const totalLikes = media.reduce((sum, m) => sum + (m.likeCount || 0), 0);
+      const totalComments = media.reduce((sum, m) => sum + (m.commentsCount || 0), 0);
+      const totalReach = media.reduce((sum, m) => sum + (m.reach || 0), 0);
+      const totalImpressions = media.reduce((sum, m) => sum + (m.impressions || 0), 0);
+      const avgEngagement = media.length > 0 ? (totalLikes + totalComments) / media.length : 0;
+      
+      // Group by date for daily stats
+      const dailyStats: Record<string, { posts: number; likes: number; comments: number }> = {};
+      for (const m of media) {
+        if (!dailyStats[m.postDate]) {
+          dailyStats[m.postDate] = { posts: 0, likes: 0, comments: 0 };
+        }
+        dailyStats[m.postDate].posts++;
+        dailyStats[m.postDate].likes += m.likeCount || 0;
+        dailyStats[m.postDate].comments += m.commentsCount || 0;
+      }
+      
+      res.json({
+        account: {
+          username: account.instagramUsername,
+          followersCount: account.followersCount,
+          followingCount: account.followingCount,
+          mediaCount: account.mediaCount,
+          profilePictureUrl: account.profilePictureUrl,
+          lastSyncAt: account.lastSyncAt
+        },
+        stats: {
+          totalPosts: media.length,
+          totalLikes,
+          totalComments,
+          totalReach,
+          totalImpressions,
+          avgEngagement: Math.round(avgEngagement * 10) / 10
+        },
+        dailyStats: Object.entries(dailyStats).map(([date, stats]) => ({
+          date,
+          ...stats
+        })).sort((a, b) => b.date.localeCompare(a.date)),
+        recentMedia: media.slice(0, 12)
+      });
+    } catch (error) {
+      console.error("Error fetching Instagram analytics:", error);
+      res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  // Check if user posted on Instagram today (for streak integration)
+  app.get("/api/instagram/posted-today", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const account = await storage.getInstagramAccount(userId);
+      if (!account || !account.isActive) {
+        return res.json({ hasPosted: false, connected: false });
+      }
+      
+      const today = new Date().toISOString().split('T')[0];
+      const hasPosted = await storage.hasInstagramPostOnDate(userId, today);
+      
+      res.json({ hasPosted, connected: true });
+    } catch (error) {
+      console.error("Error checking Instagram post:", error);
+      res.status(500).json({ error: "Failed to check" });
     }
   });
 
