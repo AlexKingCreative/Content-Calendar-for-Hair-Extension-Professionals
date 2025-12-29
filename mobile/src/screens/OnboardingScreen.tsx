@@ -73,12 +73,38 @@ const CONTENT_GOALS = [
   { id: 'engagement', label: 'Increase Engagement', icon: 'heart' as const },
 ];
 
+const CERTIFIED_BRANDS = [
+  "Great Lengths",
+  "Bellami",
+  "Hairdreams",
+  "Hotheads",
+  "IBE",
+  "NBR",
+  "DreamCatchers",
+  "Habit Hand Tied",
+  "Invisible Bead",
+  "Other",
+];
+
+const EXTENSION_METHODS = [
+  "Tape-In",
+  "Hand-Tied Weft",
+  "Machine Weft",
+  "Keratin/Fusion",
+  "I-Tip/Micro Links",
+  "Clip-Ins",
+  "Sew-In",
+  "Halo/Wire",
+];
+
 type OnboardingData = {
   services: string[];
   location: string;
   experience: string;
   goals: string[];
   instagram: string;
+  brands: string[];
+  methods: string[];
 };
 
 export default function OnboardingScreen() {
@@ -90,10 +116,14 @@ export default function OnboardingScreen() {
     experience: '',
     goals: [],
     instagram: '',
+    brands: [],
+    methods: [],
   });
   const progressAnim = useRef(new Animated.Value(0)).current;
 
-  const totalSteps = 4;
+  const hasExtensions = data.services.includes('extensions');
+  const baseSteps = 4;
+  const totalSteps = hasExtensions ? baseSteps + 1 : baseSteps;
 
   const animateProgress = (toStep: number) => {
     Animated.spring(progressAnim, {
@@ -121,6 +151,31 @@ export default function OnboardingScreen() {
     }));
   };
 
+  const toggleBrand = (brand: string) => {
+    setData(prev => ({
+      ...prev,
+      brands: prev.brands.includes(brand)
+        ? prev.brands.filter(b => b !== brand)
+        : [...prev.brands, brand],
+    }));
+  };
+
+  const toggleMethod = (method: string) => {
+    setData(prev => ({
+      ...prev,
+      methods: prev.methods.includes(method)
+        ? prev.methods.filter(m => m !== method)
+        : [...prev.methods, method],
+    }));
+  };
+
+  const getLogicalStep = () => {
+    if (step === 0) return 0;
+    if (hasExtensions && step === 1) return 'brands';
+    if (hasExtensions) return step - 1;
+    return step;
+  };
+
   const handleNext = () => {
     if (step < totalSteps - 1) {
       const nextStep = step + 1;
@@ -142,9 +197,12 @@ export default function OnboardingScreen() {
   };
 
   const canContinue = () => {
-    switch (step) {
+    const logicalStep = getLogicalStep();
+    switch (logicalStep) {
       case 0:
         return data.services.length > 0;
+      case 'brands':
+        return data.brands.length > 0 && data.methods.length > 0;
       case 1:
         return data.location.trim().length > 0;
       case 2:
@@ -157,7 +215,8 @@ export default function OnboardingScreen() {
   };
 
   const renderStep = () => {
-    switch (step) {
+    const logicalStep = getLogicalStep();
+    switch (logicalStep) {
       case 0:
         return (
           <View style={styles.stepContent}>
@@ -197,6 +256,68 @@ export default function OnboardingScreen() {
                     <View style={styles.checkmark}>
                       <Ionicons name="checkmark" size={16} color="#FFFFFF" />
                     </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        );
+
+      case 'brands':
+        return (
+          <View style={styles.stepContent}>
+            <Text style={styles.stepTitle}>Extension Expertise</Text>
+            <Text style={styles.stepSubtitle}>
+              Select your certified brands and methods
+            </Text>
+            
+            <Text style={styles.sectionLabel}>Certified Brands</Text>
+            <View style={styles.brandGrid}>
+              {CERTIFIED_BRANDS.map((brand) => (
+                <TouchableOpacity
+                  key={brand}
+                  style={[
+                    styles.brandChip,
+                    data.brands.includes(brand) && styles.brandChipSelected,
+                  ]}
+                  onPress={() => toggleBrand(brand)}
+                >
+                  <Text
+                    style={[
+                      styles.brandChipText,
+                      data.brands.includes(brand) && styles.brandChipTextSelected,
+                    ]}
+                  >
+                    {brand}
+                  </Text>
+                  {data.brands.includes(brand) && (
+                    <Ionicons name="checkmark" size={14} color="#FFFFFF" style={{ marginLeft: 4 }} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={[styles.sectionLabel, { marginTop: 20 }]}>Extension Methods</Text>
+            <View style={styles.brandGrid}>
+              {EXTENSION_METHODS.map((method) => (
+                <TouchableOpacity
+                  key={method}
+                  style={[
+                    styles.brandChip,
+                    data.methods.includes(method) && styles.brandChipSelected,
+                  ]}
+                  onPress={() => toggleMethod(method)}
+                >
+                  <Text
+                    style={[
+                      styles.brandChipText,
+                      data.methods.includes(method) && styles.brandChipTextSelected,
+                    ]}
+                  >
+                    {method}
+                  </Text>
+                  {data.methods.includes(method) && (
+                    <Ionicons name="checkmark" size={14} color="#FFFFFF" style={{ marginLeft: 4 }} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -598,6 +719,39 @@ const styles = StyleSheet.create({
     backgroundColor: '#D4A574',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#5D4E3C',
+    marginBottom: 12,
+  },
+  brandGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  brandChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 2,
+    borderColor: '#E5D5C5',
+  },
+  brandChipSelected: {
+    borderColor: '#D4A574',
+    backgroundColor: '#D4A574',
+  },
+  brandChipText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#5D4E3C',
+  },
+  brandChipTextSelected: {
+    color: '#FFFFFF',
   },
   footer: {
     padding: 24,

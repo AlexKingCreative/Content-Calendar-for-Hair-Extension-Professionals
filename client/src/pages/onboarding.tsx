@@ -12,7 +12,7 @@ import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { TrialOfferModal } from "@/components/trial-offer-modal";
 import { BuildingScheduleAnimation } from "@/components/building-schedule-animation";
-import { experienceLevelDescriptions, contentGoalOptions } from "@shared/schema";
+import { experienceLevelDescriptions, contentGoalOptions, certifiedBrands, extensionMethods } from "@shared/schema";
 
 interface User {
   id: string;
@@ -79,8 +79,12 @@ export default function OnboardingPage() {
   const [instagram, setInstagram] = useState("");
   const [experience, setExperience] = useState("");
   const [goals, setGoals] = useState<string[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [methods, setMethods] = useState<string[]>([]);
   const [showTrialModal, setShowTrialModal] = useState(false);
   const [showBuildingAnimation, setShowBuildingAnimation] = useState(false);
+
+  const hasExtensions = services.includes("extensions");
 
   const { data: user } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
@@ -88,7 +92,8 @@ export default function OnboardingPage() {
   });
 
   const isLoggedIn = !!user;
-  const totalSteps = isLoggedIn ? 4 : 5;
+  const baseSteps = isLoggedIn ? 4 : 5;
+  const totalSteps = hasExtensions ? baseSteps + 1 : baseSteps;
 
   useEffect(() => {
     if (user) {
@@ -106,6 +111,8 @@ export default function OnboardingPage() {
         if (data.instagram) setInstagram(data.instagram);
         if (data.experience) setExperience(data.experience);
         if (data.goals?.length) setGoals(data.goals);
+        if (data.brands?.length) setBrands(data.brands);
+        if (data.methods?.length) setMethods(data.methods);
         localStorage.removeItem("pendingOnboarding");
       } catch (e) {
         console.error("Failed to parse pending onboarding data");
@@ -135,6 +142,8 @@ export default function OnboardingPage() {
         contentGoals: goals,
         offeredServices: postingServices,
         postingServices: postingServices,
+        certifiedBrands: hasExtensions ? brands : [],
+        extensionMethods: hasExtensions ? methods : [],
       });
     },
     onSuccess: () => {
@@ -164,6 +173,8 @@ export default function OnboardingPage() {
         contentGoals: goals,
         offeredServices: postingServices,
         postingServices: postingServices,
+        certifiedBrands: hasExtensions ? brands : [],
+        extensionMethods: hasExtensions ? methods : [],
       });
     },
     onSuccess: async (data: any) => {
@@ -207,14 +218,42 @@ export default function OnboardingPage() {
     );
   };
 
+  const toggleBrand = (brand: string) => {
+    setBrands(prev => 
+      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
+    );
+  };
+
+  const toggleMethod = (method: string) => {
+    setMethods(prev => 
+      prev.includes(method) ? prev.filter(m => m !== method) : [...prev, method]
+    );
+  };
+
+  const getAdjustedStep = () => {
+    if (!isLoggedIn && step === 1) return 0;
+    let adjusted = isLoggedIn ? step : step - 1;
+    return adjusted;
+  };
+
+  const getLogicalStep = () => {
+    const adjusted = getAdjustedStep();
+    if (adjusted <= 1) return adjusted;
+    if (hasExtensions && adjusted === 2) return "brands";
+    if (hasExtensions) return adjusted - 1;
+    return adjusted;
+  };
+
   const canContinue = () => {
     if (!isLoggedIn && step === 1) {
       return email.includes('@');
     }
-    const adjustedStep = isLoggedIn ? step : step - 1;
-    switch (adjustedStep) {
+    const logicalStep = getLogicalStep();
+    switch (logicalStep) {
       case 1:
         return services.length > 0;
+      case "brands":
+        return brands.length > 0 && methods.length > 0;
       case 2:
         return city.trim().length > 0;
       case 3:
@@ -246,9 +285,10 @@ export default function OnboardingPage() {
 
   const getStepTitle = () => {
     if (!isLoggedIn && step === 1) return "Get Started";
-    const adjustedStep = isLoggedIn ? step : step - 1;
-    switch (adjustedStep) {
+    const logicalStep = getLogicalStep();
+    switch (logicalStep) {
       case 1: return "What services do you offer?";
+      case "brands": return "Extension Expertise";
       case 2: return "Where are you located?";
       case 3: return "How long have you been styling?";
       case 4: return "What are your content goals?";
@@ -258,9 +298,10 @@ export default function OnboardingPage() {
 
   const getStepSubtitle = () => {
     if (!isLoggedIn && step === 1) return "Enter your email to personalize your content calendar";
-    const adjustedStep = isLoggedIn ? step : step - 1;
-    switch (adjustedStep) {
+    const logicalStep = getLogicalStep();
+    switch (logicalStep) {
       case 1: return "Select all that apply - we'll personalize your content";
+      case "brands": return "Select the brands you're certified in and methods you specialize in";
       case 2: return "We'll include location-based hashtags for you";
       case 3: return "This helps us tailor content to your experience level";
       case 4: return "Choose what you want to achieve with your posts";
@@ -291,9 +332,9 @@ export default function OnboardingPage() {
       );
     }
 
-    const adjustedStep = isLoggedIn ? step : step - 1;
+    const logicalStep = getLogicalStep();
 
-    switch (adjustedStep) {
+    switch (logicalStep) {
       case 1:
         return (
           <div className="space-y-4" data-testid="step-services">
@@ -333,6 +374,69 @@ export default function OnboardingPage() {
                   </button>
                 );
               })}
+            </div>
+          </div>
+        );
+
+      case "brands":
+        return (
+          <div className="space-y-6" data-testid="step-brands">
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <Award className="w-4 h-4 text-primary" />
+                Certified Brands
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                {certifiedBrands.map((brand) => {
+                  const isSelected = brands.includes(brand);
+                  return (
+                    <button
+                      key={brand}
+                      onClick={() => toggleBrand(brand)}
+                      className={`p-3 rounded-md border-2 text-sm text-left transition-all ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5 text-primary font-medium' 
+                          : 'border-border hover-elevate'
+                      }`}
+                      data-testid={`button-brand-${brand.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      {brand}
+                      {isSelected && (
+                        <Check className="w-3 h-3 inline-block ml-1" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Extension Methods
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                {extensionMethods.map((method) => {
+                  const isSelected = methods.includes(method);
+                  return (
+                    <button
+                      key={method}
+                      onClick={() => toggleMethod(method)}
+                      className={`p-3 rounded-md border-2 text-sm text-left transition-all ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5 text-primary font-medium' 
+                          : 'border-border hover-elevate'
+                      }`}
+                      data-testid={`button-method-${method.toLowerCase().replace(/[\s\/]+/g, '-')}`}
+                    >
+                      {method}
+                      {isSelected && (
+                        <Check className="w-3 h-3 inline-block ml-1" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         );
