@@ -337,3 +337,64 @@ export const insertSalonMemberSchema = createInsertSchema(salonMembers).omit({
 
 export type SalonMember = typeof salonMembers.$inferSelect;
 export type InsertSalonMember = z.infer<typeof insertSalonMemberSchema>;
+
+// Challenges - self-directed posting challenges
+export const challengeTypes = ["daily", "weekly", "custom"] as const;
+export type ChallengeType = typeof challengeTypes[number];
+
+export const challengeStatuses = ["active", "completed", "abandoned"] as const;
+export type ChallengeStatus = typeof challengeStatuses[number];
+
+export const challenges = pgTable("challenges", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull().default("target"),
+  durationDays: integer("duration_days").notNull(),
+  challengeType: text("challenge_type").notNull().default("daily"),
+  postsRequired: integer("posts_required"),
+  rules: text("rules").array().default(sql`'{}'::text[]`),
+  tips: text("tips").array().default(sql`'{}'::text[]`),
+  badgeName: text("badge_name"),
+  badgeIcon: text("badge_icon"),
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertChallengeSchema = createInsertSchema(challenges).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Challenge = typeof challenges.$inferSelect;
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+
+// User Challenges - tracks user participation and progress
+export const userChallenges = pgTable("user_challenges", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  challengeId: integer("challenge_id").notNull(),
+  status: text("status").notNull().default("active"),
+  startedAt: timestamp("started_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  completedAt: timestamp("completed_at"),
+  abandonedAt: timestamp("abandoned_at"),
+  postsCompleted: integer("posts_completed").default(0),
+  currentStreak: integer("current_streak").default(0),
+  longestStreak: integer("longest_streak").default(0),
+  lastPostDate: text("last_post_date"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertUserChallengeSchema = createInsertSchema(userChallenges).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  completedAt: true,
+  abandonedAt: true,
+});
+
+export type UserChallenge = typeof userChallenges.$inferSelect;
+export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;

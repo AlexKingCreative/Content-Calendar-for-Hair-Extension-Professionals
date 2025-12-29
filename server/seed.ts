@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { posts, type InsertPost, categories, contentTypes } from "@shared/schema";
+import { posts, challenges, type InsertPost, type InsertChallenge, categories, contentTypes } from "@shared/schema";
 
 type Category = typeof categories[number];
 type ContentType = typeof contentTypes[number];
@@ -135,4 +135,93 @@ export async function seedPosts() {
   }
   
   console.log(`Seeded ${postsToInsert.length} posts for all 365 days`);
+}
+
+const defaultChallenges: Omit<InsertChallenge, "id">[] = [
+  {
+    name: "Post Every Day for a Month",
+    slug: "daily-posting-month",
+    description: "Challenge yourself to post every single day for 30 days straight. Build consistency, grow your audience, and establish a powerful posting habit.",
+    icon: "flame",
+    durationDays: 30,
+    challengeType: "daily",
+    postsRequired: 30,
+    rules: [
+      "Post at least once every day",
+      "Any type of content counts (photo, video, reel, story)",
+      "Missing a day means you can restart the challenge",
+      "Track your progress and celebrate milestones"
+    ],
+    tips: [
+      "Plan your content a week ahead to stay consistent",
+      "Use your Content Calendar to never run out of ideas",
+      "Batch create content on slower days",
+      "Remember: done is better than perfect"
+    ],
+    badgeName: "30-Day Warrior",
+    badgeIcon: "trophy",
+    isActive: true,
+    sortOrder: 1
+  },
+  {
+    name: "Put Yourself Out There",
+    slug: "put-yourself-out-there",
+    description: "Step out of your comfort zone and show your face, your voice, and your personality. Connect authentically with your audience for 14 days.",
+    icon: "sparkles",
+    durationDays: 14,
+    challengeType: "daily",
+    postsRequired: 14,
+    rules: [
+      "Each post must feature YOU in some way",
+      "Show your face, use your voice, or share personal stories",
+      "Reels, stories with talking, or behind-the-scenes of YOU working",
+      "No stock photos or faceless content"
+    ],
+    tips: [
+      "Start with something simple like a quick greeting in stories",
+      "Share your journey becoming an extension specialist",
+      "Talk about why you love what you do",
+      "Your clients want to connect with YOU, not just your work"
+    ],
+    badgeName: "Authentic Creator",
+    badgeIcon: "heart",
+    isActive: true,
+    sortOrder: 2
+  },
+  {
+    name: "Quality Over Quantity",
+    slug: "quality-over-quantity",
+    description: "Focus on creating 3 high-quality, polished posts per week for 4 weeks. Less posting, more impact. Perfect for busy stylists who want maximum results.",
+    icon: "gem",
+    durationDays: 28,
+    challengeType: "weekly",
+    postsRequired: 12,
+    rules: [
+      "Create exactly 3 posts per week",
+      "Each post should be thoughtfully planned and polished",
+      "Include professional photos or well-edited videos",
+      "Write engaging captions that tell a story"
+    ],
+    tips: [
+      "Spend time editing and perfecting each post",
+      "Plan your 3 weekly posts at the start of each week",
+      "Focus on your best transformations and work",
+      "Quality content gets saved and shared more"
+    ],
+    badgeName: "Quality Creator",
+    badgeIcon: "star",
+    isActive: true,
+    sortOrder: 3
+  }
+];
+
+export async function seedChallenges() {
+  const existingChallenges = await db.select().from(challenges).limit(1);
+  if (existingChallenges.length > 0) {
+    console.log("Challenges already seeded, skipping...");
+    return;
+  }
+  
+  await db.insert(challenges).values(defaultChallenges);
+  console.log(`Seeded ${defaultChallenges.length} challenges`);
 }

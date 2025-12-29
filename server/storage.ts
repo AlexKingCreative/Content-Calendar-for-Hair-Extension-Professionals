@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, postSubmissions, salons, salonMembers, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog, type PostSubmission, type InsertPostSubmission, type Salon, type InsertSalon, type SalonMember, type InsertSalonMember } from "@shared/schema";
-import { eq, and, sql, desc } from "drizzle-orm";
+import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, postSubmissions, salons, salonMembers, challenges, userChallenges, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog, type PostSubmission, type InsertPostSubmission, type Salon, type InsertSalon, type SalonMember, type InsertSalonMember, type Challenge, type InsertChallenge, type UserChallenge, type InsertUserChallenge } from "@shared/schema";
+import { eq, and, sql, desc, asc } from "drizzle-orm";
 
 export interface IStorage {
   getAllPosts(): Promise<Post[]>;
@@ -60,6 +60,25 @@ export interface IStorage {
   updateSalonMember(id: number, data: Partial<SalonMember>): Promise<SalonMember | undefined>;
   revokeSalonMember(id: number): Promise<boolean>;
   acceptSalonInvitation(token: string, stylistUserId: string): Promise<SalonMember | undefined>;
+  
+  // Challenges
+  getAllChallenges(): Promise<Challenge[]>;
+  getActiveChallenges(): Promise<Challenge[]>;
+  getChallengeById(id: number): Promise<Challenge | undefined>;
+  getChallengeBySlug(slug: string): Promise<Challenge | undefined>;
+  createChallenge(challenge: InsertChallenge): Promise<Challenge>;
+  updateChallenge(id: number, data: Partial<InsertChallenge>): Promise<Challenge | undefined>;
+  deleteChallenge(id: number): Promise<boolean>;
+  
+  // User Challenges
+  getUserChallenges(userId: string): Promise<UserChallenge[]>;
+  getActiveUserChallenges(userId: string): Promise<UserChallenge[]>;
+  getUserChallengeById(id: number): Promise<UserChallenge | undefined>;
+  startChallenge(userId: string, challengeId: number): Promise<UserChallenge>;
+  updateUserChallengeProgress(id: number, data: Partial<UserChallenge>): Promise<UserChallenge | undefined>;
+  abandonChallenge(id: number): Promise<UserChallenge | undefined>;
+  completeChallenge(id: number): Promise<UserChallenge | undefined>;
+  getActiveUserChallengeForChallenge(userId: string, challengeId: number): Promise<UserChallenge | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -401,6 +420,106 @@ export class DatabaseStorage implements IStorage {
     }
     
     return updated;
+  }
+
+  // Challenges
+  async getAllChallenges(): Promise<Challenge[]> {
+    return db.select().from(challenges).orderBy(asc(challenges.sortOrder), asc(challenges.name));
+  }
+
+  async getActiveChallenges(): Promise<Challenge[]> {
+    return db.select().from(challenges).where(eq(challenges.isActive, true)).orderBy(asc(challenges.sortOrder), asc(challenges.name));
+  }
+
+  async getChallengeById(id: number): Promise<Challenge | undefined> {
+    const [challenge] = await db.select().from(challenges).where(eq(challenges.id, id));
+    return challenge;
+  }
+
+  async getChallengeBySlug(slug: string): Promise<Challenge | undefined> {
+    const [challenge] = await db.select().from(challenges).where(eq(challenges.slug, slug));
+    return challenge;
+  }
+
+  async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
+    const [created] = await db.insert(challenges).values(challenge).returning();
+    return created;
+  }
+
+  async updateChallenge(id: number, data: Partial<InsertChallenge>): Promise<Challenge | undefined> {
+    const [updated] = await db
+      .update(challenges)
+      .set(data)
+      .where(eq(challenges.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteChallenge(id: number): Promise<boolean> {
+    const result = await db.delete(challenges).where(eq(challenges.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // User Challenges
+  async getUserChallenges(userId: string): Promise<UserChallenge[]> {
+    return db.select().from(userChallenges).where(eq(userChallenges.userId, userId)).orderBy(desc(userChallenges.createdAt));
+  }
+
+  async getActiveUserChallenges(userId: string): Promise<UserChallenge[]> {
+    return db.select().from(userChallenges)
+      .where(and(eq(userChallenges.userId, userId), eq(userChallenges.status, "active")))
+      .orderBy(desc(userChallenges.createdAt));
+  }
+
+  async getUserChallengeById(id: number): Promise<UserChallenge | undefined> {
+    const [uc] = await db.select().from(userChallenges).where(eq(userChallenges.id, id));
+    return uc;
+  }
+
+  async startChallenge(userId: string, challengeId: number): Promise<UserChallenge> {
+    const [created] = await db.insert(userChallenges).values({
+      userId,
+      challengeId,
+      status: "active",
+    }).returning();
+    return created;
+  }
+
+  async updateUserChallengeProgress(id: number, data: Partial<UserChallenge>): Promise<UserChallenge | undefined> {
+    const [updated] = await db
+      .update(userChallenges)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(userChallenges.id, id))
+      .returning();
+    return updated;
+  }
+
+  async abandonChallenge(id: number): Promise<UserChallenge | undefined> {
+    const [updated] = await db
+      .update(userChallenges)
+      .set({ status: "abandoned", abandonedAt: new Date(), updatedAt: new Date() })
+      .where(eq(userChallenges.id, id))
+      .returning();
+    return updated;
+  }
+
+  async completeChallenge(id: number): Promise<UserChallenge | undefined> {
+    const [updated] = await db
+      .update(userChallenges)
+      .set({ status: "completed", completedAt: new Date(), updatedAt: new Date() })
+      .where(eq(userChallenges.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getActiveUserChallengeForChallenge(userId: string, challengeId: number): Promise<UserChallenge | undefined> {
+    const [uc] = await db.select().from(userChallenges)
+      .where(and(
+        eq(userChallenges.userId, userId),
+        eq(userChallenges.challengeId, challengeId),
+        eq(userChallenges.status, "active")
+      ));
+    return uc;
   }
 }
 

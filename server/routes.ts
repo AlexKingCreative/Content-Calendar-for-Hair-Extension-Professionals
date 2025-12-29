@@ -2,7 +2,7 @@ import type { Express, RequestHandler } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, registerAuthRoutes } from "./replit_integrations/auth";
-import { seedPosts } from "./seed";
+import { seedPosts, seedChallenges } from "./seed";
 import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -293,6 +293,7 @@ export async function registerRoutes(
   });
   
   await seedPosts();
+  await seedChallenges();
 
   app.get("/api/posts", async (req, res) => {
     try {
@@ -1594,6 +1595,274 @@ Respond in JSON format with these fields:
     } catch (error) {
       console.error("Error fetching user salon:", error);
       res.status(500).json({ error: "Failed to fetch salon" });
+    }
+  });
+
+  // ============ CHALLENGES ============
+
+  // Get all active challenges
+  app.get("/api/challenges", async (req, res) => {
+    try {
+      const allChallenges = await storage.getActiveChallenges();
+      res.json(allChallenges);
+    } catch (error) {
+      console.error("Error fetching challenges:", error);
+      res.status(500).json({ error: "Failed to fetch challenges" });
+    }
+  });
+
+  // Get challenge by slug
+  app.get("/api/challenges/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const challenge = await storage.getChallengeBySlug(slug);
+      if (!challenge) {
+        return res.status(404).json({ error: "Challenge not found" });
+      }
+      res.json(challenge);
+    } catch (error) {
+      console.error("Error fetching challenge:", error);
+      res.status(500).json({ error: "Failed to fetch challenge" });
+    }
+  });
+
+  // Get user's challenges (active and completed)
+  app.get("/api/user/challenges", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const userChallenges = await storage.getUserChallenges(userId);
+      
+      // Fetch challenge details for each user challenge
+      const challengesWithDetails = await Promise.all(
+        userChallenges.map(async (uc) => {
+          const challenge = await storage.getChallengeById(uc.challengeId);
+          return {
+            ...uc,
+            challenge,
+          };
+        })
+      );
+      
+      res.json(challengesWithDetails);
+    } catch (error) {
+      console.error("Error fetching user challenges:", error);
+      res.status(500).json({ error: "Failed to fetch user challenges" });
+    }
+  });
+
+  // Get user's active challenges
+  app.get("/api/user/challenges/active", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const activeChallenges = await storage.getActiveUserChallenges(userId);
+      
+      const challengesWithDetails = await Promise.all(
+        activeChallenges.map(async (uc) => {
+          const challenge = await storage.getChallengeById(uc.challengeId);
+          return {
+            ...uc,
+            challenge,
+          };
+        })
+      );
+      
+      res.json(challengesWithDetails);
+    } catch (error) {
+      console.error("Error fetching active challenges:", error);
+      res.status(500).json({ error: "Failed to fetch active challenges" });
+    }
+  });
+
+  // Start a challenge
+  app.post("/api/challenges/:challengeId/start", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const challengeId = parseInt(req.params.challengeId);
+      if (isNaN(challengeId)) {
+        return res.status(400).json({ error: "Invalid challenge ID" });
+      }
+      
+      // Check if challenge exists
+      const challenge = await storage.getChallengeById(challengeId);
+      if (!challenge) {
+        return res.status(404).json({ error: "Challenge not found" });
+      }
+      
+      // Check if user already has this challenge active
+      const existing = await storage.getActiveUserChallengeForChallenge(userId, challengeId);
+      if (existing) {
+        return res.status(400).json({ error: "You already have this challenge active" });
+      }
+      
+      const userChallenge = await storage.startChallenge(userId, challengeId);
+      res.json({ ...userChallenge, challenge });
+    } catch (error) {
+      console.error("Error starting challenge:", error);
+      res.status(500).json({ error: "Failed to start challenge" });
+    }
+  });
+
+  // Log progress on a challenge
+  app.post("/api/user/challenges/:id/progress", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid user challenge ID" });
+      }
+      
+      const userChallenge = await storage.getUserChallengeById(id);
+      if (!userChallenge || userChallenge.userId !== userId) {
+        return res.status(404).json({ error: "Challenge not found" });
+      }
+      
+      if (userChallenge.status !== "active") {
+        return res.status(400).json({ error: "Challenge is not active" });
+      }
+      
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Don't allow logging twice on same day
+      if (userChallenge.lastPostDate === today) {
+        return res.status(400).json({ error: "Already logged progress today" });
+      }
+      
+      // Calculate new streak
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      let newStreak = 1;
+      if (userChallenge.lastPostDate === yesterdayStr) {
+        newStreak = (userChallenge.currentStreak || 0) + 1;
+      }
+      
+      const updatedChallenge = await storage.updateUserChallengeProgress(id, {
+        postsCompleted: (userChallenge.postsCompleted || 0) + 1,
+        currentStreak: newStreak,
+        longestStreak: Math.max(newStreak, userChallenge.longestStreak || 0),
+        lastPostDate: today,
+      });
+      
+      // Check if challenge is complete
+      const challenge = await storage.getChallengeById(userChallenge.challengeId);
+      if (challenge) {
+        const startDate = new Date(userChallenge.startedAt);
+        const now = new Date();
+        const daysPassed = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        const postsNeeded = challenge.postsRequired || challenge.durationDays;
+        if ((updatedChallenge?.postsCompleted || 0) >= postsNeeded || daysPassed >= challenge.durationDays) {
+          await storage.completeChallenge(id);
+        }
+      }
+      
+      res.json(updatedChallenge);
+    } catch (error) {
+      console.error("Error logging challenge progress:", error);
+      res.status(500).json({ error: "Failed to log progress" });
+    }
+  });
+
+  // Abandon a challenge
+  app.post("/api/user/challenges/:id/abandon", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid user challenge ID" });
+      }
+      
+      const userChallenge = await storage.getUserChallengeById(id);
+      if (!userChallenge || userChallenge.userId !== userId) {
+        return res.status(404).json({ error: "Challenge not found" });
+      }
+      
+      const abandoned = await storage.abandonChallenge(id);
+      res.json(abandoned);
+    } catch (error) {
+      console.error("Error abandoning challenge:", error);
+      res.status(500).json({ error: "Failed to abandon challenge" });
+    }
+  });
+
+  // Admin: Get all challenges (including inactive)
+  app.get("/api/admin/challenges", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const allChallenges = await storage.getAllChallenges();
+      res.json(allChallenges);
+    } catch (error) {
+      console.error("Error fetching all challenges:", error);
+      res.status(500).json({ error: "Failed to fetch challenges" });
+    }
+  });
+
+  // Admin: Create challenge
+  app.post("/api/admin/challenges", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const challenge = await storage.createChallenge(req.body);
+      res.json(challenge);
+    } catch (error) {
+      console.error("Error creating challenge:", error);
+      res.status(500).json({ error: "Failed to create challenge" });
+    }
+  });
+
+  // Admin: Update challenge
+  app.patch("/api/admin/challenges/:id", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid challenge ID" });
+      }
+      
+      const updated = await storage.updateChallenge(id, req.body);
+      if (!updated) {
+        return res.status(404).json({ error: "Challenge not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating challenge:", error);
+      res.status(500).json({ error: "Failed to update challenge" });
+    }
+  });
+
+  // Admin: Delete challenge
+  app.delete("/api/admin/challenges/:id", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid challenge ID" });
+      }
+      
+      const success = await storage.deleteChallenge(id);
+      if (!success) {
+        return res.status(404).json({ error: "Challenge not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting challenge:", error);
+      res.status(500).json({ error: "Failed to delete challenge" });
     }
   });
 
