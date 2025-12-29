@@ -618,7 +618,7 @@ export default function OnboardingPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <SiInstagram className="w-5 h-5 text-primary" />
-                <label className="text-sm font-medium">Instagram Handle (optional)</label>
+                <label className="text-sm font-medium">Instagram Handle</label>
               </div>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>

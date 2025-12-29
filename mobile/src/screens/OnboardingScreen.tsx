@@ -809,7 +809,7 @@ export default function OnboardingScreen() {
               <Ionicons name="logo-instagram" size={24} color="#E1306C" style={styles.inputIcon} />
               <TextInput
                 style={styles.textInput}
-                placeholder="Instagram handle (optional)"
+                placeholder="Instagram handle"
                 placeholderTextColor="#A89580"
                 value={data.instagram}
                 onChangeText={(text) => setData(prev => ({ ...prev, instagram: text }))}
