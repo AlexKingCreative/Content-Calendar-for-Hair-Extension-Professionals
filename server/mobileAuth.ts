@@ -216,7 +216,7 @@ router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
     }
     
     const Stripe = (await import('stripe')).default;
-    const stripe = new Stripe(stripeSecretKey, { apiVersion: '2025-04-30.basil' });
+    const stripe = new Stripe(stripeSecretKey, { apiVersion: '2025-11-17.clover' });
     
     const baseUrl = process.env.REPLIT_DEV_DOMAIN 
       ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
