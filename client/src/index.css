@@ -433,20 +433,20 @@
     inset: -1px;
   }
 
-  /* Landing Page Animations */
+  /* Landing Page Animations - opacity only to prevent layout shift */
   @keyframes fade-in {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes slide-in-left {
-    from { opacity: 0; transform: translateX(-20px); }
-    to { opacity: 1; transform: translateX(0); }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes slide-in-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes card-flow {
@@ -506,20 +506,18 @@
   .stagger-7 { animation-delay: 0.35s; }
   .stagger-8 { animation-delay: 0.4s; }
 
-  /* Luxurious fade-in-up animation */
+  /* Luxurious fade-in animation - opacity only to prevent layout shift */
   @keyframes fade-in-up {
     from { 
       opacity: 0; 
-      transform: translateY(16px); 
     }
     to { 
       opacity: 1; 
-      transform: translateY(0); 
     }
   }
 
   .animate-fade-in-up {
-    animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: fade-in-up 0.4s ease-out forwards;
     opacity: 0;
   }
 
@@ -540,20 +538,18 @@
     opacity: 0;
   }
 
-  /* Page transition */
+  /* Page transition - opacity only to prevent layout shift */
   @keyframes page-enter {
     from { 
       opacity: 0; 
-      transform: translateY(8px); 
     }
     to { 
       opacity: 1; 
-      transform: translateY(0); 
     }
   }
 
   .animate-page-enter {
-    animation: page-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: page-enter 0.25s ease-out forwards;
   }
 
   /* Smooth pulse for attention */
@@ -581,7 +577,7 @@
   }
 
   .glass-card:hover {
-    transform: translateY(-1px);
+    /* Removed translateY to prevent layout shift on mobile */
   }
 
   /* Enhanced glass pill transitions */
