@@ -150,25 +150,6 @@ const howItWorks = [
   },
 ];
 
-const screenshots = [
-  {
-    title: "Monthly Calendar View",
-    description: "See all your content ideas laid out in a beautiful calendar format",
-  },
-  {
-    title: "Daily Post Details",
-    description: "Get full post descriptions, hashtags, and content type suggestions",
-  },
-  {
-    title: "AI Caption Generator",
-    description: "Generate custom captions with AI tailored to your style",
-  },
-  {
-    title: "Streak Tracking",
-    description: "Stay motivated with posting streaks and achievement badges",
-  },
-];
-
 const comparisonData = [
   { feature: "365 days of hair-specific content", us: true, others: false },
   { feature: "Personalized hashtags for your city", us: true, others: false },
@@ -182,7 +163,6 @@ const comparisonData = [
 
 export default function LandingPage() {
   const [showIOSModal, setShowIOSModal] = useState(false);
-  const [currentScreenshot, setCurrentScreenshot] = useState(0);
   const { isInstallable, isInstalled, isIOS, isAndroid, promptInstall, platform } = useInstallPrompt();
 
   const handleInstallClick = async () => {
@@ -196,14 +176,6 @@ export default function LandingPage() {
   };
 
   const showInstallButton = !isInstalled && (isIOS || isInstallable || platform === "android");
-
-  const nextScreenshot = () => {
-    setCurrentScreenshot((prev) => (prev + 1) % screenshots.length);
-  };
-
-  const prevScreenshot = () => {
-    setCurrentScreenshot((prev) => (prev - 1 + screenshots.length) % screenshots.length);
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -458,54 +430,6 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* App Screenshots Carousel */}
-      <section className="py-16 sm:py-24">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4">See It In Action</Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Beautiful, Easy-to-Use Interface
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Designed for busy stylists who want results without the learning curve.
-            </p>
-          </div>
-          
-          <div className="relative">
-            <Card className="p-8 max-w-2xl mx-auto">
-              <div className="aspect-[9/16] bg-gradient-to-br from-primary/5 to-rose-500/5 rounded-lg flex flex-col items-center justify-center mb-6 border">
-                <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Calendar className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">{screenshots[currentScreenshot].title}</h3>
-                <p className="text-muted-foreground text-center max-w-xs">{screenshots[currentScreenshot].description}</p>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Button variant="outline" size="icon" onClick={prevScreenshot} data-testid="button-prev-screenshot">
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <div className="flex gap-2">
-                  {screenshots.map((_, index) => (
-                    <button
-                      key={index}
-                      className={`w-2 h-2 rounded-full transition-colors ${
-                        index === currentScreenshot ? "bg-primary" : "bg-muted-foreground/30"
-                      }`}
-                      onClick={() => setCurrentScreenshot(index)}
-                      data-testid={`screenshot-dot-${index}`}
-                    />
-                  ))}
-                </div>
-                <Button variant="outline" size="icon" onClick={nextScreenshot} data-testid="button-next-screenshot">
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </Card>
           </div>
         </div>
       </section>
