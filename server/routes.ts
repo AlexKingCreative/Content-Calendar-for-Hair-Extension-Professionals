@@ -1187,7 +1187,7 @@ Respond in JSON format with these fields:
 
   app.get("/api/billing/access-status", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
@@ -1232,13 +1232,15 @@ Respond in JSON format with these fields:
 
   app.post("/api/billing/checkout", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
-      const userEmail = req.user?.claims?.email || `${userId}@user.replit.app`;
+      const userId = getUserId(req);
       const { withTrial } = req.body;
       
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
+      
+      // Get user email from database
+      const userEmail = await getUserEmail(userId) || `${userId}@user.app`;
 
       let profile = await storage.getUserProfile(userId);
       if (!profile) {
@@ -1276,7 +1278,7 @@ Respond in JSON format with these fields:
 
   app.post("/api/billing/portal", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
