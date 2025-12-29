@@ -27,7 +27,7 @@ export function CalendarDemo() {
   }, []);
 
   return (
-    <div className="relative">
+    <div className="relative" data-testid="demo-calendar">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-amber-500/20 rounded-3xl blur-3xl" />
       <Card className="relative p-4 sm:p-6 max-w-sm mx-auto">
         <div className="flex items-center gap-2 mb-4">
@@ -35,7 +35,7 @@ export function CalendarDemo() {
             <Calendar className="w-4 h-4 text-primary-foreground" />
           </div>
           <div>
-            <div className="text-sm font-semibold">December 2025</div>
+            <div className="text-sm font-semibold" data-testid="text-calendar-month">December 2025</div>
             <div className="text-xs text-muted-foreground">Your content calendar</div>
           </div>
         </div>
@@ -46,13 +46,14 @@ export function CalendarDemo() {
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-1 mb-4">
+        <div className="grid grid-cols-7 gap-1 mb-4" data-testid="calendar-grid">
           {Array.from({ length: 31 }, (_, i) => {
             const dayData = days.find(d => d.day === i + 1);
             const isActive = dayData && days.indexOf(dayData) === currentDay;
             return (
               <motion.div
                 key={i}
+                data-testid={`calendar-day-${i + 1}`}
                 className={`aspect-square rounded-md flex items-center justify-center text-xs relative cursor-pointer
                   ${isActive ? "bg-primary text-primary-foreground" : dayData?.hasPost ? "bg-primary/20" : "hover:bg-muted"}
                 `}
@@ -75,17 +76,18 @@ export function CalendarDemo() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="bg-muted/50 rounded-lg p-3 border"
+            data-testid="calendar-post-preview"
           >
             <div className="flex items-center justify-between mb-2">
-              <Badge variant="secondary" className="text-xs">{days[currentDay].category}</Badge>
-              <span className="text-xs text-muted-foreground">Dec {days[currentDay].day}</span>
+              <Badge variant="secondary" className="text-xs" data-testid="text-post-category">{days[currentDay].category}</Badge>
+              <span className="text-xs text-muted-foreground" data-testid="text-post-date">Dec {days[currentDay].day}</span>
             </div>
-            <div className="text-sm font-medium">{days[currentDay].title}</div>
+            <div className="text-sm font-medium" data-testid="text-post-title">{days[currentDay].title}</div>
             <div className="flex gap-2 mt-2">
-              <Button size="sm" variant="ghost" className="h-7 text-xs gap-1">
+              <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" data-testid="button-demo-copy">
                 <Copy className="w-3 h-3" /> Copy
               </Button>
-              <Button size="sm" variant="ghost" className="h-7 text-xs gap-1">
+              <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" data-testid="button-demo-ai-caption">
                 <Sparkles className="w-3 h-3" /> AI Caption
               </Button>
             </div>
@@ -125,7 +127,7 @@ export function AICaptionDemo() {
   }, [stage]);
 
   return (
-    <div className="relative">
+    <div className="relative" data-testid="demo-ai-caption">
       <div className="absolute inset-0 bg-gradient-to-br from-violet-500/20 to-primary/20 rounded-3xl blur-3xl" />
       <Card className="relative p-4 sm:p-6 max-w-sm mx-auto">
         <div className="flex items-center gap-2 mb-4">
@@ -141,7 +143,7 @@ export function AICaptionDemo() {
         <div className="space-y-4">
           <div className="bg-muted/50 rounded-lg p-3 border">
             <div className="text-xs text-muted-foreground mb-1">Post Type</div>
-            <div className="text-sm font-medium flex items-center gap-2">
+            <div className="text-sm font-medium flex items-center gap-2" data-testid="text-post-type">
               <Camera className="w-4 h-4 text-rose-500" />
               Before & After Transformation
             </div>
@@ -156,7 +158,7 @@ export function AICaptionDemo() {
                 exit={{ opacity: 0 }}
                 className="text-center py-6"
               >
-                <Button size="sm" className="gap-2">
+                <Button size="sm" className="gap-2" data-testid="button-generate-caption">
                   <Zap className="w-4 h-4" />
                   Generate Caption
                 </Button>
@@ -169,6 +171,7 @@ export function AICaptionDemo() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="text-center py-6"
+                data-testid="status-generating"
               >
                 <motion.div
                   animate={{ rotate: 360 }}
@@ -185,12 +188,13 @@ export function AICaptionDemo() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 className="bg-primary/5 rounded-lg p-3 border border-primary/20"
+                data-testid="caption-result"
               >
                 <div className="flex items-center gap-1 mb-2">
                   <Sparkles className="w-3 h-3 text-primary" />
                   <span className="text-xs font-medium text-primary">AI Generated</span>
                 </div>
-                <p className="text-sm leading-relaxed">
+                <p className="text-sm leading-relaxed" data-testid="text-generated-caption">
                   {stage === 2 ? displayedText : caption}
                   {stage === 2 && <span className="animate-pulse">|</span>}
                 </p>
@@ -200,10 +204,10 @@ export function AICaptionDemo() {
                     animate={{ opacity: 1 }}
                     className="flex gap-2 mt-3"
                   >
-                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1" data-testid="button-copy-caption">
                       <Copy className="w-3 h-3" /> Copy
                     </Button>
-                    <Button size="sm" className="h-7 text-xs gap-1">
+                    <Button size="sm" className="h-7 text-xs gap-1" data-testid="button-use-caption">
                       <Check className="w-3 h-3" /> Use This
                     </Button>
                   </motion.div>
@@ -234,7 +238,7 @@ export function StreakDemo() {
   }, []);
 
   return (
-    <div className="relative">
+    <div className="relative" data-testid="demo-streak">
       <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-3xl blur-3xl" />
       <Card className="relative p-4 sm:p-6 max-w-sm mx-auto">
         <div className="flex items-center justify-between mb-4">
@@ -252,15 +256,17 @@ export function StreakDemo() {
             initial={{ scale: 0.5 }}
             animate={{ scale: 1 }}
             className="text-2xl font-bold text-orange-500"
+            data-testid="text-streak-count"
           >
             {streak}
           </motion.div>
         </div>
 
-        <div className="flex gap-1 mb-4">
+        <div className="flex gap-1 mb-4" data-testid="streak-progress-bar">
           {Array.from({ length: maxStreak }, (_, i) => (
             <motion.div
               key={i}
+              data-testid={`streak-day-${i + 1}`}
               className={`flex-1 h-2 rounded-full ${
                 i < streak ? "bg-gradient-to-r from-orange-500 to-red-500" : "bg-muted"
               }`}
@@ -276,6 +282,7 @@ export function StreakDemo() {
             return (
               <motion.div
                 key={i}
+                data-testid={`reward-${reward.day}-day`}
                 className={`flex items-center gap-3 p-2 rounded-lg ${
                   unlocked ? "bg-primary/10 border border-primary/20" : "bg-muted/50"
                 }`}
@@ -287,7 +294,7 @@ export function StreakDemo() {
                   <reward.icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
-                  <div className={`text-sm font-medium ${unlocked ? "" : "text-muted-foreground"}`}>
+                  <div className={`text-sm font-medium ${unlocked ? "" : "text-muted-foreground"}`} data-testid={`text-reward-label-${reward.day}`}>
                     {reward.label}
                   </div>
                   <div className="text-xs text-muted-foreground">{reward.day}-day streak</div>
@@ -296,6 +303,7 @@ export function StreakDemo() {
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
+                    data-testid={`icon-reward-unlocked-${reward.day}`}
                   >
                     <Check className="w-5 h-5 text-primary" />
                   </motion.div>
@@ -311,7 +319,6 @@ export function StreakDemo() {
 
 export function InstagramDemo() {
   const [stage, setStage] = useState(0);
-  const stages = ["select", "preview", "posted", "stats"];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -321,7 +328,7 @@ export function InstagramDemo() {
   }, []);
 
   return (
-    <div className="relative">
+    <div className="relative" data-testid="demo-instagram">
       <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-3xl blur-3xl" />
       <Card className="relative p-4 sm:p-6 max-w-sm mx-auto overflow-hidden">
         <div className="flex items-center gap-2 mb-4">
@@ -342,11 +349,12 @@ export function InstagramDemo() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               className="space-y-3"
+              data-testid="instagram-stage-select"
             >
               <div className="aspect-video bg-gradient-to-br from-rose-200 to-amber-100 dark:from-rose-900 dark:to-amber-900 rounded-lg flex items-center justify-center">
                 <Camera className="w-8 h-8 text-muted-foreground" />
               </div>
-              <Button className="w-full gap-2">
+              <Button className="w-full gap-2" data-testid="button-post-instagram">
                 <Send className="w-4 h-4" />
                 Post to Instagram
               </Button>
@@ -359,10 +367,11 @@ export function InstagramDemo() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               className="space-y-3"
+              data-testid="instagram-stage-preview"
             >
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pink-500 to-purple-500" />
-                <span className="text-sm font-medium">@yoursalon</span>
+                <span className="text-sm font-medium" data-testid="text-username">@yoursalon</span>
               </div>
               <div className="aspect-video bg-gradient-to-br from-rose-200 to-amber-100 dark:from-rose-900 dark:to-amber-900 rounded-lg" />
               <div className="text-xs text-muted-foreground line-clamp-2">
@@ -372,7 +381,7 @@ export function InstagramDemo() {
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ repeat: Infinity, duration: 1 }}
               >
-                <Button className="w-full gap-2" variant="default">
+                <Button className="w-full gap-2" variant="default" data-testid="button-posting">
                   <Clock className="w-4 h-4" />
                   Posting...
                 </Button>
@@ -386,6 +395,7 @@ export function InstagramDemo() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               className="text-center py-6"
+              data-testid="instagram-stage-posted"
             >
               <motion.div
                 initial={{ scale: 0 }}
@@ -395,7 +405,7 @@ export function InstagramDemo() {
               >
                 <Check className="w-8 h-8 text-white" />
               </motion.div>
-              <div className="text-lg font-semibold">Posted!</div>
+              <div className="text-lg font-semibold" data-testid="text-posted-status">Posted!</div>
               <div className="text-sm text-muted-foreground">Your content is now live</div>
             </motion.div>
           )}
@@ -406,6 +416,7 @@ export function InstagramDemo() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               className="space-y-3"
+              data-testid="instagram-stage-stats"
             >
               <div className="text-xs text-muted-foreground mb-2">Engagement Stats</div>
               <div className="grid grid-cols-3 gap-2">
@@ -420,14 +431,15 @@ export function InstagramDemo() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
                     className="bg-muted/50 rounded-lg p-2 text-center"
+                    data-testid={`stat-${stat.label.toLowerCase()}`}
                   >
                     <stat.icon className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
-                    <div className="text-lg font-bold">{stat.value}</div>
+                    <div className="text-lg font-bold" data-testid={`text-${stat.label.toLowerCase()}-value`}>{stat.value}</div>
                     <div className="text-[10px] text-muted-foreground">{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
-              <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg">
+              <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-lg" data-testid="status-engagement-change">
                 <TrendingUp className="w-4 h-4 text-primary" />
                 <span className="text-xs">+23% engagement vs last week</span>
               </div>
@@ -465,7 +477,7 @@ export function HashtagDemo() {
   }, [visible]);
 
   return (
-    <div className="relative">
+    <div className="relative" data-testid="demo-hashtags">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-3xl blur-3xl" />
       <Card className="relative p-4 sm:p-6 max-w-sm mx-auto">
         <div className="flex items-center gap-2 mb-4">
@@ -478,7 +490,7 @@ export function HashtagDemo() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 min-h-[120px]">
+        <div className="flex flex-wrap gap-2 min-h-[120px]" data-testid="hashtag-container">
           {hashtags.slice(0, visible).map((h, i) => (
             <motion.div
               key={i}
@@ -489,6 +501,7 @@ export function HashtagDemo() {
               <Badge 
                 variant="secondary" 
                 className="text-xs py-1 gap-1"
+                data-testid={`hashtag-${i}`}
               >
                 {h.tag}
                 <span className="text-[10px] text-muted-foreground ml-1">{h.type}</span>
@@ -502,6 +515,7 @@ export function HashtagDemo() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="mt-3 p-2 bg-primary/10 rounded-lg text-center"
+            data-testid="button-copy-all-hashtags"
           >
             <div className="text-xs text-primary font-medium">
               Tap to copy all 6 hashtags

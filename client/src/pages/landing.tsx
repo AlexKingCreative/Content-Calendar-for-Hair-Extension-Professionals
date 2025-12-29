@@ -36,6 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { LandingAnimation } from "@/components/LandingAnimation";
+import { CalendarDemo, AICaptionDemo, StreakDemo, InstagramDemo, HashtagDemo } from "@/components/LandingDemos";
 
 function AnimatedCounter({ value, duration = 2000 }: { value: number; duration?: number }) {
   const [count, setCount] = useState(0);
@@ -563,6 +564,106 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </motion.div>
+        </div>
+      </section>
+
+      {/* Interactive Demos Section */}
+      <section className="py-20 sm:py-28 bg-gradient-to-b from-background via-muted/30 to-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(212,165,116,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_70%,rgba(168,85,247,0.05),transparent_50%)]" />
+        <div className="max-w-6xl mx-auto px-4 relative">
+          <motion.div 
+            className="text-center mb-14"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <Badge variant="secondary" className="mb-4 px-4 py-1.5">
+              <Zap className="w-3.5 h-3.5 mr-1.5" />
+              See It In Action
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Powerful Features, Simple to Use
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Watch how the app helps you create and post content effortlessly.
+            </p>
+          </motion.div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0 }}
+              className="flex flex-col"
+            >
+              <CalendarDemo />
+              <div className="text-center mt-4">
+                <h3 className="font-semibold mb-1">365 Days of Content</h3>
+                <p className="text-sm text-muted-foreground">Browse by month, filter by category</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="flex flex-col"
+            >
+              <AICaptionDemo />
+              <div className="text-center mt-4">
+                <h3 className="font-semibold mb-1">AI Caption Generator</h3>
+                <p className="text-sm text-muted-foreground">One-tap captions for any post type</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex flex-col"
+            >
+              <HashtagDemo />
+              <div className="text-center mt-4">
+                <h3 className="font-semibold mb-1">Smart Hashtags</h3>
+                <p className="text-sm text-muted-foreground">Personalized based on your location and specialty</p>
+              </div>
+            </motion.div>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 mt-8 max-w-3xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col"
+            >
+              <StreakDemo />
+              <div className="text-center mt-4">
+                <h3 className="font-semibold mb-1">Streak Rewards</h3>
+                <p className="text-sm text-muted-foreground">Stay consistent and earn 50% off</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="flex flex-col"
+            >
+              <InstagramDemo />
+              <div className="text-center mt-4">
+                <h3 className="font-semibold mb-1">Instagram Integration</h3>
+                <p className="text-sm text-muted-foreground">Post directly and track engagement</p>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
