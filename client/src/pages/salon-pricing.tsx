@@ -64,8 +64,8 @@ const salonBenefits = [
   },
   {
     icon: Gift,
-    title: "Create Incentive Rewards",
-    description: "Motivate stylists with custom rewards like gift cards when they hit streak goals.",
+    title: "Incentivize Your Team",
+    description: "Incentivize and reward your team for posting with custom rewards when they hit streak goals.",
   },
   {
     icon: Flame,
