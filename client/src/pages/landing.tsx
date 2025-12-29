@@ -679,7 +679,11 @@ export default function LandingPage() {
             {[
               {
                 q: "What exactly does this app do?",
-                a: "This app gives you 365 days of ready-to-use social media post ideas for hair pros - cutting, coloring, extensions, toppers, and wigs. Each day includes a post title, description, content type suggestion, category, and personalized hashtags. Plus, AI writes your captions so you never have to stare at a blank screen again."
+                a: "This app gives you 365 days of ready-to-use social media post ideas specifically for hair pros - cutting, coloring, extensions, toppers, and wigs. Each day includes a post title, description, content type suggestion, category, and personalized hashtags based on your location and expertise. Premium members also get AI-powered caption generation."
+              },
+              {
+                q: "How does the free trial work?",
+                a: "You get a full 7-day free trial with access to all premium features. During your trial, if you post for 7 days straight and build a streak, you'll earn 50% off your first month as a reward for staying consistent!"
               },
               {
                 q: "What are trend alerts?",
@@ -694,20 +698,16 @@ export default function LandingPage() {
                 a: "Consistent, quality content is the number one way to grow your following. This app helps you post regularly with strategic content that showcases your expertise, engages your audience, and attracts new clients. Many stylists see significant growth within the first few months of staying consistent."
               },
               {
-                q: "Is this app free to try?",
-                a: "Yes! You get 3 days of free access to the current and next month's content. Subscribe for $10/month to unlock all 12 months of content and never miss key dates like National Hairstylist Appreciation Day."
+                q: "How much does it cost after the trial?",
+                a: "After your 7-day free trial, the app is just $9.99/month. That's less than the cost of one coffee a week to never worry about content ideas again. Plus, earn 50% off your first month by maintaining a 7-day posting streak during your trial!"
               },
               {
                 q: "What devices does this work on?",
-                a: "The app works on all devices - iOS, Android, and Desktop. Access it from any browser and add it to your home screen for the best experience."
-              },
-              {
-                q: "Do I need an account to use the app?",
-                a: "You can browse all content without an account. Sign in to unlock personalized hashtags based on your city and expertise."
+                a: "We have native apps for both iPhone (App Store) and Android (Google Play), plus a full web version you can access from any browser. Your account syncs across all devices."
               },
               {
                 q: "Will I get push notifications?",
-                a: "Yes! Once you install the app and enable notifications, you'll receive daily reminders to post. Perfect for staying consistent!"
+                a: "Yes! Our mobile apps send daily reminders to help you stay consistent with your posting. You'll also get notified about trend alerts so you never miss a viral opportunity."
               },
             ].map((faq, index) => (
               <Card key={index} className="p-6" data-testid={`faq-card-${index}`}>
