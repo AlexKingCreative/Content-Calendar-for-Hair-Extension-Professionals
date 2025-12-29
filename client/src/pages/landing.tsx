@@ -137,7 +137,7 @@ const thePlan = [
 const whatYouGet = [
   {
     icon: Calendar,
-    title: "365 Days of Post Ideas",
+    title: "Monthly Post Ideas",
     description: "Know exactly what to post every single day.",
   },
   {
@@ -248,7 +248,7 @@ export default function LandingPage() {
                 className="text-lg sm:text-xl text-muted-foreground max-w-2xl lg:max-w-none mb-8"
                 variants={fadeInUp}
               >
-                365 days of done-for-you social media post ideas for cutting, coloring, extensions, toppers, and wigs. Stop guessing. Start posting. Attract premium clients and get recognized.
+                Monthly done-for-you social media post ideas for cutting, coloring, extensions, toppers, and wigs. Stop guessing. Start posting. Attract premium clients and get recognized.
               </motion.p>
               
               {/* Direct CTA */}
@@ -370,7 +370,7 @@ export default function LandingPage() {
             >
               <CalendarDemo />
               <div className="text-center mt-4">
-                <h3 className="font-semibold mb-1">365 Days of Content</h3>
+                <h3 className="font-semibold mb-1">Monthly Content Ideas</h3>
                 <p className="text-sm text-muted-foreground">Browse by month, filter by category</p>
               </div>
             </motion.div>
@@ -550,9 +550,9 @@ export default function LandingPage() {
             >
               <div className="inline-block p-10 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-3xl border border-primary/10">
                 <div className="text-6xl sm:text-7xl font-bold bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent mb-2">
-                  <AnimatedCounter value={365} />
+                  <AnimatedCounter value={31} />
                 </div>
-                <p className="text-muted-foreground text-lg">days of content ideas ready for you</p>
+                <p className="text-muted-foreground text-lg">fresh post ideas every month</p>
                 <div className="flex justify-center gap-1 mt-6">
                   {[1,2,3,4,5].map((i) => (
                     <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
@@ -882,7 +882,7 @@ export default function LandingPage() {
                   <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
                     <Check className="w-4 h-4 text-emerald-500" />
                   </div>
-                  365 days of post ideas for hair pros
+                  Fresh post ideas every month
                 </li>
                 <li className="flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
@@ -974,7 +974,7 @@ export default function LandingPage() {
               },
               {
                 q: "How is this different from other content planners?",
-                a: "Generic planners give you blank calendars. We give you 365 days of done-for-you ideas specifically for hair professionals - cutting, coloring, extensions, toppers, and wigs. Plus trend alerts, personalized hashtags, and AI captions."
+                a: "Generic planners give you blank calendars. We give you monthly done-for-you ideas specifically for hair professionals - cutting, coloring, extensions, toppers, and wigs. Plus trend alerts, personalized hashtags, and AI captions."
               },
               {
                 q: "Will this actually help me attract premium clients?",
@@ -1073,7 +1073,7 @@ export default function LandingPage() {
                 <span className="font-semibold">Content Calendar</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                365 days of content ideas for hair professionals. Built by stylists, for stylists.
+                Monthly content ideas for hair professionals. Built by stylists, for stylists.
               </p>
             </div>
             
