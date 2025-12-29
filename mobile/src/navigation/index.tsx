@@ -13,6 +13,7 @@ import CalendarScreen from '../screens/CalendarScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import PostDetailScreen from '../screens/PostDetailScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
+import WelcomeScreen from '../screens/WelcomeScreen';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -22,6 +23,7 @@ export type RootStackParamList = {
 };
 
 export type AuthStackParamList = {
+  Welcome: undefined;
   Login: undefined;
   Register: undefined;
   Onboarding: undefined;
@@ -40,6 +42,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 function AuthNavigator() {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+      <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
       <AuthStack.Screen name="Onboarding" component={OnboardingScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Register" component={RegisterScreen} />
