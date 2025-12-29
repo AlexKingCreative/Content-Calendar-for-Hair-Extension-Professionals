@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  ArrowLeft, MapPin, Award, Scissors, Check, X, Crown, CreditCard, ExternalLink, Briefcase, Megaphone, Users, Trophy, Gift, Target 
+  ArrowLeft, MapPin, Award, Scissors, Check, X, Crown, CreditCard, ExternalLink, Briefcase, Megaphone, Users, Trophy, Gift, Target, Instagram, RefreshCw, Link2, Link2Off, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,6 +70,16 @@ interface StylistChallenge {
   salonName: string;
 }
 
+interface InstagramStatus {
+  connected: boolean;
+  username?: string;
+  profilePictureUrl?: string;
+  followersCount?: number;
+  mediaCount?: number;
+  lastSyncAt?: string;
+  isActive?: boolean;
+}
+
 const toneLabels: Record<ToneOption, string> = {
   professional: "Professional",
   neutral: "Neutral",
@@ -119,6 +129,73 @@ export default function AccountPage() {
     enabled: !!user && profile?.salonRole === "stylist",
   });
 
+  const { data: instagramStatus, isLoading: instagramLoading } = useQuery<InstagramStatus>({
+    queryKey: ["/api/instagram/status"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!user,
+  });
+
+  const connectInstagramMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("GET", "/api/instagram/auth-url", undefined);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Could not connect to Instagram. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const disconnectInstagramMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/instagram/disconnect", {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/instagram/status"] });
+      toast({
+        title: "Disconnected",
+        description: "Instagram account has been disconnected.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Could not disconnect Instagram account.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const syncInstagramMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/instagram/sync", {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/instagram/status"] });
+      toast({
+        title: "Synced",
+        description: "Instagram data has been updated.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Could not sync Instagram data.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const certifiedBrands = options?.certifiedBrands ?? [];
   const extensionMethods = options?.extensionMethods ?? [];
 
@@ -143,6 +220,7 @@ export default function AccountPage() {
 
   const searchParams = new URLSearchParams(window.location.search);
   const isSuccess = searchParams.get("success") === "true";
+  const instagramConnected = searchParams.get("instagram_connected") === "true";
 
   useEffect(() => {
     if (isSuccess) {
@@ -152,7 +230,15 @@ export default function AccountPage() {
       });
       window.history.replaceState({}, "", "/account");
     }
-  }, [isSuccess, toast]);
+    if (instagramConnected) {
+      toast({
+        title: "Instagram connected!",
+        description: "Your posts will now be tracked automatically.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/instagram/status"] });
+      window.history.replaceState({}, "", "/account");
+    }
+  }, [isSuccess, instagramConnected, toast, queryClient]);
 
   useEffect(() => {
     if (profile) {
@@ -552,6 +638,106 @@ export default function AccountPage() {
               })
             )}
           </div>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 space-y-4">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <Instagram className="w-4 h-4" />
+            Instagram Integration
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Connect your Instagram Business or Creator account to automatically track your posts and get engagement analytics.
+          </p>
+          
+          {instagramLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Checking connection...</span>
+            </div>
+          ) : instagramStatus?.connected ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                {instagramStatus.profilePictureUrl ? (
+                  <img 
+                    src={instagramStatus.profilePictureUrl} 
+                    alt="Profile" 
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <Instagram className="w-5 h-5 text-white" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p className="text-sm font-medium">@{instagramStatus.username}</p>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                    <span>{instagramStatus.followersCount?.toLocaleString() || 0} followers</span>
+                    <span>{instagramStatus.mediaCount?.toLocaleString() || 0} posts</span>
+                  </div>
+                </div>
+                <Badge variant="default" className="bg-gradient-to-r from-purple-500 to-pink-500">
+                  <Check className="w-3 h-3 mr-1" />
+                  Connected
+                </Badge>
+              </div>
+              {instagramStatus.lastSyncAt && (
+                <p className="text-xs text-muted-foreground">
+                  Last synced: {new Date(instagramStatus.lastSyncAt).toLocaleString()}
+                </p>
+              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => syncInstagramMutation.mutate()}
+                  disabled={syncInstagramMutation.isPending}
+                  data-testid="button-sync-instagram"
+                >
+                  {syncInstagramMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                  )}
+                  Sync Now
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => disconnectInstagramMutation.mutate()}
+                  disabled={disconnectInstagramMutation.isPending}
+                  className="text-destructive hover:text-destructive"
+                  data-testid="button-disconnect-instagram"
+                >
+                  <Link2Off className="w-4 h-4 mr-2" />
+                  Disconnect
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="p-3 rounded-md bg-muted/50">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Requirements for connection:
+                </p>
+                <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Instagram Business or Creator account</li>
+                  <li>Connected to a Facebook Page</li>
+                </ul>
+              </div>
+              <Button
+                onClick={() => connectInstagramMutation.mutate()}
+                disabled={connectInstagramMutation.isPending}
+                data-testid="button-connect-instagram"
+              >
+                {connectInstagramMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Link2 className="w-4 h-4 mr-2" />
+                )}
+                Connect Instagram
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="glass-card rounded-2xl p-4 space-y-4">
