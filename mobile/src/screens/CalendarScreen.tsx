@@ -7,10 +7,13 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as WebBrowser from 'expo-web-browser';
+import * as SecureStore from 'expo-secure-store';
 import { postsApi } from '../services/api';
 import { RootStackParamList } from '../navigation';
 import { colors, borderRadius, shadows, spacing, glassCard } from '../theme';
@@ -56,6 +59,20 @@ export default function CalendarScreen() {
 
   const handlePostPress = (postId: number) => {
     navigation.navigate('PostDetail', { postId });
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('authToken');
+      if (!token) {
+        Alert.alert('Error', 'Please sign in to download the calendar');
+        return;
+      }
+      const pdfUrl = postsApi.getCalendarPdfUrl(selectedMonth);
+      await WebBrowser.openBrowserAsync(`${pdfUrl}?token=${token}`);
+    } catch (error) {
+      Alert.alert('Error', 'Could not download PDF. Please try again.');
+    }
   };
 
   const getCategoryColor = (category: string) => {
@@ -106,6 +123,12 @@ export default function CalendarScreen() {
         >
           <Ionicons name="chevron-forward" size={24} color={canGoForward ? colors.primary : colors.textTertiary} />
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.downloadButton}
+          onPress={handleDownloadPDF}
+        >
+          <Ionicons name="download-outline" size={20} color={colors.primary} />
+        </TouchableOpacity>
       </View>
 
       {isLoading ? (
@@ -149,6 +172,11 @@ const styles = StyleSheet.create({
   },
   monthArrowDisabled: {
     opacity: 0.4,
+  },
+  downloadButton: {
+    position: 'absolute',
+    right: spacing.lg,
+    padding: spacing.sm,
   },
   monthTitle: {
     fontSize: 20,

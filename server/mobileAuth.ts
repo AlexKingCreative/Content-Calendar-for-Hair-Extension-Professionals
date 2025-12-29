@@ -6,6 +6,7 @@ import { users } from '@shared/models/auth';
 import { userProfiles } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { storage } from './storage';
+import { generateMonthPDF } from './pdfExport';
 
 const router = Router();
 
@@ -212,6 +213,38 @@ router.put('/profile', authenticateMobile, async (req: any, res) => {
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ message: 'Failed to update profile' });
+  }
+});
+
+router.get('/calendar/pdf/:month', async (req: any, res) => {
+  try {
+    const token = req.query.token || req.headers.authorization?.substring(7);
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    
+    const payload = jwt.verify(token, JWT_SECRET) as { userId: string } | null;
+    if (!payload?.userId) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+    
+    const month = parseInt(req.params.month);
+    if (isNaN(month) || month < 1 || month > 12) {
+      return res.status(400).json({ message: 'Invalid month' });
+    }
+    
+    const [user] = await db.select().from(users).where(eq(users.id, payload.userId));
+    const userEmail = user?.email || 'Unknown';
+    
+    const posts = await storage.getPostsByMonth(month);
+    const pdfBuffer = generateMonthPDF(posts, month, userEmail);
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=content-calendar-${month}.pdf`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    res.status(500).json({ message: 'Failed to generate PDF' });
   }
 });
 

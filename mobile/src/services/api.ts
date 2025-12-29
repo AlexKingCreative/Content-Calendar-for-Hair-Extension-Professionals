@@ -68,6 +68,9 @@ export const postsApi = {
     const response = await api.post(`/api/posts/${id}/generate-caption`);
     return response.data;
   },
+  getCalendarPdfUrl: (month: number) => {
+    return `${API_URL}/api/mobile/calendar/pdf/${month}`;
+  },
 };
 
 export const profileApi = {
