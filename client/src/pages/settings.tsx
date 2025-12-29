@@ -365,7 +365,7 @@ export default function SettingsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Build</span>
-                <span className="font-medium">2025.1</span>
+                <span className="font-medium">2025.2</span>
               </div>
             </div>
           </div>
