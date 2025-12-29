@@ -29,6 +29,7 @@
       "package": "com.hairpro360.contentcalendar"
     },
     "scheme": "hairpro",
+    "owner": "alexkingcreative",
     "extra": {
       "apiUrl": "https://content-calendar-hair-pro.replit.app",
       "eas": {
