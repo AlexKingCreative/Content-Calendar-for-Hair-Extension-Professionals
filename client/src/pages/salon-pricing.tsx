@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Check, Users, Flame, BarChart3, Mail, Building2 } from "lucide-react";
+import { ArrowLeft, Check, Users, Flame, BarChart3, Mail, Building2, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MobileNav } from "@/components/MobileNav";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { SalonRewardAnimation } from "@/components/SalonRewardAnimation";
 
 interface User {
   id: string;
@@ -46,6 +47,11 @@ const salonBenefits = [
     description: "Invite stylists to join your salon and manage their access from one dashboard.",
   },
   {
+    icon: Gift,
+    title: "Create Incentive Rewards",
+    description: "Motivate stylists with custom rewards like gift cards when they hit streak goals.",
+  },
+  {
     icon: Flame,
     title: "Track Posting Streaks",
     description: "Monitor your team's posting consistency and celebrate their achievements.",
@@ -54,11 +60,6 @@ const salonBenefits = [
     icon: BarChart3,
     title: "Team Insights",
     description: "See which stylists are most active and encourage friendly competition.",
-  },
-  {
-    icon: Mail,
-    title: "Easy Invitations",
-    description: "Send email invites to your stylists - they get instant access when they join.",
   },
 ];
 
@@ -157,7 +158,11 @@ export default function SalonPricingPage() {
           ))}
         </div>
 
-        <div className="space-y-3 animate-fade-in-up stagger-3">
+        <div className="animate-fade-in-up stagger-3">
+          <SalonRewardAnimation />
+        </div>
+
+        <div className="space-y-3 animate-fade-in-up stagger-4">
           <h3 className="font-heading font-medium text-foreground">Choose Your Plan</h3>
           {salonTiers.map((tier) => (
             <Card
