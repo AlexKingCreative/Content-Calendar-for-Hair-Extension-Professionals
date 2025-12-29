@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Sparkles, MapPin, Award, Scissors, ChevronRight, ChevronLeft, Check, X, Briefcase, MessageSquare, Mail } from "lucide-react";
+import ashleyDianaImg from "@assets/IMG_8599_3_1766974570149.JPG";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -331,12 +332,21 @@ export default function OnboardingPage() {
               </div>
               
               <div className="mt-6 p-4 bg-muted/50 rounded-md border border-border/50">
-                <p className="text-sm text-muted-foreground italic text-center">
-                  "What you post about, you will bring about!"
-                </p>
-                <p className="text-xs text-muted-foreground/70 text-center mt-1">
-                  — Ashley Diana, Hair Extension Business Coach
-                </p>
+                <div className="flex items-center gap-3 justify-center">
+                  <img 
+                    src={ashleyDianaImg} 
+                    alt="Ashley Diana" 
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                  />
+                  <div>
+                    <p className="text-sm text-muted-foreground italic">
+                      "What you post about, you will bring about!"
+                    </p>
+                    <p className="text-xs text-muted-foreground/70 mt-0.5">
+                      — Ashley Diana, Hair Extension Business Coach
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
