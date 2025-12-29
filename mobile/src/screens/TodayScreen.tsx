@@ -10,9 +10,10 @@ import {
   Share,
   Alert,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { postsApi, streakApi, profileApi } from '../services/api';
-import { colors, borderRadius, shadows, spacing, glassCard } from '../theme';
+import { colors, borderRadius, spacing } from '../theme';
 
 interface Post {
   id: number;
@@ -38,21 +39,31 @@ interface UserProfile {
 }
 
 const getCategoryColor = (category: string) => {
-  return colors.categories[category] || { bg: colors.surfaceSecondary, text: colors.textSecondary };
+  const categoryColors: Record<string, { bg: string; text: string }> = {
+    'Tips & Tricks': { bg: '#FEF3C7', text: '#92400E' },
+    'Behind the Scenes': { bg: '#DBEAFE', text: '#1E40AF' },
+    'Transformation': { bg: '#FCE7F3', text: '#9D174D' },
+    'Education': { bg: '#D1FAE5', text: '#065F46' },
+    'Promotion': { bg: '#FEE2E2', text: '#991B1B' },
+    'Engagement': { bg: '#E0E7FF', text: '#3730A3' },
+  };
+  return categoryColors[category] || { bg: '#F3F4F6', text: '#4B5563' };
+};
+
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const options: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
 };
 
 export default function TodayScreen() {
   const queryClient = useQueryClient();
   const [markedToday, setMarkedToday] = useState(false);
+  const [copiedHashtags, setCopiedHashtags] = useState(false);
 
   const { data: posts, isLoading, error } = useQuery({
     queryKey: ['posts', 'today'],
     queryFn: postsApi.getToday,
-  });
-
-  const { data: streakData } = useQuery<StreakData>({
-    queryKey: ['streak'],
-    queryFn: streakApi.get,
   });
 
   const { data: profile } = useQuery<UserProfile>({
@@ -86,26 +97,17 @@ export default function TodayScreen() {
     },
   });
 
-  const handleShare = async (post: Post) => {
-    try {
-      const personalTags = getPersonalizedHashtags();
-      const baseTags = post.hashtags.slice(0, 5 - personalTags.length);
-      const allHashtags = [...personalTags, ...baseTags];
-      await Share.share({
-        message: `${post.description}\n\n${allHashtags.join(' ')}`,
-        title: post.title,
-      });
-    } catch (error) {
-      console.error('Error sharing:', error);
-    }
-  };
-
-  const handleCopyCaption = async (post: Post) => {
+  const handleCopyHashtags = async (post: Post) => {
     const personalTags = getPersonalizedHashtags();
     const baseTags = post.hashtags.slice(0, 5 - personalTags.length);
     const allHashtags = [...personalTags, ...baseTags];
-    const caption = `${post.description}\n\n${allHashtags.join(' ')}`;
-    await Share.share({ message: caption });
+    await Clipboard.setStringAsync(allHashtags.join(' '));
+    setCopiedHashtags(true);
+    setTimeout(() => setCopiedHashtags(false), 2000);
+  };
+
+  const handleWriteCaption = async (post: Post) => {
+    Alert.alert('Coming Soon', 'AI Caption Generator will be available soon!');
   };
 
   if (isLoading) {
@@ -127,100 +129,83 @@ export default function TodayScreen() {
   }
 
   const todayPost = Array.isArray(posts) ? posts[0] : posts;
+  const personalTags = getPersonalizedHashtags();
+  const baseTags = todayPost.hashtags.slice(0, 5 - personalTags.length);
+  const allHashtags = [...personalTags, ...baseTags];
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {streakData && (
-        <View style={styles.streakCard}>
-          <View style={styles.streakHeader}>
-            <Ionicons name="flame" size={24} color={colors.primary} />
-            <Text style={styles.streakTitle}>Your Streak</Text>
-          </View>
-          <View style={styles.streakStats}>
-            <View style={styles.streakStat}>
-              <Text style={styles.streakNumber}>{streakData.currentStreak}</Text>
-              <Text style={styles.streakLabel}>Current</Text>
-            </View>
-            <View style={styles.streakDivider} />
-            <View style={styles.streakStat}>
-              <Text style={styles.streakNumber}>{streakData.longestStreak}</Text>
-              <Text style={styles.streakLabel}>Best</Text>
-            </View>
-            <View style={styles.streakDivider} />
-            <View style={styles.streakStat}>
-              <Text style={styles.streakNumber}>{streakData.totalPosts}</Text>
-              <Text style={styles.streakLabel}>Total</Text>
-            </View>
-          </View>
-        </View>
-      )}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Today's Post</Text>
+        <Text style={styles.headerDate}>{formatDate(todayPost.date)}</Text>
+      </View>
 
       <View style={styles.card}>
-        <TouchableOpacity
-          style={[styles.postedCircle, markedToday && styles.postedCircleDone]}
-          onPress={() => markCompleteMutation.mutate(todayPost.id)}
-          disabled={markedToday || markCompleteMutation.isPending}
-        >
-          {markCompleteMutation.isPending ? (
-            <ActivityIndicator size="small" color={markedToday ? colors.textOnPrimary : colors.primary} />
-          ) : (
-            <>
-              <Ionicons 
-                name={markedToday ? "checkmark" : "checkmark"} 
-                size={18} 
-                color={markedToday ? colors.textOnPrimary : colors.primary} 
-              />
-              <Text style={[styles.postedCircleText, markedToday && styles.postedCircleTextDone]}>
-                {markedToday ? "Posted" : "Post"}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.header}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{todayPost.contentType}</Text>
+        <View style={styles.cardHeader}>
+          <View style={styles.iconContainer}>
+            <Ionicons name="document-text-outline" size={24} color={colors.primary} />
           </View>
-          <View style={[styles.badge, { backgroundColor: getCategoryColor(todayPost.category).bg }]}>
-            <Text style={[styles.badgeText, { color: getCategoryColor(todayPost.category).text }]}>{todayPost.category}</Text>
-          </View>
-        </View>
-
-        <Text style={styles.title}>{todayPost.title}</Text>
-        <Text style={styles.description}>{todayPost.description}</Text>
-
-        <View style={styles.hashtagsContainer}>
-          {(() => {
-            const personalTags = getPersonalizedHashtags();
-            const baseTags = todayPost.hashtags.slice(0, 5 - personalTags.length);
-            const allHashtags = [...personalTags, ...baseTags];
-            return allHashtags.map((tag: string, index: number) => (
-              <View key={index} style={styles.hashtag}>
-                <Text style={styles.hashtagText}>{tag}</Text>
+          <View style={styles.cardHeaderText}>
+            <Text style={styles.title}>{todayPost.title}</Text>
+            <View style={styles.badges}>
+              <View style={[styles.badge, { backgroundColor: getCategoryColor(todayPost.category).bg }]}>
+                <Ionicons name="bulb-outline" size={12} color={getCategoryColor(todayPost.category).text} style={styles.badgeIcon} />
+                <Text style={[styles.badgeText, { color: getCategoryColor(todayPost.category).text }]}>{todayPost.category}</Text>
               </View>
-            ));
-          })()}
+              <View style={styles.badgeOutline}>
+                <Text style={styles.badgeOutlineText}>{todayPost.contentType}</Text>
+              </View>
+            </View>
+          </View>
         </View>
 
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleCopyCaption(todayPost)}
-          >
-            <Ionicons name="copy-outline" size={20} color={colors.primary} />
-            <Text style={styles.actionText}>Copy Caption</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleShare(todayPost)}
-          >
-            <Ionicons name="share-outline" size={20} color={colors.primary} />
-            <Text style={styles.actionText}>Share</Text>
-          </TouchableOpacity>
-        </View>
-
+        <Text style={styles.description}>{todayPost.description}</Text>
       </View>
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Suggested Hashtags</Text>
+          <TouchableOpacity onPress={() => handleCopyHashtags(todayPost)} style={styles.copyButton}>
+            <Ionicons name={copiedHashtags ? "checkmark" : "copy-outline"} size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.hashtagsContainer}>
+          {allHashtags.map((tag: string, index: number) => (
+            <View key={index} style={styles.hashtag}>
+              <Text style={styles.hashtagText}># {tag.replace('#', '')}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>AI Caption Generator</Text>
+        <TouchableOpacity style={styles.primaryButton} onPress={() => handleWriteCaption(todayPost)}>
+          <Ionicons name="sparkles" size={20} color="#FFFFFF" />
+          <Text style={styles.primaryButtonText}>Write My Caption</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity
+        style={[styles.markPostedButton, markedToday && styles.markPostedButtonDone]}
+        onPress={() => markCompleteMutation.mutate(todayPost.id)}
+        disabled={markedToday || markCompleteMutation.isPending}
+      >
+        {markCompleteMutation.isPending ? (
+          <ActivityIndicator size="small" color={markedToday ? "#FFFFFF" : colors.primary} />
+        ) : (
+          <>
+            <Ionicons 
+              name={markedToday ? "checkmark-circle" : "checkmark-circle-outline"} 
+              size={24} 
+              color={markedToday ? "#FFFFFF" : colors.primary} 
+            />
+            <Text style={[styles.markPostedText, markedToday && styles.markPostedTextDone]}>
+              {markedToday ? "Posted!" : "Mark as Posted"}
+            </Text>
+          </>
+        )}
+      </TouchableOpacity>
 
       <View style={styles.tipCard}>
         <Ionicons name="bulb-outline" size={24} color={colors.primary} />
@@ -269,153 +254,176 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     textAlign: 'center',
   },
-  card: {
-    ...glassCard,
-    padding: spacing.xl,
-    position: 'relative',
-  },
-  postedCircle: {
-    position: 'absolute',
-    top: spacing.lg,
-    right: spacing.lg,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.glass.backgroundLight,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  postedCircleDone: {
-    backgroundColor: colors.success,
-    borderColor: colors.success,
-  },
-  postedCircleText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: colors.primary,
-    marginTop: 1,
-  },
-  postedCircleTextDone: {
-    color: colors.textOnPrimary,
-  },
   header: {
-    flexDirection: 'row',
-    gap: spacing.sm,
     marginBottom: spacing.lg,
   },
-  badge: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: borderRadius.pill,
-  },
-  badgeText: {
-    color: colors.textOnPrimary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  title: {
+  headerTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: colors.text,
+  },
+  headerDate: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: 'row',
     marginBottom: spacing.md,
   },
-  description: {
-    fontSize: 16,
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  cardHeaderText: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  badges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
+  },
+  badgeIcon: {
+    marginRight: 4,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  badgeOutline: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
+  },
+  badgeOutlineText: {
+    fontSize: 12,
+    fontWeight: '500',
     color: colors.textSecondary,
-    lineHeight: 24,
-    marginBottom: spacing.lg,
+  },
+  description: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    lineHeight: 22,
+  },
+  section: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  copyButton: {
+    padding: spacing.sm,
   },
   hashtagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
-    marginBottom: spacing.xl,
   },
   hashtag: {
-    backgroundColor: colors.glass.background,
+    backgroundColor: colors.surfaceSecondary,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.pill,
-    borderWidth: 1,
-    borderColor: colors.glass.borderAccent,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
   },
   hashtagText: {
-    color: colors.primary,
-    fontSize: 12,
+    color: colors.text,
+    fontSize: 13,
     fontWeight: '500',
   },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  actionButton: {
-    flex: 1,
+  primaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.glass.backgroundLight,
+    backgroundColor: colors.primary,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.button,
-    borderWidth: 1,
-    borderColor: colors.glass.borderAccent,
+    marginTop: spacing.sm,
   },
-  actionText: {
-    color: colors.primary,
-    fontSize: 14,
+  primaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: '600',
+  },
+  markPostedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    marginBottom: spacing.md,
+  },
+  markPostedButtonDone: {
+    backgroundColor: colors.success,
+    borderColor: colors.success,
+  },
+  markPostedText: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  markPostedTextDone: {
+    color: '#FFFFFF',
   },
   tipCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    ...glassCard,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    marginTop: spacing.lg,
     gap: spacing.md,
-  },
-  streakCard: {
-    ...glassCard,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  streakHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  streakTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  streakStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  streakStat: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  streakNumber: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  streakLabel: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  streakDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: colors.border,
   },
   tipContent: {
     flex: 1,
