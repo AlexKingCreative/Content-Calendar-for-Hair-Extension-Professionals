@@ -398,3 +398,26 @@ export const insertUserChallengeSchema = createInsertSchema(userChallenges).omit
 
 export type UserChallenge = typeof userChallenges.$inferSelect;
 export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;
+
+// Trend Alerts - admin-created trend notifications for users
+export const trendAlerts = pgTable("trend_alerts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  videoUrl: text("video_url"),
+  instagramUrl: text("instagram_url"),
+  isActive: boolean("is_active").default(true),
+  createdById: varchar("created_by_id"),
+  publishedAt: timestamp("published_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertTrendAlertSchema = createInsertSchema(trendAlerts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type TrendAlert = typeof trendAlerts.$inferSelect;
+export type InsertTrendAlert = z.infer<typeof insertTrendAlertSchema>;

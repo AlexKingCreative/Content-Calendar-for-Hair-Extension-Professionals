@@ -13,7 +13,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { MobileNav } from "@/components/MobileNav";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
-import { type Post, type Category, type ContentType } from "@shared/schema";
+import { type Post, type Category, type ContentType, type TrendAlert } from "@shared/schema";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ExternalLink } from "lucide-react";
 
 interface StreakData {
   currentStreak: number;
@@ -109,6 +111,11 @@ export default function TodayPage() {
     queryKey: ["/api/users/me/salon"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: !!user && !!profile?.salonId && profile?.salonRole === "stylist",
+  });
+
+  const { data: trends = [] } = useQuery<TrendAlert[]>({
+    queryKey: ["/api/trends"],
+    enabled: !!user && !!profile?.onboardingComplete,
   });
 
   const logPostMutation = useMutation({
@@ -433,6 +440,76 @@ export default function TodayPage() {
                 Tag <span className="font-medium text-foreground">@{salon.instagramHandle}</span> in your post to help your salon grow!
               </p>
             </div>
+          </div>
+        )}
+
+        {trends.length > 0 && (
+          <div className="space-y-3 animate-fade-in-up stagger-5">
+            <div className="flex items-center gap-2 px-1">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <h3 className="font-heading font-medium text-foreground text-sm">Trending Now</h3>
+            </div>
+            {trends.slice(0, 2).map((trend) => {
+              const getVideoEmbedUrl = (url: string) => {
+                if (!url) return null;
+                if (url.includes("youtube.com") || url.includes("youtu.be")) {
+                  const videoId = url.includes("youtu.be") 
+                    ? url.split("youtu.be/")[1]?.split("?")[0]
+                    : url.split("v=")[1]?.split("&")[0];
+                  return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+                }
+                return null;
+              };
+              const embedUrl = getVideoEmbedUrl(trend.videoUrl || "");
+              
+              return (
+                <Card key={trend.id} className="overflow-hidden" data-testid={`card-trend-${trend.id}`}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="font-heading text-base flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-primary flex-shrink-0" />
+                      {trend.title}
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      {trend.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0 space-y-3">
+                    <div className="flex gap-2 flex-wrap">
+                      {trend.videoUrl && (
+                        <a href={trend.videoUrl} target="_blank" rel="noopener noreferrer">
+                          <Badge variant="outline" className="gap-1 text-xs">
+                            <Video className="w-3 h-3" />
+                            Watch Video
+                            <ExternalLink className="w-3 h-3" />
+                          </Badge>
+                        </a>
+                      )}
+                      {trend.instagramUrl && (
+                        <a href={trend.instagramUrl} target="_blank" rel="noopener noreferrer">
+                          <Badge variant="outline" className="gap-1 text-xs">
+                            <SiInstagram className="w-3 h-3" />
+                            See Example
+                            <ExternalLink className="w-3 h-3" />
+                          </Badge>
+                        </a>
+                      )}
+                    </div>
+                    
+                    {embedUrl && (
+                      <div className="aspect-video rounded-lg overflow-hidden bg-muted">
+                        <iframe
+                          src={embedUrl}
+                          title={trend.title}
+                          className="w-full h-full"
+                          allowFullScreen
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </main>

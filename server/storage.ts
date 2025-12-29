@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, postSubmissions, salons, salonMembers, challenges, userChallenges, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog, type PostSubmission, type InsertPostSubmission, type Salon, type InsertSalon, type SalonMember, type InsertSalonMember, type Challenge, type InsertChallenge, type UserChallenge, type InsertUserChallenge } from "@shared/schema";
+import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, postSubmissions, salons, salonMembers, challenges, userChallenges, trendAlerts, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog, type PostSubmission, type InsertPostSubmission, type Salon, type InsertSalon, type SalonMember, type InsertSalonMember, type Challenge, type InsertChallenge, type UserChallenge, type InsertUserChallenge, type TrendAlert, type InsertTrendAlert } from "@shared/schema";
 import { eq, and, sql, desc, asc } from "drizzle-orm";
 
 export interface IStorage {
@@ -79,6 +79,14 @@ export interface IStorage {
   abandonChallenge(id: number): Promise<UserChallenge | undefined>;
   completeChallenge(id: number): Promise<UserChallenge | undefined>;
   getActiveUserChallengeForChallenge(userId: string, challengeId: number): Promise<UserChallenge | undefined>;
+  
+  // Trend Alerts
+  getAllTrendAlerts(): Promise<TrendAlert[]>;
+  getActiveTrendAlerts(): Promise<TrendAlert[]>;
+  getTrendAlertById(id: number): Promise<TrendAlert | undefined>;
+  createTrendAlert(alert: InsertTrendAlert): Promise<TrendAlert>;
+  updateTrendAlert(id: number, data: Partial<InsertTrendAlert>): Promise<TrendAlert | undefined>;
+  deleteTrendAlert(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -520,6 +528,41 @@ export class DatabaseStorage implements IStorage {
         eq(userChallenges.status, "active")
       ));
     return uc;
+  }
+
+  // Trend Alerts
+  async getAllTrendAlerts(): Promise<TrendAlert[]> {
+    return db.select().from(trendAlerts).orderBy(desc(trendAlerts.publishedAt));
+  }
+
+  async getActiveTrendAlerts(): Promise<TrendAlert[]> {
+    return db.select().from(trendAlerts)
+      .where(eq(trendAlerts.isActive, true))
+      .orderBy(desc(trendAlerts.publishedAt));
+  }
+
+  async getTrendAlertById(id: number): Promise<TrendAlert | undefined> {
+    const [alert] = await db.select().from(trendAlerts).where(eq(trendAlerts.id, id));
+    return alert;
+  }
+
+  async createTrendAlert(alert: InsertTrendAlert): Promise<TrendAlert> {
+    const [created] = await db.insert(trendAlerts).values(alert).returning();
+    return created;
+  }
+
+  async updateTrendAlert(id: number, data: Partial<InsertTrendAlert>): Promise<TrendAlert | undefined> {
+    const [updated] = await db
+      .update(trendAlerts)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(trendAlerts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTrendAlert(id: number): Promise<boolean> {
+    const result = await db.delete(trendAlerts).where(eq(trendAlerts.id, id)).returning();
+    return result.length > 0;
   }
 }
 

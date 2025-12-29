@@ -1866,5 +1866,91 @@ Respond in JSON format with these fields:
     }
   });
 
+  // ============ TREND ALERTS ============
+  
+  // Public: Get active trend alerts for users
+  app.get("/api/trends", async (req, res) => {
+    try {
+      const trends = await storage.getActiveTrendAlerts();
+      res.json(trends);
+    } catch (error) {
+      console.error("Error fetching trends:", error);
+      res.status(500).json({ error: "Failed to fetch trends" });
+    }
+  });
+
+  // Admin: Get all trend alerts
+  app.get("/api/admin/trends", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const trends = await storage.getAllTrendAlerts();
+      res.json(trends);
+    } catch (error) {
+      console.error("Error fetching trends:", error);
+      res.status(500).json({ error: "Failed to fetch trends" });
+    }
+  });
+
+  // Admin: Create trend alert
+  app.post("/api/admin/trends", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { title, description, videoUrl, instagramUrl, isActive } = req.body;
+      if (!title || !description) {
+        return res.status(400).json({ error: "Title and description are required" });
+      }
+      
+      const trend = await storage.createTrendAlert({
+        title,
+        description,
+        videoUrl: videoUrl || null,
+        instagramUrl: instagramUrl || null,
+        isActive: isActive !== false,
+        createdById: req.user?.id || null,
+        publishedAt: new Date(),
+      });
+      res.status(201).json(trend);
+    } catch (error) {
+      console.error("Error creating trend:", error);
+      res.status(500).json({ error: "Failed to create trend" });
+    }
+  });
+
+  // Admin: Update trend alert
+  app.patch("/api/admin/trends/:id", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid trend ID" });
+      }
+      
+      const updated = await storage.updateTrendAlert(id, req.body);
+      if (!updated) {
+        return res.status(404).json({ error: "Trend not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating trend:", error);
+      res.status(500).json({ error: "Failed to update trend" });
+    }
+  });
+
+  // Admin: Delete trend alert
+  app.delete("/api/admin/trends/:id", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid trend ID" });
+      }
+      
+      const success = await storage.deleteTrendAlert(id);
+      if (!success) {
+        return res.status(404).json({ error: "Trend not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting trend:", error);
+      res.status(500).json({ error: "Failed to delete trend" });
+    }
+  });
+
   return httpServer;
 }

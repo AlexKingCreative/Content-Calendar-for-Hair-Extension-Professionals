@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Plus, Sparkles, Pencil, Trash2, Calendar, ArrowLeft, Award, 
   Users, CreditCard, BarChart3, DollarSign, Settings, ChevronLeft,
-  List, LayoutGrid, Scissors, Send, Check, X, ExternalLink, LogOut
+  List, LayoutGrid, Scissors, Send, Check, X, ExternalLink, LogOut,
+  TrendingUp, Video, Play
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { Link } from "wouter";
@@ -17,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { type Post, type Brand, type Method, categories, contentTypes, type Category, type ContentType } from "@shared/schema";
+import { type Post, type Brand, type Method, type TrendAlert, categories, contentTypes, type Category, type ContentType } from "@shared/schema";
 import { Switch } from "@/components/ui/switch";
 import {
   Sidebar,
@@ -39,7 +40,7 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-type AdminSection = "posts" | "brands" | "methods" | "users" | "billing" | "stats" | "submissions";
+type AdminSection = "posts" | "brands" | "methods" | "users" | "billing" | "stats" | "submissions" | "trends";
 
 interface PostSubmission {
   id: number;
@@ -54,13 +55,14 @@ interface PostSubmission {
 }
 
 const navItems = [
+  { id: "stats" as AdminSection, title: "Stats & MRR", icon: BarChart3 },
+  { id: "trends" as AdminSection, title: "Trend Alerts", icon: TrendingUp },
   { id: "posts" as AdminSection, title: "Posts", icon: Calendar },
   { id: "submissions" as AdminSection, title: "Submissions", icon: Send },
   { id: "brands" as AdminSection, title: "Brands", icon: Award },
   { id: "methods" as AdminSection, title: "Methods", icon: Scissors },
   { id: "users" as AdminSection, title: "Users", icon: Users },
   { id: "billing" as AdminSection, title: "Billing", icon: CreditCard },
-  { id: "stats" as AdminSection, title: "Stats & MRR", icon: BarChart3 },
 ];
 
 export default function AdminPage() {
@@ -117,6 +119,20 @@ export default function AdminPage() {
     queryKey: ["/api/submissions"],
   });
 
+  const { data: trends = [], isLoading: trendsLoading } = useQuery<TrendAlert[]>({
+    queryKey: ["/api/admin/trends"],
+  });
+
+  const [isTrendDialogOpen, setIsTrendDialogOpen] = useState(false);
+  const [editingTrend, setEditingTrend] = useState<TrendAlert | null>(null);
+  const [trendForm, setTrendForm] = useState({
+    title: "",
+    description: "",
+    videoUrl: "",
+    instagramUrl: "",
+    isActive: true,
+  });
+
   const [submissionFilter, setSubmissionFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
   const filteredSubmissions = submissions.filter(s => submissionFilter === "all" || s.status === submissionFilter);
 
@@ -133,6 +149,73 @@ export default function AdminPage() {
       toast({ title: "Failed to update submission", variant: "destructive" });
     },
   });
+
+  const createTrendMutation = useMutation({
+    mutationFn: async (data: typeof trendForm) => {
+      return apiRequest("POST", "/api/admin/trends", data);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/trends"] });
+      qc.invalidateQueries({ queryKey: ["/api/trends"] });
+      setIsTrendDialogOpen(false);
+      setTrendForm({ title: "", description: "", videoUrl: "", instagramUrl: "", isActive: true });
+      toast({ title: "Trend alert created!" });
+    },
+    onError: () => {
+      toast({ title: "Failed to create trend", variant: "destructive" });
+    },
+  });
+
+  const updateTrendMutation = useMutation({
+    mutationFn: async ({ id, ...data }: { id: number } & Partial<typeof trendForm>) => {
+      return apiRequest("PATCH", `/api/admin/trends/${id}`, data);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/trends"] });
+      qc.invalidateQueries({ queryKey: ["/api/trends"] });
+      setIsTrendDialogOpen(false);
+      setEditingTrend(null);
+      setTrendForm({ title: "", description: "", videoUrl: "", instagramUrl: "", isActive: true });
+      toast({ title: "Trend updated!" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update trend", variant: "destructive" });
+    },
+  });
+
+  const deleteTrendMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/admin/trends/${id}`);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/trends"] });
+      qc.invalidateQueries({ queryKey: ["/api/trends"] });
+      toast({ title: "Trend deleted" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete trend", variant: "destructive" });
+    },
+  });
+
+  const openEditTrend = (trend: TrendAlert) => {
+    setEditingTrend(trend);
+    setTrendForm({
+      title: trend.title,
+      description: trend.description,
+      videoUrl: trend.videoUrl || "",
+      instagramUrl: trend.instagramUrl || "",
+      isActive: trend.isActive !== false,
+    });
+    setIsTrendDialogOpen(true);
+  };
+
+  const handleTrendSubmit = () => {
+    if (editingTrend) {
+      updateTrendMutation.mutate({ id: editingTrend.id, ...trendForm });
+    } else {
+      createTrendMutation.mutate(trendForm);
+    }
+  };
 
   const [newBrandName, setNewBrandName] = useState("");
   const [newMethodName, setNewMethodName] = useState("");
@@ -420,6 +503,22 @@ export default function AdminPage() {
           <div className="p-6">
             {activeSection === "stats" && (
               <StatsSection stats={adminStats} isLoading={statsLoading} />
+            )}
+
+            {activeSection === "trends" && (
+              <TrendsSection
+                trends={trends}
+                isLoading={trendsLoading}
+                onCreateOpen={() => {
+                  setEditingTrend(null);
+                  setTrendForm({ title: "", description: "", videoUrl: "", instagramUrl: "", isActive: true });
+                  setIsTrendDialogOpen(true);
+                }}
+                onEdit={openEditTrend}
+                onDelete={(id) => deleteTrendMutation.mutate(id)}
+                onToggleActive={(id, isActive) => updateTrendMutation.mutate({ id, isActive })}
+                isPending={deleteTrendMutation.isPending || updateTrendMutation.isPending}
+              />
             )}
             
             {activeSection === "users" && (
@@ -717,6 +816,101 @@ export default function AdminPage() {
               data-testid="button-generate-post"
             >
               {generateMutation.isPending ? "Generating..." : "Generate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isTrendDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setIsTrendDialogOpen(false);
+          setEditingTrend(null);
+          setTrendForm({ title: "", description: "", videoUrl: "", instagramUrl: "", isActive: true });
+        }
+      }}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingTrend ? "Edit Trend Alert" : "Create Trend Alert"}</DialogTitle>
+            <DialogDescription>
+              {editingTrend ? "Update the trend alert details" : "Create a new trend alert to notify users about trending content"}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Title</label>
+              <Input
+                value={trendForm.title}
+                onChange={(e) => setTrendForm({ ...trendForm, title: e.target.value })}
+                placeholder="e.g., Slicked-Back Low Buns Are Trending!"
+                data-testid="input-trend-title"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                value={trendForm.description}
+                onChange={(e) => setTrendForm({ ...trendForm, description: e.target.value })}
+                placeholder="Describe the trend and how stylists can create content around it..."
+                rows={4}
+                data-testid="input-trend-description"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Video Link (YouTube, TikTok, etc.)</label>
+              <div className="flex gap-2 items-center">
+                <Video className="w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={trendForm.videoUrl}
+                  onChange={(e) => setTrendForm({ ...trendForm, videoUrl: e.target.value })}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  data-testid="input-trend-video"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">YouTube videos will show an embedded preview</p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Instagram Example Link</label>
+              <div className="flex gap-2 items-center">
+                <SiInstagram className="w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={trendForm.instagramUrl}
+                  onChange={(e) => setTrendForm({ ...trendForm, instagramUrl: e.target.value })}
+                  placeholder="https://www.instagram.com/p/..."
+                  data-testid="input-trend-instagram"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-sm font-medium">Publish Immediately</label>
+                <p className="text-xs text-muted-foreground">Make this visible to users right away</p>
+              </div>
+              <Switch
+                checked={trendForm.isActive}
+                onCheckedChange={(checked) => setTrendForm({ ...trendForm, isActive: checked })}
+                data-testid="switch-trend-active"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsTrendDialogOpen(false);
+              setEditingTrend(null);
+            }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleTrendSubmit}
+              disabled={!trendForm.title || !trendForm.description || createTrendMutation.isPending || updateTrendMutation.isPending}
+              data-testid="button-submit-trend"
+            >
+              {(createTrendMutation.isPending || updateTrendMutation.isPending) ? "Saving..." : editingTrend ? "Update" : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1512,6 +1706,154 @@ function MethodsSection({
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function TrendsSection({
+  trends,
+  isLoading,
+  onCreateOpen,
+  onEdit,
+  onDelete,
+  onToggleActive,
+  isPending,
+}: {
+  trends: TrendAlert[];
+  isLoading: boolean;
+  onCreateOpen: () => void;
+  onEdit: (trend: TrendAlert) => void;
+  onDelete: (id: number) => void;
+  onToggleActive: (id: number, isActive: boolean) => void;
+  isPending: boolean;
+}) {
+  const getVideoEmbedUrl = (url: string) => {
+    if (!url) return null;
+    if (url.includes("youtube.com") || url.includes("youtu.be")) {
+      const videoId = url.includes("youtu.be") 
+        ? url.split("youtu.be/")[1]?.split("?")[0]
+        : url.split("v=")[1]?.split("&")[0];
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    }
+    if (url.includes("tiktok.com")) {
+      return url;
+    }
+    return null;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-trends-title">
+            Trend Alerts
+          </h1>
+          <p className="text-muted-foreground">Create trend alerts to notify your users about hot trends</p>
+        </div>
+        <Button onClick={onCreateOpen} data-testid="button-create-trend">
+          <Plus className="w-4 h-4 mr-2" />
+          New Trend Alert
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-xl" />
+          ))}
+        </div>
+      ) : trends.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="font-heading text-lg font-medium mb-2">No Trend Alerts Yet</h3>
+            <p className="text-muted-foreground mb-4">Create your first trend alert to notify users about trending content ideas</p>
+            <Button onClick={onCreateOpen}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create First Alert
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {trends.map((trend) => {
+            const embedUrl = getVideoEmbedUrl(trend.videoUrl || "");
+            return (
+              <Card key={trend.id} className={trend.isActive ? "" : "opacity-60"} data-testid={`card-trend-${trend.id}`}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <CardTitle className="font-heading text-lg flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-primary" />
+                        {trend.title}
+                        {!trend.isActive && <Badge variant="secondary">Draft</Badge>}
+                      </CardTitle>
+                      <CardDescription className="mt-1">
+                        Published {new Date(trend.publishedAt).toLocaleDateString()}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {trend.isActive ? "Active" : "Hidden"}
+                        </span>
+                        <Switch
+                          checked={trend.isActive !== false}
+                          onCheckedChange={(checked) => onToggleActive(trend.id, checked)}
+                          disabled={isPending}
+                          data-testid={`switch-trend-${trend.id}`}
+                        />
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={() => onEdit(trend)} data-testid={`button-edit-trend-${trend.id}`}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => onDelete(trend.id)} disabled={isPending} data-testid={`button-delete-trend-${trend.id}`}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">{trend.description}</p>
+                  
+                  <div className="flex gap-2 flex-wrap">
+                    {trend.videoUrl && (
+                      <a href={trend.videoUrl} target="_blank" rel="noopener noreferrer">
+                        <Badge variant="outline" className="gap-1">
+                          <Video className="w-3 h-3" />
+                          Video
+                          <ExternalLink className="w-3 h-3" />
+                        </Badge>
+                      </a>
+                    )}
+                    {trend.instagramUrl && (
+                      <a href={trend.instagramUrl} target="_blank" rel="noopener noreferrer">
+                        <Badge variant="outline" className="gap-1">
+                          <SiInstagram className="w-3 h-3" />
+                          Instagram Example
+                          <ExternalLink className="w-3 h-3" />
+                        </Badge>
+                      </a>
+                    )}
+                  </div>
+
+                  {embedUrl && embedUrl.includes("youtube") && (
+                    <div className="aspect-video rounded-lg overflow-hidden bg-muted mt-3">
+                      <iframe
+                        src={embedUrl}
+                        title={trend.title}
+                        className="w-full h-full"
+                        allowFullScreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
