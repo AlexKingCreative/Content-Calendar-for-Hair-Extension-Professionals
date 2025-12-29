@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { X, Sparkles, ArrowRight } from "lucide-react";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface AccessStatus {
@@ -16,6 +17,7 @@ interface AccessStatus {
 export function TrialBanner() {
   const [, setLocation] = useLocation();
   const [dismissed, setDismissed] = useState(false);
+  const { toast } = useToast();
 
   const { data: accessStatus } = useQuery<AccessStatus | null>({
     queryKey: ["/api/billing/access-status"],
@@ -35,6 +37,13 @@ export function TrialBanner() {
       if (data.url) {
         window.location.href = data.url;
       }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Checkout failed",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
     },
   });
 

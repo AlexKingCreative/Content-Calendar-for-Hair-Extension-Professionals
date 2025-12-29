@@ -78,11 +78,12 @@ export default function PostDetailModal({ post, onClose }: PostDetailModalProps)
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const { data: accessStatus } = useQuery<AccessStatus>({
+  const { data: accessStatus, isLoading: isAccessLoading } = useQuery<AccessStatus>({
     queryKey: ["/api/billing/access-status"],
   });
 
   const isPremium = accessStatus?.subscriptionStatus === "active" || accessStatus?.subscriptionStatus === "trialing";
+  const accessResolved = !isAccessLoading && accessStatus !== undefined;
 
   // Reset caption when post changes
   useEffect(() => {
@@ -93,6 +94,10 @@ export default function PostDetailModal({ post, onClose }: PostDetailModalProps)
   if (!post) return null;
 
   const handleGenerateCaption = async () => {
+    if (!accessResolved) {
+      return;
+    }
+    
     if (!isPremium) {
       toast({
         title: "Premium Feature",
@@ -209,16 +214,16 @@ export default function PostDetailModal({ post, onClose }: PostDetailModalProps)
           {!generatedCaption ? (
             <Button
               onClick={handleGenerateCaption}
-              disabled={isGenerating}
-              variant={isPremium ? "default" : "outline"}
+              disabled={isGenerating || !accessResolved}
+              variant={accessResolved && !isPremium ? "outline" : "default"}
               className="w-full gap-2"
               size="sm"
               data-testid="button-write-caption"
             >
-              {isGenerating ? (
+              {isGenerating || !accessResolved ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Writing...
+                  {!accessResolved ? "Loading..." : "Writing..."}
                 </>
               ) : isPremium ? (
                 <>
