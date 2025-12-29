@@ -33,12 +33,26 @@ const MONTHS = [
 
 export default function CalendarScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const currentMonth = new Date().getMonth() + 1;
+  const currentDay = new Date().getDate();
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ['posts', 'month', selectedMonth],
     queryFn: () => postsApi.getByMonth(selectedMonth),
   });
+
+  const filteredPosts = React.useMemo(() => {
+    if (!posts) return [];
+    return posts.filter((post: Post) => {
+      if (selectedMonth === currentMonth) {
+        return post.day >= currentDay;
+      }
+      return true;
+    });
+  }, [posts, selectedMonth, currentMonth, currentDay]);
+
+  const canGoForward = selectedMonth < currentMonth;
 
   const handlePostPress = (postId: number) => {
     navigation.navigate('PostDetail', { postId });
@@ -86,10 +100,11 @@ export default function CalendarScreen() {
         </TouchableOpacity>
         <Text style={styles.monthTitle}>{MONTHS[selectedMonth - 1]}</Text>
         <TouchableOpacity
-          style={styles.monthArrow}
-          onPress={() => setSelectedMonth(prev => prev < 12 ? prev + 1 : 1)}
+          style={[styles.monthArrow, !canGoForward && styles.monthArrowDisabled]}
+          onPress={() => canGoForward && setSelectedMonth(prev => prev + 1)}
+          disabled={!canGoForward}
         >
-          <Ionicons name="chevron-forward" size={24} color={colors.primary} />
+          <Ionicons name="chevron-forward" size={24} color={canGoForward ? colors.primary : colors.textTertiary} />
         </TouchableOpacity>
       </View>
 
@@ -99,7 +114,7 @@ export default function CalendarScreen() {
         </View>
       ) : (
         <FlatList
-          data={posts}
+          data={filteredPosts}
           renderItem={renderPost}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContent}
@@ -131,6 +146,9 @@ const styles = StyleSheet.create({
   },
   monthArrow: {
     padding: spacing.sm,
+  },
+  monthArrowDisabled: {
+    opacity: 0.4,
   },
   monthTitle: {
     fontSize: 20,
