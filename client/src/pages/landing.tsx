@@ -42,8 +42,8 @@ const testimonials = [
     location: "Los Angeles, CA",
     avatar: "SM",
     rating: 5,
-    problem: "I was posting randomly and barely getting likes.",
-    transformation: "Now I have a strategic plan and my engagement has doubled. I'm finally attracting my dream clients!",
+    problem: "I was posting randomly and attracting budget clients.",
+    transformation: "Now I'm booked 6 weeks out with premium clients who pay my full price. My engagement doubled and I'm finally known as THE extension specialist in LA!",
   },
   {
     name: "Jessica Turner",
@@ -51,8 +51,8 @@ const testimonials = [
     location: "Miami, FL",
     avatar: "JT",
     rating: 5,
-    problem: "I was using the same hashtags that never reached new people.",
-    transformation: "The personalized hashtags based on my city are a game-changer. I'm reaching so many more local clients now.",
+    problem: "Nobody outside my neighborhood knew who I was.",
+    transformation: "The personalized hashtags helped me get discovered. I've been featured in a local magazine and my following grew by 3,000 in two months!",
   },
   {
     name: "Amanda Rodriguez",
@@ -60,8 +60,8 @@ const testimonials = [
     location: "New York, NY",
     avatar: "AR",
     rating: 5,
-    problem: "I knew I should post, but I kept putting it off.",
-    transformation: "The daily reminders keep me accountable. My consistency has never been better, and my followers love it!",
+    problem: "I kept attracting clients who didn't value my work.",
+    transformation: "Consistent posting positioned me as an expert. Now I get DMs from people saying 'I've been following you for months - I NEED to book with you!'",
   },
   {
     name: "Brittany Chen",
@@ -69,8 +69,8 @@ const testimonials = [
     location: "Houston, TX",
     avatar: "BC",
     rating: 5,
-    problem: "I was missing viral trends and watching other stylists blow up.",
-    transformation: "I caught a trending audio early and got 50k views! This app pays for itself.",
+    problem: "I felt invisible while other stylists were blowing up.",
+    transformation: "I caught a trend early and got 50k views! Now brands reach out to me for collaborations. I'm finally getting recognized!",
   },
 ];
 
@@ -89,8 +89,8 @@ const thePlan = [
   },
   {
     step: 3,
-    title: "Watch Your Following Grow",
-    description: "Stay consistent and attract more dream clients.",
+    title: "Become the Go-To Stylist",
+    description: "Grow your following, attract premium clients, and get recognized.",
     icon: TrendingUp,
   },
 ];
@@ -183,15 +183,15 @@ export default function LandingPage() {
             <div className="text-center lg:text-left">
               {/* The One-Liner: What you offer + How it helps them */}
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
-                <span className="block">Post Every Day.</span>
+                <span className="block">Attract Premium Clients.</span>
                 <span className="block bg-gradient-to-r from-primary via-rose-500 to-amber-500 bg-clip-text text-transparent">
-                  Get More Clients.
+                  Get Recognized.
                 </span>
               </h1>
               
               {/* Stakes: What's at risk / the problem in one line */}
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl lg:max-w-none mb-8">
-                You're great at hair. But coming up with content ideas every day? That's exhausting. We give you 365 days of done-for-you post ideas so you can stay consistent and grow your following.
+                You're amazing at hair. But figuring out what to post every day? That's exhausting. We give you 365 days of done-for-you content ideas so you can grow your following and become the go-to stylist in your area.
               </p>
               
               {/* Direct CTA */}
@@ -439,19 +439,19 @@ export default function LandingPage() {
               <ul className="space-y-3 text-muted-foreground">
                 <li className="flex items-start gap-3">
                   <X className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-                  Keep posting randomly and wondering why you're not growing
+                  Keep attracting budget clients who don't value your work
                 </li>
                 <li className="flex items-start gap-3">
                   <X className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-                  Watch other stylists pass you by while you stay stuck
+                  Stay invisible while other stylists get all the recognition
                 </li>
                 <li className="flex items-start gap-3">
                   <X className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-                  Miss out on clients who could be booking with YOU
+                  Watch your following stay flat month after month
                 </li>
                 <li className="flex items-start gap-3">
                   <X className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-                  Feel the frustration of knowing you should do more
+                  Wonder why you're not getting the clients you deserve
                 </li>
               </ul>
             </div>
@@ -464,19 +464,19 @@ export default function LandingPage() {
               <ul className="space-y-3 text-muted-foreground">
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                  Wake up knowing exactly what to post today
+                  Attract premium clients who happily pay your prices
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                  Build a following that books appointments
+                  Grow a following that sees you as THE expert
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                  Attract dream clients who find you on Instagram
+                  Get recognized as the go-to stylist in your area
                 </li>
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                  Feel confident and in control of your content
+                  Have brands and clients reaching out to YOU
                 </li>
               </ul>
             </div>
@@ -615,8 +615,8 @@ export default function LandingPage() {
                 a: "Generic planners give you blank calendars. We give you 365 days of done-for-you ideas specifically for hair professionals - cutting, coloring, extensions, toppers, and wigs. Plus trend alerts, personalized hashtags, and AI captions."
               },
               {
-                q: "Will this actually get me more clients?",
-                a: "Consistent posting is the #1 way to grow your following and attract clients. The stylists who use this app post more often, reach more people, and get more inquiries. But you have to actually use it!"
+                q: "Will this actually help me attract premium clients?",
+                a: "When you post consistently, you position yourself as an expert. That attracts clients who value quality and are willing to pay for it. Our users report getting more inquiries from dream clients who say 'I've been following you - I need to book with you!'"
               },
               {
                 q: "What if I miss a day?",
@@ -644,10 +644,10 @@ export default function LandingPage() {
       <section className="py-16 sm:py-24 bg-gradient-to-r from-primary to-rose-600 text-primary-foreground">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Stop Guessing. Start Growing.
+            Ready to Attract Premium Clients?
           </h2>
           <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-            Your dream clients are on Instagram. It's time they found you. Start your free 7-day trial and see the difference consistency makes.
+            Grow your following. Get recognized in your industry. Become the stylist everyone wants to book. It starts with showing up consistently.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/onboarding">
