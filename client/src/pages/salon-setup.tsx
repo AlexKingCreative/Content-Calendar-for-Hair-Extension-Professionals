@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { useLocation, useSearch } from "wouter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Building2, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Building2, Loader2, LogIn } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
+
+interface User {
+  id: string;
+}
 
 export default function SalonSetupPage() {
   const [, setLocation] = useLocation();
@@ -17,6 +21,11 @@ export default function SalonSetupPage() {
   const tier = params.get("tier") || "5-seats";
   const { toast } = useToast();
   const qc = useQueryClient();
+
+  const { data: user, isLoading: userLoading } = useQuery<User | null>({
+    queryKey: ["/api/auth/user"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
 
   const [salonName, setSalonName] = useState("");
   const [instagramHandle, setInstagramHandle] = useState("");
@@ -49,6 +58,52 @@ export default function SalonSetupPage() {
   const tierInfo = tier === "10-plus-seats" 
     ? { seats: 10, price: 50, perSeat: 5 }
     : { seats: 5, price: 40, perSeat: 8 };
+
+  if (!userLoading && !user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-50 glass-header">
+          <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => setLocation("/salon-pricing")} data-testid="button-back">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="font-heading font-semibold text-lg">Set Up Your Salon</h1>
+          </div>
+        </header>
+
+        <main className="max-w-lg mx-auto px-4 py-12 text-center space-y-6">
+          <Building2 className="w-16 h-16 mx-auto text-primary" />
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-foreground mb-2">
+              Create an Account First
+            </h2>
+            <p className="text-muted-foreground">
+              Sign up or log in to set up your salon and start managing your team.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <Button 
+              className="w-full" 
+              size="lg"
+              onClick={() => setLocation(`/onboarding?returnTo=/salon-setup?tier=${tier}`)}
+              data-testid="button-signup-for-salon"
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              Create Account
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => setLocation(`/login?returnTo=/salon-setup?tier=${tier}`)}
+              data-testid="button-login-for-salon"
+            >
+              Already have an account? Log in
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

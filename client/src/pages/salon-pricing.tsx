@@ -96,14 +96,6 @@ export default function SalonPricingPage() {
   });
 
   const handleSelectTier = (tierId: string) => {
-    if (!user) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in to start your salon plan.",
-        variant: "destructive",
-      });
-      return;
-    }
     setSelectedTier(tierId);
     setLocation(`/salon-setup?tier=${tierId}`);
   };
