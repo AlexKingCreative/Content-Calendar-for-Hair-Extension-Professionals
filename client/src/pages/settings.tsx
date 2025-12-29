@@ -242,7 +242,7 @@ export default function SettingsPage() {
           <SettingsRow 
             icon={HelpCircle} 
             label="Help & Support" 
-            onClick={() => setShowHelpModal(true)}
+            onClick={() => setLocation("/help")}
           />
           <Separator className="my-1" />
           <SettingsRow 

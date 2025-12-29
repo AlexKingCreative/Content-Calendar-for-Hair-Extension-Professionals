@@ -154,7 +154,7 @@ router.get('/profile', authenticateMobile, async (req: any, res) => {
 
 router.put('/profile', authenticateMobile, async (req: any, res) => {
   try {
-    const { postingGoal, certifiedBrands, extensionMethods, city, postingServices, showStreaks, pushNotificationsEnabled } = req.body;
+    const { postingGoal, certifiedBrands, extensionMethods, city, postingServices, showStreaks, pushNotificationsEnabled, instagramHandle, experience, voice, tone } = req.body;
     
     const updateData: Record<string, any> = {};
     
@@ -190,6 +190,18 @@ router.put('/profile', authenticateMobile, async (req: any, res) => {
     }
     if (typeof pushNotificationsEnabled === 'boolean') {
       updateData.pushNotificationsEnabled = pushNotificationsEnabled;
+    }
+    if (instagramHandle !== undefined && typeof instagramHandle === 'string') {
+      updateData.instagramHandle = instagramHandle;
+    }
+    if (experience !== undefined && typeof experience === 'string') {
+      updateData.experience = experience;
+    }
+    if (voice !== undefined && typeof voice === 'string') {
+      updateData.voice = voice;
+    }
+    if (tone !== undefined && typeof tone === 'string') {
+      updateData.tone = tone;
     }
 
     if (Object.keys(updateData).length === 0) {

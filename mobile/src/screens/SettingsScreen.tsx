@@ -106,14 +106,7 @@ export default function SettingsScreen() {
   };
 
   const handleManageAccount = () => {
-    Alert.alert(
-      'Manage Account',
-      'Account settings are available on the web app. You will be redirected to the website where you can log in to manage your account.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Open Website', onPress: () => openLink(`${API_URL}/account`) },
-      ]
-    );
+    navigation.navigate('Account');
   };
 
 

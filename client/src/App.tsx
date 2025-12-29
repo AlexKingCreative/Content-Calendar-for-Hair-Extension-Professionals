@@ -12,6 +12,7 @@ import AdminPage from "@/pages/admin";
 import LandingPage from "@/pages/landing";
 import SettingsPage from "@/pages/settings";
 import AccountPage from "@/pages/account";
+import HelpPage from "@/pages/help";
 import TodayPage from "@/pages/today";
 import StreaksPage from "@/pages/streaks";
 import TrendsPage from "@/pages/trends";
@@ -175,6 +176,7 @@ function Router() {
           <AccountPage />
         </ProtectedRoute>
       </Route>
+      <Route path="/help" component={HelpPage} />
       <Route path="/today" component={TodayPage} />
       <Route path="/trends" component={TrendsPage} />
       <Route path="/streaks" component={StreaksPage} />
