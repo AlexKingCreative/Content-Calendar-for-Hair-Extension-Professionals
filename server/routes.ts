@@ -197,8 +197,11 @@ export async function registerRoutes(
       let generatedPassword: string | null = null;
       
       if (existingUser) {
-        // User exists - just log them in
-        user = existingUser;
+        // User already exists - don't auto-login for security, they need to use login page
+        return res.status(409).json({ 
+          message: "An account with this email already exists. Please sign in using the login page.",
+          existingUser: true
+        });
       } else {
         // Generate a random 12-character password
         generatedPassword = crypto.randomBytes(6).toString('base64').replace(/[+/=]/g, 'x').slice(0, 12);

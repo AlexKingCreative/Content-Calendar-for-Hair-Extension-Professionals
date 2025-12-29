@@ -125,11 +125,19 @@ export default function OnboardingPage() {
       setLocation("/calendar");
     },
     onError: (error: any) => {
-      toast({
-        title: "Something went wrong",
-        description: error?.message || "Please try again.",
-        variant: "destructive",
-      });
+      if (error?.existingUser) {
+        toast({
+          title: "Account already exists",
+          description: "Please sign in with your existing account.",
+        });
+        setLocation("/login");
+      } else {
+        toast({
+          title: "Something went wrong",
+          description: error?.message || "Please try again.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
