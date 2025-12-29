@@ -2,7 +2,8 @@
   "expo": {
     "name": "Hair Pro Content Calendar",
     "slug": "hairpro-content-calendar",
-    "version": "1.0.7",    "icon": "./assets/icon.png",
+    "version": "1.0.7",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "jsEngine": "hermes",
@@ -14,7 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hairpro360.contentcalendar",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -31,7 +32,8 @@
     "extra": {
       "apiUrl": "https://content-calendar-hair-pro.replit.app",
       "eas": {
-      "projectId": "01f55345-9c43-4d74-89c0-70adbe93df53"      }
+        "projectId": "01f55345-9c43-4d74-89c0-70adbe93df53"
+      }
     },
     "runtimeVersion": {
       "policy": "sdkVersion"
