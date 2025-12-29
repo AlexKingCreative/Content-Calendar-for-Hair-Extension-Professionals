@@ -308,8 +308,8 @@ export default function LandingPage() {
                   Cancel anytime
                 </span>
                 <span className="flex items-center gap-1.5 bg-background/50 backdrop-blur-sm px-3 py-1.5 rounded-full border">
-                  <Users className="w-3.5 h-3.5" />
-                  2,000+ stylists using it
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  7-day free trial
                 </span>
               </motion.div>
             </motion.div>
