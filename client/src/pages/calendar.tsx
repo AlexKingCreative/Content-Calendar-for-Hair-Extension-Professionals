@@ -23,6 +23,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Badge } from "@/components/ui/badge";
 import { exportMonthToPDF } from "@/lib/pdfExport";
 import { navigateToLogin } from "@/lib/auth-utils";
+import { TrialBanner } from "@/components/trial-banner";
 
 interface StreakData {
   currentStreak: number;
@@ -282,6 +283,7 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24 sm:pb-0">
+      <TrialBanner />
       <header className="sticky top-0 z-50 glass-header safe-area-top">
         <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2">

@@ -12,6 +12,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { TrialOfferModal } from "@/components/trial-offer-modal";
 
 interface OptionsData {
   certifiedBrands: string[];
@@ -37,6 +38,7 @@ export default function OnboardingPage() {
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
   const [brandSearch, setBrandSearch] = useState("");
   const [brandPopoverOpen, setBrandPopoverOpen] = useState(false);
+  const [showTrialModal, setShowTrialModal] = useState(false);
 
   const { data: user } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
@@ -97,7 +99,7 @@ export default function OnboardingPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
-      setLocation("/calendar");
+      setShowTrialModal(true);
     },
   });
 
@@ -122,7 +124,7 @@ export default function OnboardingPage() {
           ? "Your account is ready! Check your email for your login credentials." 
           : "Welcome back! You're now signed in.",
       });
-      setLocation("/calendar");
+      setShowTrialModal(true);
     },
     onError: (error: any) => {
       if (error?.existingUser) {
@@ -521,6 +523,12 @@ export default function OnboardingPage() {
           </div>
         </CardContent>
       </Card>
+      
+      <TrialOfferModal
+        open={showTrialModal}
+        onClose={() => setShowTrialModal(false)}
+        onSkip={() => setShowTrialModal(false)}
+      />
     </div>
   );
 }
