@@ -1045,7 +1045,7 @@ Respond in JSON format with these fields:
         return res.status(400).json({ error: "Invalid subscription data" });
       }
 
-      const userId = req.user?.claims?.sub || null;
+      const userId = getUserId(req);
       
       await storage.createPushSubscription({
         userId,
@@ -1306,7 +1306,7 @@ Respond in JSON format with these fields:
   // Submit an Instagram post to be featured
   app.post("/api/posts/:id/submissions", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
@@ -1362,7 +1362,11 @@ Respond in JSON format with these fields:
   // Approve or reject a submission (admin only)
   app.patch("/api/submissions/:id/status", isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid submission ID" });
@@ -1395,7 +1399,7 @@ Respond in JSON format with these fields:
   // Get user's own submissions
   app.get("/api/users/me/submissions", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
@@ -1413,7 +1417,7 @@ Respond in JSON format with these fields:
   // Create a salon (during owner onboarding)
   app.post("/api/salons", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
@@ -1457,7 +1461,7 @@ Respond in JSON format with these fields:
   // Get current user's salon
   app.get("/api/salons/me", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
@@ -1501,7 +1505,7 @@ Respond in JSON format with these fields:
   // Update salon
   app.put("/api/salons/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid salon ID" });
@@ -1528,7 +1532,7 @@ Respond in JSON format with these fields:
   // Invite a stylist to the salon
   app.post("/api/salons/:id/invitations", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const salonId = parseInt(req.params.id);
       if (isNaN(salonId)) {
         return res.status(400).json({ error: "Invalid salon ID" });
@@ -1577,7 +1581,7 @@ Respond in JSON format with these fields:
   // Accept a salon invitation
   app.patch("/api/salon-invitations/:token", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
@@ -1619,7 +1623,7 @@ Respond in JSON format with these fields:
   // Revoke a salon member
   app.delete("/api/salons/:salonId/members/:memberId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       const salonId = parseInt(req.params.salonId);
       const memberId = parseInt(req.params.memberId);
       
@@ -1647,7 +1651,7 @@ Respond in JSON format with these fields:
   // Get user's salon info (for stylists to know their salon)
   app.get("/api/users/me/salon", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getUserId(req);
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
