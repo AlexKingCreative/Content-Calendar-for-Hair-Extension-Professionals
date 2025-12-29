@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { postsApi } from '../services/api';
 import { RootStackParamList } from '../navigation';
+import { colors, borderRadius, shadows, spacing, glassCard } from '../theme';
 
 interface Post {
   id: number;
@@ -63,7 +64,7 @@ export default function CalendarScreen() {
           </View>
         </View>
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#D4A574" />
+      <Ionicons name="chevron-forward" size={20} color={colors.primary} />
     </TouchableOpacity>
   );
 
@@ -74,20 +75,20 @@ export default function CalendarScreen() {
           style={styles.monthArrow}
           onPress={() => setSelectedMonth(prev => prev > 1 ? prev - 1 : 12)}
         >
-          <Ionicons name="chevron-back" size={24} color="#D4A574" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
         <Text style={styles.monthTitle}>{MONTHS[selectedMonth - 1]}</Text>
         <TouchableOpacity
           style={styles.monthArrow}
           onPress={() => setSelectedMonth(prev => prev < 12 ? prev + 1 : 1)}
         >
-          <Ionicons name="chevron-forward" size={24} color="#D4A574" />
+          <Ionicons name="chevron-forward" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#D4A574" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         <FlatList
@@ -110,25 +111,25 @@ export default function CalendarScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8F0',
+    backgroundColor: colors.background,
   },
   monthSelector: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    paddingVertical: spacing.lg,
+    backgroundColor: colors.glass.backgroundLight,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5D5C5',
+    borderBottomColor: colors.border,
   },
   monthArrow: {
-    padding: 8,
+    padding: spacing.sm,
   },
   monthTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#5D4E3C',
-    marginHorizontal: 24,
+    color: colors.text,
+    marginHorizontal: spacing.xxl,
   },
   loadingContainer: {
     flex: 1,
@@ -136,34 +137,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContent: {
-    padding: 16,
-    gap: 12,
+    padding: spacing.lg,
+    gap: spacing.md,
+    paddingBottom: 120,
   },
   postCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    ...glassCard,
+    padding: spacing.lg,
   },
   postDate: {
     width: 48,
     height: 48,
-    backgroundColor: '#D4A574',
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   postDay: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   postContent: {
     flex: 1,
@@ -171,44 +167,44 @@ const styles = StyleSheet.create({
   postTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#5D4E3C',
-    marginBottom: 4,
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
   postDescription: {
     fontSize: 13,
-    color: '#8B7355',
+    color: colors.textSecondary,
     lineHeight: 18,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   postMeta: {
     flexDirection: 'row',
-    gap: 8,
+    gap: spacing.sm,
   },
   metaBadge: {
-    backgroundColor: '#D4A574',
-    paddingHorizontal: 8,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: borderRadius.pill,
   },
   metaText: {
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
     fontSize: 10,
     fontWeight: '600',
   },
   categoryMeta: {
-    backgroundColor: '#F5EDE4',
+    backgroundColor: colors.surfaceSecondary,
   },
   categoryMetaText: {
-    color: '#8B7355',
+    color: colors.textSecondary,
     fontSize: 10,
     fontWeight: '600',
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: 48,
+    paddingVertical: spacing.xxxl,
   },
   emptyText: {
-    color: '#8B7355',
+    color: colors.textSecondary,
     fontSize: 16,
   },
 });

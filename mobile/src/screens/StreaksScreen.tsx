@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { streakApi, challengesApi } from '../services/api';
+import { colors, borderRadius, shadows, spacing, glassCard } from '../theme';
 
 interface StreakData {
   currentStreak: number;
@@ -126,7 +127,7 @@ export default function StreaksScreen() {
   if (streakLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#D4A574" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -141,7 +142,7 @@ export default function StreaksScreen() {
           <Ionicons 
             name="flame" 
             size={18} 
-            color={activeTab === 'streaks' ? '#D4A574' : '#8B7355'} 
+            color={activeTab === 'streaks' ? colors.primary : colors.textSecondary} 
           />
           <Text style={[styles.tabText, activeTab === 'streaks' && styles.tabTextActive]}>
             Streaks
@@ -154,7 +155,7 @@ export default function StreaksScreen() {
           <Ionicons 
             name="flag" 
             size={18} 
-            color={activeTab === 'challenges' ? '#D4A574' : '#8B7355'} 
+            color={activeTab === 'challenges' ? colors.primary : colors.textSecondary} 
           />
           <Text style={[styles.tabText, activeTab === 'challenges' && styles.tabTextActive]}>
             Challenges
@@ -171,10 +172,10 @@ export default function StreaksScreen() {
         <>
           <View style={styles.streakCard}>
             <View style={styles.streakCircle}>
-              <Ionicons name="flame" size={48} color="#FFFFFF" />
+              <Ionicons name="flame" size={48} color={colors.textOnPrimary} />
               {streak?.hasPostedToday && (
                 <View style={styles.checkBadge}>
-                  <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                  <Ionicons name="checkmark" size={14} color={colors.textOnPrimary} />
                 </View>
               )}
             </View>
@@ -183,7 +184,7 @@ export default function StreaksScreen() {
 
             {streak?.hasPostedToday ? (
               <View style={styles.postedBadge}>
-                <Ionicons name="checkmark-circle" size={18} color="#22C55E" />
+                <Ionicons name="checkmark-circle" size={18} color={colors.success} />
                 <Text style={styles.postedText}>You've posted today!</Text>
               </View>
             ) : (
@@ -192,7 +193,7 @@ export default function StreaksScreen() {
                 onPress={() => logPostMutation.mutate()}
                 disabled={logPostMutation.isPending}
               >
-                <Ionicons name="calendar" size={20} color="#FFFFFF" />
+                <Ionicons name="calendar" size={20} color={colors.textOnPrimary} />
                 <Text style={styles.logButtonText}>
                   {logPostMutation.isPending ? 'Logging...' : 'I Posted Today!'}
                 </Text>
@@ -225,7 +226,7 @@ export default function StreaksScreen() {
               <Text style={styles.milestoneTitle}>Next Milestone</Text>
               <View style={styles.milestoneRow}>
                 <View style={styles.milestoneIcon}>
-                  <Ionicons name={getIconName(nextMilestone.icon)} size={24} color="#D4A574" />
+                  <Ionicons name={getIconName(nextMilestone.icon)} size={24} color={colors.primary} />
                 </View>
                 <View style={styles.milestoneInfo}>
                   <Text style={styles.milestoneName}>{nextMilestone.name}</Text>
@@ -256,7 +257,7 @@ export default function StreaksScreen() {
                 {earnedBadges.map((badge) => (
                   <View key={badge.days} style={styles.badgeItem}>
                     <View style={styles.badgeIcon}>
-                      <Ionicons name={getIconName(badge.icon)} size={20} color="#D4A574" />
+                      <Ionicons name={getIconName(badge.icon)} size={20} color={colors.primary} />
                     </View>
                     <Text style={styles.badgeName}>{badge.name}</Text>
                   </View>
@@ -279,7 +280,7 @@ export default function StreaksScreen() {
                   <View key={uc.id} style={styles.challengeCard}>
                     <View style={styles.challengeHeader}>
                       <View style={styles.challengeIconActive}>
-                        <Ionicons name={getIconName(challenge.icon)} size={20} color="#D4A574" />
+                        <Ionicons name={getIconName(challenge.icon)} size={20} color={colors.primary} />
                       </View>
                       <View style={styles.challengeInfo}>
                         <Text style={styles.challengeName}>{challenge.name}</Text>
@@ -306,7 +307,7 @@ export default function StreaksScreen() {
                       onPress={() => logChallengeMutation.mutate(uc.id)}
                       disabled={logChallengeMutation.isPending}
                     >
-                      <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+                      <Ionicons name="checkmark" size={18} color={colors.textOnPrimary} />
                       <Text style={styles.logChallengeButtonText}>Log Post</Text>
                     </TouchableOpacity>
                   </View>
@@ -324,7 +325,7 @@ export default function StreaksScreen() {
                 <View key={challenge.id} style={[styles.challengeCard, isActive && styles.challengeActive]}>
                   <View style={styles.challengeHeader}>
                     <View style={styles.challengeIcon}>
-                      <Ionicons name={getIconName(challenge.icon)} size={20} color="#D4A574" />
+                      <Ionicons name={getIconName(challenge.icon)} size={20} color={colors.primary} />
                     </View>
                     <View style={styles.challengeInfo}>
                       <Text style={styles.challengeName}>{challenge.name}</Text>
@@ -338,7 +339,7 @@ export default function StreaksScreen() {
                   </View>
                   <Text style={styles.challengeDescription}>{challenge.description}</Text>
                   <View style={styles.challengeReward}>
-                    <Ionicons name="gift-outline" size={14} color="#8B7355" />
+                    <Ionicons name="gift-outline" size={14} color={colors.textSecondary} />
                     <Text style={styles.challengeRewardText}>{challenge.reward}</Text>
                   </View>
                   {!isActive && (
@@ -347,7 +348,7 @@ export default function StreaksScreen() {
                       onPress={() => startChallengeMutation.mutate(challenge.id)}
                       disabled={startChallengeMutation.isPending}
                     >
-                      <Ionicons name="play" size={16} color="#FFFFFF" />
+                      <Ionicons name="play" size={16} color={colors.textOnPrimary} />
                       <Text style={styles.startButtonText}>Start Challenge</Text>
                     </TouchableOpacity>
                   )}
@@ -364,77 +365,73 @@ export default function StreaksScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8F0',
+    backgroundColor: colors.background,
   },
   content: {
-    padding: 16,
-    paddingBottom: 32,
+    padding: spacing.lg,
+    paddingBottom: 120,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF8F0',
+    backgroundColor: colors.background,
   },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 16,
+    backgroundColor: colors.glass.background,
+    borderRadius: borderRadius.md,
+    padding: spacing.xs,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.glass.border,
   },
   tab: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    borderRadius: 10,
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.button,
   },
   tabActive: {
-    backgroundColor: '#FFF8F0',
+    backgroundColor: colors.glass.backgroundDark,
   },
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#8B7355',
+    color: colors.textSecondary,
   },
   tabTextActive: {
-    color: '#D4A574',
+    color: colors.primary,
   },
   badge: {
-    backgroundColor: '#D4A574',
-    borderRadius: 10,
-    paddingHorizontal: 6,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 2,
-    marginLeft: 4,
+    marginLeft: spacing.xs,
   },
   badgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   streakCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 24,
+    ...glassCard,
+    padding: spacing.xxl,
     alignItems: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    marginBottom: spacing.lg,
   },
   streakCircle: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#F97316',
+    backgroundColor: colors.warning,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   checkBadge: {
     position: 'absolute',
@@ -443,61 +440,60 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#22C55E',
+    backgroundColor: colors.success,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    borderColor: colors.surface,
   },
   streakNumber: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#5D4E3C',
+    color: colors.text,
   },
   streakLabel: {
     fontSize: 14,
-    color: '#8B7355',
-    marginBottom: 16,
+    color: colors.textSecondary,
+    marginBottom: spacing.lg,
   },
   postedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
+    gap: spacing.sm,
+    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
   },
   postedText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#166534',
+    color: colors.success,
   },
   logButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#D4A574',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 12,
+    gap: spacing.sm,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius.button,
   },
   logButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   statsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    ...glassCard,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
   },
   statsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#5D4E3C',
-    marginBottom: 12,
+    color: colors.text,
+    marginBottom: spacing.md,
   },
   statsRow: {
     flexDirection: 'row',
@@ -510,40 +506,39 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#5D4E3C',
+    color: colors.text,
   },
   statLabel: {
     fontSize: 12,
-    color: '#8B7355',
+    color: colors.textSecondary,
   },
   statDivider: {
     width: 1,
     height: 32,
-    backgroundColor: '#E5D5C5',
+    backgroundColor: colors.border,
   },
   milestoneCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    ...glassCard,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
   },
   milestoneTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#5D4E3C',
-    marginBottom: 12,
+    color: colors.text,
+    marginBottom: spacing.md,
   },
   milestoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
   milestoneIcon: {
     width: 44,
     height: 44,
-    borderRadius: 12,
-    backgroundColor: '#FFF8F0',
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.glass.backgroundDark,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -553,106 +548,99 @@ const styles = StyleSheet.create({
   milestoneName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#5D4E3C',
+    color: colors.text,
   },
   milestoneProgress: {
     fontSize: 13,
-    color: '#8B7355',
+    color: colors.textSecondary,
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#E5D5C5',
-    borderRadius: 4,
+    backgroundColor: colors.border,
+    borderRadius: spacing.xs,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#D4A574',
-    borderRadius: 4,
+    backgroundColor: colors.primary,
+    borderRadius: spacing.xs,
   },
   badgesCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    ...glassCard,
+    padding: spacing.lg,
   },
   badgesTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#5D4E3C',
-    marginBottom: 12,
+    color: colors.text,
+    marginBottom: spacing.md,
   },
   noBadges: {
     fontSize: 14,
-    color: '#8B7355',
+    color: colors.textSecondary,
     textAlign: 'center',
-    paddingVertical: 16,
+    paddingVertical: spacing.lg,
   },
   badgesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: spacing.md,
   },
   badgeItem: {
     alignItems: 'center',
-    gap: 6,
+    gap: spacing.sm,
   },
   badgeIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FFF8F0',
+    backgroundColor: colors.glass.backgroundDark,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badgeName: {
     fontSize: 11,
-    color: '#5D4E3C',
+    color: colors.text,
     textAlign: 'center',
     maxWidth: 70,
   },
   sectionCard: {
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#5D4E3C',
-    marginBottom: 12,
+    color: colors.text,
+    marginBottom: spacing.md,
   },
   challengeCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    ...glassCard,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
   },
   challengeActive: {
     borderWidth: 2,
-    borderColor: '#D4A574',
+    borderColor: colors.primary,
   },
   challengeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 10,
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
   challengeIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
-    backgroundColor: '#FFF8F0',
+    borderRadius: borderRadius.button,
+    backgroundColor: colors.glass.backgroundDark,
     alignItems: 'center',
     justifyContent: 'center',
   },
   challengeIconActive: {
     width: 40,
     height: 40,
-    borderRadius: 10,
-    backgroundColor: '#FFF8F0',
+    borderRadius: borderRadius.button,
+    backgroundColor: colors.glass.backgroundDark,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -662,20 +650,20 @@ const styles = StyleSheet.create({
   challengeName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#5D4E3C',
+    color: colors.text,
   },
   challengeDuration: {
     fontSize: 13,
-    color: '#8B7355',
+    color: colors.textSecondary,
   },
   challengeStarted: {
     fontSize: 12,
-    color: '#8B7355',
+    color: colors.textSecondary,
   },
   challengeStats: {
     flexDirection: 'row',
-    gap: 24,
-    marginBottom: 12,
+    gap: spacing.xxl,
+    marginBottom: spacing.md,
   },
   challengeStat: {
     alignItems: 'center',
@@ -683,66 +671,66 @@ const styles = StyleSheet.create({
   challengeStatNumber: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#D4A574',
+    color: colors.primary,
   },
   challengeStatLabel: {
     fontSize: 11,
-    color: '#8B7355',
+    color: colors.textSecondary,
   },
   activeBadge: {
-    backgroundColor: '#D4A574',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.md,
   },
   activeBadgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   challengeDescription: {
     fontSize: 13,
-    color: '#8B7355',
+    color: colors.textSecondary,
     lineHeight: 18,
-    marginBottom: 10,
+    marginBottom: spacing.md,
   },
   challengeReward: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 12,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
   challengeRewardText: {
     fontSize: 12,
-    color: '#8B7355',
+    color: colors.textSecondary,
   },
   startButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#D4A574',
-    paddingVertical: 12,
-    borderRadius: 10,
+    gap: spacing.sm,
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.button,
   },
   startButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   logChallengeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#D4A574',
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginTop: 12,
+    gap: spacing.sm,
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.button,
+    marginTop: spacing.md,
   },
   logChallengeButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
 });

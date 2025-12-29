@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { postsApi, profileApi } from '../services/api';
 import { RootStackParamList } from '../navigation';
+import { colors, borderRadius, shadows, spacing, glassCard } from '../theme';
 
 interface UserProfile {
   city?: string;
@@ -72,7 +73,7 @@ export default function PostDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#D4A574" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -124,12 +125,12 @@ export default function PostDetailScreen() {
 
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionButton} onPress={handleCopyCaption}>
-          <Ionicons name="copy-outline" size={20} color="#D4A574" />
+          <Ionicons name="copy-outline" size={20} color={colors.primary} />
           <Text style={styles.actionText}>Copy Caption</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.actionButton, styles.primaryButton]} onPress={handleShare}>
-          <Ionicons name="share-outline" size={20} color="#FFFFFF" />
+          <Ionicons name="share-outline" size={20} color={colors.textOnPrimary} />
           <Text style={styles.primaryButtonText}>Share</Text>
         </TouchableOpacity>
       </View>
@@ -140,126 +141,126 @@ export default function PostDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8F0',
+    backgroundColor: colors.background,
   },
   content: {
-    padding: 16,
+    padding: spacing.lg,
+    paddingBottom: 120,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF8F0',
+    backgroundColor: colors.background,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF8F0',
+    backgroundColor: colors.background,
   },
   errorText: {
     fontSize: 16,
-    color: '#8B7355',
+    color: colors.textSecondary,
   },
   header: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
   badge: {
-    backgroundColor: '#D4A574',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.pill,
   },
   badgeText: {
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
     fontSize: 12,
     fontWeight: '600',
   },
   categoryBadge: {
-    backgroundColor: '#F5EDE4',
+    backgroundColor: colors.surfaceSecondary,
   },
   categoryBadgeText: {
-    color: '#8B7355',
+    color: colors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },
   date: {
     fontSize: 14,
-    color: '#8B7355',
-    marginBottom: 8,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#5D4E3C',
-    marginBottom: 24,
+    color: colors.text,
+    marginBottom: spacing.xxl,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: spacing.xxl,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#8B7355',
-    marginBottom: 12,
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
   },
   captionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
+    ...glassCard,
+    padding: spacing.lg,
   },
   description: {
     fontSize: 16,
-    color: '#5D4E3C',
+    color: colors.text,
     lineHeight: 24,
   },
   hashtagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: spacing.sm,
   },
   hashtag: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    backgroundColor: colors.glass.background,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: '#D4A574',
+    borderColor: colors.primary,
   },
   hashtagText: {
-    color: '#D4A574',
+    color: colors.primary,
     fontSize: 13,
   },
   actions: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
+    gap: spacing.md,
+    marginTop: spacing.sm,
   },
   actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 14,
-    borderRadius: 12,
+    gap: spacing.sm,
+    backgroundColor: colors.glass.background,
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius.button,
     borderWidth: 1,
-    borderColor: '#D4A574',
+    borderColor: colors.primary,
   },
   actionText: {
-    color: '#D4A574',
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
   primaryButton: {
-    backgroundColor: '#D4A574',
-    borderColor: '#D4A574',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   primaryButtonText: {
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
     fontSize: 14,
     fontWeight: '600',
   },

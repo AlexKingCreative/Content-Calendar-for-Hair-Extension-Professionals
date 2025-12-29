@@ -15,6 +15,7 @@ import Constants from 'expo-constants';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
 import { stripeApi, profileApi } from '../services/api';
+import { colors, borderRadius, shadows, spacing, glassCard } from '../theme';
 
 const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://content-calendar-hair-pro.replit.app';
 
@@ -102,19 +103,19 @@ export default function SettingsScreen() {
         <Text style={styles.sectionTitle}>ACCOUNT</Text>
         <View style={styles.card}>
           <TouchableOpacity style={styles.menuItem} onPress={handleManageAccount}>
-            <Ionicons name="person-outline" size={22} color="#5D4E3C" />
+            <Ionicons name="person-outline" size={22} color={colors.text} />
             <Text style={styles.menuText}>Manage Account</Text>
-            <Ionicons name="chevron-forward" size={20} color="#A89580" />
+            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuItem} onPress={handleUpgrade}>
-            <Ionicons name="diamond-outline" size={22} color="#5D4E3C" />
+            <Ionicons name="diamond-outline" size={22} color={colors.text} />
             <Text style={styles.menuText}>Upgrade Plan</Text>
-            <Ionicons name="chevron-forward" size={20} color="#A89580" />
+            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
           <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={handleInstagramAnalytics}>
-            <Ionicons name="logo-instagram" size={22} color="#5D4E3C" />
+            <Ionicons name="logo-instagram" size={22} color={colors.text} />
             <Text style={styles.menuText}>Instagram Analytics</Text>
-            <Ionicons name="chevron-forward" size={20} color="#A89580" />
+            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -124,7 +125,7 @@ export default function SettingsScreen() {
         <View style={styles.card}>
           <View style={styles.switchItem}>
             <View style={styles.switchLeft}>
-              <Ionicons name="flame-outline" size={22} color="#5D4E3C" />
+              <Ionicons name="flame-outline" size={22} color={colors.text} />
               <View style={styles.switchTextContainer}>
                 <Text style={styles.switchTitle}>Show Streaks</Text>
                 <Text style={styles.switchDescription}>Display your posting streak on calendar</Text>
@@ -133,13 +134,13 @@ export default function SettingsScreen() {
             <Switch
               value={showStreaks}
               onValueChange={toggleShowStreaks}
-              trackColor={{ false: '#E5D5C5', true: '#D4A574' }}
-              thumbColor="#FFFFFF"
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.surface}
             />
           </View>
           <View style={[styles.switchItem, styles.menuItemLast]}>
             <View style={styles.switchLeft}>
-              <Ionicons name="notifications-outline" size={22} color="#5D4E3C" />
+              <Ionicons name="notifications-outline" size={22} color={colors.text} />
               <View style={styles.switchTextContainer}>
                 <Text style={styles.switchTitle}>Push Notifications</Text>
                 <Text style={styles.switchDescription}>Get reminders to post</Text>
@@ -148,8 +149,8 @@ export default function SettingsScreen() {
             <Switch
               value={pushNotificationsEnabled}
               onValueChange={togglePushNotifications}
-              trackColor={{ false: '#E5D5C5', true: '#D4A574' }}
-              thumbColor="#FFFFFF"
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.surface}
             />
           </View>
         </View>
@@ -157,9 +158,9 @@ export default function SettingsScreen() {
 
       <View style={styles.section}>
         <TouchableOpacity style={styles.notificationRow} onPress={() => openLink(`${API_URL}/notifications`)}>
-          <Ionicons name="notifications" size={22} color="#5D4E3C" />
+          <Ionicons name="notifications" size={22} color={colors.text} />
           <Text style={styles.menuText}>Notifications</Text>
-          <Ionicons name="chevron-forward" size={20} color="#A89580" />
+          <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
         </TouchableOpacity>
       </View>
 
@@ -167,15 +168,15 @@ export default function SettingsScreen() {
         <Text style={styles.sectionTitle}>SUPPORT</Text>
         <View style={styles.card}>
           <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={() => openLink(`${API_URL}/help`)}>
-            <Ionicons name="help-circle-outline" size={22} color="#5D4E3C" />
+            <Ionicons name="help-circle-outline" size={22} color={colors.text} />
             <Text style={styles.menuText}>Help & Support</Text>
-            <Ionicons name="chevron-forward" size={20} color="#A89580" />
+            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
         </View>
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={22} color="#DC2626" />
+        <Ionicons name="log-out-outline" size={22} color={colors.error} />
         <Text style={styles.logoutText}>Sign Out</Text>
       </TouchableOpacity>
 
@@ -187,40 +188,34 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8F0',
+    backgroundColor: colors.background,
   },
   content: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: spacing.lg,
+    paddingBottom: 120,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: spacing.xxl,
   },
   sectionTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#8B7355',
-    marginBottom: 10,
-    marginLeft: 4,
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
+    marginLeft: spacing.xs,
     letterSpacing: 0.5,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    ...glassCard,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5EDE4',
-    gap: 14,
+    borderBottomColor: colors.border,
+    gap: spacing.lg,
   },
   menuItemLast: {
     borderBottomWidth: 0,
@@ -228,67 +223,61 @@ const styles = StyleSheet.create({
   menuText: {
     flex: 1,
     fontSize: 16,
-    color: '#5D4E3C',
+    color: colors.text,
   },
   switchItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    padding: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5EDE4',
+    borderBottomColor: colors.border,
   },
   switchLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    gap: 14,
+    gap: spacing.lg,
   },
   switchTextContainer: {
     flex: 1,
   },
   switchTitle: {
     fontSize: 16,
-    color: '#5D4E3C',
+    color: colors.text,
   },
   switchDescription: {
     fontSize: 13,
-    color: '#8B7355',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   notificationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    gap: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
+    ...glassCard,
+    padding: spacing.lg,
+    gap: spacing.lg,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    backgroundColor: '#FEE2E2',
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 8,
+    gap: spacing.md,
+    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+    padding: spacing.lg,
+    borderRadius: borderRadius.md,
+    marginTop: spacing.sm,
   },
   logoutText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#DC2626',
+    color: colors.error,
   },
   version: {
     textAlign: 'center',
-    color: '#A89580',
+    color: colors.textTertiary,
     fontSize: 13,
-    marginTop: 24,
-    marginBottom: 16,
+    marginTop: spacing.xxl,
+    marginBottom: spacing.lg,
   },
 });

@@ -4,7 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Platform, StyleSheet } from 'react-native';
+import { colors, borderRadius, shadows, spacing } from '../theme';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -73,14 +74,47 @@ function MainTabs() {
             iconName = focused ? 'settings' : 'settings-outline';
           }
           
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return (
+            <View style={focused ? tabStyles.iconContainerActive : tabStyles.iconContainer}>
+              <Ionicons name={iconName} size={22} color={color} />
+            </View>
+          );
         },
-        tabBarActiveTintColor: '#D4A574',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textTertiary,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '500',
+          marginTop: -2,
+        },
+        tabBarStyle: {
+          position: 'absolute',
+          bottom: Platform.OS === 'ios' ? 24 : 16,
+          left: 16,
+          right: 16,
+          height: 70,
+          backgroundColor: colors.glass.backgroundLight,
+          borderRadius: borderRadius.xxl,
+          borderWidth: 1,
+          borderColor: colors.glass.border,
+          paddingBottom: 8,
+          paddingTop: 8,
+          ...shadows.glass,
+        },
         headerStyle: {
-          backgroundColor: '#D4A574',
+          backgroundColor: colors.glass.backgroundDark,
+          borderBottomWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
         },
-        headerTintColor: '#fff',
+        headerTitleStyle: {
+          color: colors.text,
+          fontWeight: '600',
+          fontSize: 18,
+        },
+        headerTintColor: colors.text,
+        headerShadowVisible: false,
       })}
     >
       <Tab.Screen name="Today" component={TodayScreen} options={{ title: 'Today' }} />
@@ -91,6 +125,18 @@ function MainTabs() {
     </Tab.Navigator>
   );
 }
+
+const tabStyles = StyleSheet.create({
+  iconContainer: {
+    padding: 6,
+    borderRadius: borderRadius.md,
+  },
+  iconContainerActive: {
+    padding: 6,
+    borderRadius: borderRadius.md,
+    backgroundColor: 'rgba(212, 165, 116, 0.15)',
+  },
+});
 
 export default function Navigation() {
   const { isLoading, isAuthenticated } = useAuth();

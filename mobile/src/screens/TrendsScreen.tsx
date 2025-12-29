@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { trendsApi } from '../services/api';
+import { colors, borderRadius, shadows, spacing, glassCard } from '../theme';
 
 interface TrendAlert {
   id: number;
@@ -49,7 +50,7 @@ export default function TrendsScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#D4A574" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading trends...</Text>
       </View>
     );
@@ -58,7 +59,7 @@ export default function TrendsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Ionicons name="trending-up" size={28} color="#D4A574" />
+        <Ionicons name="trending-up" size={28} color={colors.primary} />
         <Text style={styles.headerTitle}>Trend Alerts</Text>
       </View>
       <Text style={styles.headerSubtitle}>
@@ -67,7 +68,7 @@ export default function TrendsScreen() {
 
       {activeTrends.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="sparkles-outline" size={64} color="#E5D5C5" />
+          <Ionicons name="sparkles-outline" size={64} color={colors.borderLight} />
           <Text style={styles.emptyTitle}>No Active Trends</Text>
           <Text style={styles.emptyDescription}>
             Check back soon for the latest trending content ideas
@@ -79,7 +80,7 @@ export default function TrendsScreen() {
             <View key={trend.id} style={styles.trendCard}>
               {isExpiringSoon(trend.expiresAt) && (
                 <View style={styles.urgentBadge}>
-                  <Ionicons name="time-outline" size={12} color="#FFFFFF" />
+                  <Ionicons name="time-outline" size={12} color={colors.textOnPrimary} />
                   <Text style={styles.urgentText}>Expiring Soon</Text>
                 </View>
               )}
@@ -95,7 +96,7 @@ export default function TrendsScreen() {
 
               {trend.expiresAt && (
                 <View style={styles.expiresRow}>
-                  <Ionicons name="hourglass-outline" size={14} color="#8B7355" />
+                  <Ionicons name="hourglass-outline" size={14} color={colors.textSecondary} />
                   <Text style={styles.expiresText}>
                     Expires {format(new Date(trend.expiresAt), 'MMM d')}
                   </Text>
@@ -108,7 +109,7 @@ export default function TrendsScreen() {
                     style={styles.actionButton}
                     onPress={() => openUrl(trend.videoUrl!)}
                   >
-                    <Ionicons name="play-circle-outline" size={20} color="#D4A574" />
+                    <Ionicons name="play-circle-outline" size={20} color={colors.primary} />
                     <Text style={styles.actionButtonText}>Watch Video</Text>
                   </TouchableOpacity>
                 )}
@@ -133,38 +134,38 @@ export default function TrendsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8F0',
+    backgroundColor: colors.background,
   },
   content: {
-    padding: 16,
-    paddingBottom: 32,
+    padding: spacing.lg,
+    paddingBottom: 120,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFF8F0',
+    backgroundColor: colors.background,
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: spacing.md,
     fontSize: 16,
-    color: '#8B7355',
+    color: colors.textSecondary,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 4,
+    gap: spacing.md,
+    marginBottom: spacing.xs,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#5D4E3C',
+    color: colors.text,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#8B7355',
-    marginBottom: 20,
+    color: colors.textSecondary,
+    marginBottom: spacing.xl,
   },
   emptyState: {
     alignItems: 'center',
@@ -173,88 +174,82 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#5D4E3C',
-    marginTop: 16,
-    marginBottom: 8,
+    color: colors.text,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
   },
   emptyDescription: {
     fontSize: 14,
-    color: '#8B7355',
+    color: colors.textSecondary,
     textAlign: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing.xxxl,
   },
   trendsList: {
-    gap: 16,
+    gap: spacing.lg,
   },
   trendCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    ...glassCard,
+    padding: spacing.lg,
   },
   urgentBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#EF4444',
+    gap: spacing.xs,
+    backgroundColor: colors.error,
     alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.md,
   },
   urgentText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   trendTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#5D4E3C',
-    marginBottom: 8,
+    color: colors.text,
+    marginBottom: spacing.sm,
   },
   trendDescription: {
     fontSize: 14,
-    color: '#8B7355',
+    color: colors.textSecondary,
     lineHeight: 20,
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   trendDate: {
     fontSize: 12,
-    color: '#A89580',
-    marginBottom: 8,
+    color: colors.textTertiary,
+    marginBottom: spacing.sm,
   },
   expiresRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 16,
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   expiresText: {
     fontSize: 13,
-    color: '#8B7355',
+    color: colors.textSecondary,
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: spacing.md,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FFF8F0',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
+    gap: spacing.sm,
+    backgroundColor: colors.glass.backgroundDark,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.button,
   },
   actionButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#5D4E3C',
+    color: colors.text,
   },
 });
