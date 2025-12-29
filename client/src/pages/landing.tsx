@@ -110,7 +110,7 @@ const thePlan = [
   {
     step: 1,
     title: "Sign Up in 60 Seconds",
-    description: "Tell us your city and specialties. No credit card needed.",
+    description: "Tell us your city and specialties. Takes just 60 seconds.",
     icon: UserPlus,
   },
   {
@@ -305,7 +305,7 @@ export default function LandingPage() {
               >
                 <span className="flex items-center gap-1.5 bg-background/50 backdrop-blur-sm px-3 py-1.5 rounded-full border">
                   <Check className="w-4 h-4 text-emerald-500" />
-                  No credit card required
+                  Cancel anytime
                 </span>
                 <span className="flex items-center gap-1.5 bg-background/50 backdrop-blur-sm px-3 py-1.5 rounded-full border">
                   <Users className="w-3.5 h-3.5" />
@@ -804,7 +804,7 @@ export default function LandingPage() {
                 </Button>
               </Link>
               <p className="text-center text-sm text-muted-foreground mt-4">
-                No credit card required. Cancel anytime.
+                Cancel anytime. 7-day free trial.
               </p>
             </Card>
           </motion.div>
@@ -870,7 +870,7 @@ export default function LandingPage() {
               },
               {
                 q: "How does the 7-day trial work?",
-                a: "You get full access to everything for 7 days, completely free. No credit card needed. If you love it, upgrade to keep using it. If not, no hard feelings."
+                a: "You get full access to everything for 7 days with our free trial. If you love it, you'll be billed after the trial ends. If not, cancel before the trial ends and you won't be charged."
               },
               {
                 q: "What's the streak reward?",
@@ -941,7 +941,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="text-sm opacity-70 mt-6">
-              No credit card required. Takes 60 seconds.
+              7-day free trial. Cancel anytime.
             </p>
           </motion.div>
         </div>
