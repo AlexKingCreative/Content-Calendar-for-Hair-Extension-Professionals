@@ -6,7 +6,149 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-export function exportMonthToPDF(posts: Post[], month: number, year: number = new Date().getFullYear()) {
+const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function getDaysInMonth(month: number, year: number): number {
+  return new Date(year, month, 0).getDate();
+}
+
+function getFirstDayOfMonth(month: number, year: number): number {
+  return new Date(year, month - 1, 1).getDay();
+}
+
+function addHeaderAndFooter(
+  doc: jsPDF, 
+  pageNum: number, 
+  totalPages: number, 
+  userEmail: string,
+  pageWidth: number,
+  pageHeight: number,
+  margin: number
+) {
+  doc.setPage(pageNum);
+  
+  doc.setFontSize(7);
+  doc.setTextColor(140, 140, 140);
+  doc.setFont("helvetica", "normal");
+  
+  const headerY = 0.35;
+  doc.text("ContentCalendarForHairPros.com", margin, headerY);
+  doc.text(`Licensed to: ${userEmail}`, pageWidth - margin, headerY, { align: "right" });
+  
+  const footerY = pageHeight - 0.35;
+  doc.text(`Page ${pageNum} of ${totalPages}`, pageWidth / 2, footerY, { align: "center" });
+  
+  doc.setFontSize(6);
+  doc.setTextColor(160, 160, 160);
+  doc.text("This content is licensed for personal use only and may not be redistributed, shared, or resold.", pageWidth / 2, footerY + 0.15, { align: "center" });
+}
+
+function addCalendarGridPage(
+  doc: jsPDF, 
+  posts: Post[], 
+  month: number, 
+  year: number,
+  margin: number,
+  pageWidth: number
+) {
+  const contentWidth = pageWidth - (margin * 2);
+  const daysInMonth = getDaysInMonth(month, year);
+  const firstDay = getFirstDayOfMonth(month, year);
+  
+  let yPosition = margin + 0.4;
+  
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(28);
+  doc.setTextColor(180, 130, 115);
+  doc.text(`${months[month - 1]} ${year}`, pageWidth / 2, yPosition, { align: "center" });
+  yPosition += 0.5;
+  
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.setTextColor(100, 100, 100);
+  doc.text("Content Calendar for Hair Pros", pageWidth / 2, yPosition, { align: "center" });
+  yPosition += 0.5;
+  
+  const cellWidth = contentWidth / 7;
+  const cellHeight = 1.1;
+  const gridStartX = margin;
+  const gridStartY = yPosition;
+  
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(80, 80, 80);
+  
+  for (let i = 0; i < 7; i++) {
+    const x = gridStartX + (i * cellWidth) + (cellWidth / 2);
+    doc.text(daysOfWeek[i], x, gridStartY, { align: "center" });
+  }
+  yPosition = gridStartY + 0.25;
+  
+  doc.setDrawColor(200, 200, 200);
+  doc.line(margin, yPosition, pageWidth - margin, yPosition);
+  yPosition += 0.15;
+  
+  const postsByDay: { [key: number]: Post } = {};
+  for (const post of posts) {
+    postsByDay[post.day] = post;
+  }
+  
+  let currentDay = 1;
+  let row = 0;
+  
+  while (currentDay <= daysInMonth) {
+    for (let col = 0; col < 7; col++) {
+      if ((row === 0 && col < firstDay) || currentDay > daysInMonth) {
+        continue;
+      }
+      
+      const cellX = gridStartX + (col * cellWidth);
+      const cellY = yPosition + (row * cellHeight);
+      
+      doc.setDrawColor(230, 230, 230);
+      doc.rect(cellX, cellY, cellWidth, cellHeight);
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
+      doc.text(String(currentDay), cellX + 0.08, cellY + 0.18);
+      
+      const post = postsByDay[currentDay];
+      if (post) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6);
+        doc.setTextColor(100, 100, 100);
+        
+        const maxTitleWidth = cellWidth - 0.12;
+        const titleLines = doc.splitTextToSize(post.title, maxTitleWidth);
+        const displayTitle = titleLines.slice(0, 2);
+        
+        let titleY = cellY + 0.35;
+        for (const line of displayTitle) {
+          doc.text(line, cellX + 0.06, titleY);
+          titleY += 0.12;
+        }
+        
+        doc.setFontSize(5);
+        doc.setTextColor(180, 130, 115);
+        const categoryText = post.category.length > 12 ? post.category.substring(0, 11) + "..." : post.category;
+        doc.text(categoryText, cellX + 0.06, cellY + cellHeight - 0.08);
+      }
+      
+      currentDay++;
+    }
+    row++;
+  }
+  
+  const gridEndY = yPosition + (row * cellHeight) + 0.4;
+  
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(9);
+  doc.setTextColor(120, 120, 120);
+  doc.text("Detailed post information on the following pages", pageWidth / 2, gridEndY, { align: "center" });
+}
+
+export function exportMonthToPDF(posts: Post[], month: number, userEmail: string = "Unknown", year: number = new Date().getFullYear()) {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "in",
@@ -17,21 +159,18 @@ export function exportMonthToPDF(posts: Post[], month: number, year: number = ne
   const pageHeight = 11;
   const margin = 0.75;
   const contentWidth = pageWidth - (margin * 2);
-  
-  let yPosition = margin;
   const lineHeight = 0.18;
   const postSpacing = 0.3;
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(24);
-  doc.setTextColor(180, 130, 115);
-  doc.text(`${months[month - 1]} ${year}`, margin, yPosition + 0.25);
-  yPosition += 0.5;
+  addCalendarGridPage(doc, posts, month, year, margin, pageWidth);
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.setTextColor(120, 120, 120);
-  doc.text("Content Calendar for Hair Pros", margin, yPosition);
+  doc.addPage();
+  let yPosition = margin + 0.5;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.setTextColor(180, 130, 115);
+  doc.text(`${months[month - 1]} ${year} - Daily Posts`, margin, yPosition);
   yPosition += 0.4;
 
   doc.setDrawColor(220, 220, 220);
@@ -41,11 +180,11 @@ export function exportMonthToPDF(posts: Post[], month: number, year: number = ne
   const sortedPosts = [...posts].sort((a, b) => a.day - b.day);
 
   for (const post of sortedPosts) {
-    const estimatedHeight = 0.8;
+    const estimatedHeight = 0.9;
     
-    if (yPosition + estimatedHeight > pageHeight - margin) {
+    if (yPosition + estimatedHeight > pageHeight - margin - 0.4) {
       doc.addPage();
-      yPosition = margin;
+      yPosition = margin + 0.5;
     }
 
     doc.setFont("helvetica", "bold");
@@ -63,7 +202,7 @@ export function exportMonthToPDF(posts: Post[], month: number, year: number = ne
     doc.setFontSize(9);
     doc.setTextColor(80, 80, 80);
     const descLines = doc.splitTextToSize(post.description, contentWidth);
-    const maxDescLines = 2;
+    const maxDescLines = 3;
     const displayLines = descLines.slice(0, maxDescLines);
     for (const line of displayLines) {
       doc.text(line, margin, yPosition);
@@ -72,8 +211,8 @@ export function exportMonthToPDF(posts: Post[], month: number, year: number = ne
 
     if (post.hashtags.length > 0) {
       doc.setFontSize(8);
-      doc.setTextColor(150, 100, 90);
-      const hashtagsText = post.hashtags.slice(0, 5).join(" ");
+      doc.setTextColor(180, 130, 115);
+      const hashtagsText = post.hashtags.slice(0, 6).join(" ");
       doc.text(hashtagsText, margin, yPosition);
       yPosition += lineHeight;
     }
@@ -81,13 +220,9 @@ export function exportMonthToPDF(posts: Post[], month: number, year: number = ne
     yPosition += postSpacing;
   }
 
-  doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
-  const footerY = pageHeight - 0.5;
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, footerY, { align: "center" });
+    addHeaderAndFooter(doc, i, pageCount, userEmail, pageWidth, pageHeight, margin);
   }
 
   doc.save(`content-calendar-${months[month - 1].toLowerCase()}-${year}.pdf`);

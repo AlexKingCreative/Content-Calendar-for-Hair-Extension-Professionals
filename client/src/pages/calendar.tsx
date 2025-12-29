@@ -33,6 +33,7 @@ interface User {
   id: string;
   name?: string;
   username?: string;
+  email?: string;
 }
 
 interface UserProfile {
@@ -339,7 +340,7 @@ export default function CalendarPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => exportMonthToPDF(monthPosts, selectedMonth)}
+                  onClick={() => exportMonthToPDF(monthPosts, selectedMonth, user?.email || "Unknown")}
                   data-testid="button-export-pdf-mobile"
                   className="touch-target sm:hidden"
                 >
@@ -385,7 +386,7 @@ export default function CalendarPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => exportMonthToPDF(monthPosts, selectedMonth)}
+                      onClick={() => exportMonthToPDF(monthPosts, selectedMonth, user?.email || "Unknown")}
                       data-testid="button-export-pdf"
                       className="hidden sm:flex"
                     >
