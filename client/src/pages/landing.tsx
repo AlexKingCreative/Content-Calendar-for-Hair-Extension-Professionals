@@ -181,17 +181,20 @@ export default function LandingPage() {
         <div className="relative max-w-6xl mx-auto px-4 py-16 sm:py-24">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
-              {/* The One-Liner: What you offer + How it helps them */}
+              {/* The One-Liner: What it is + the result */}
+              <p className="text-sm font-medium text-primary uppercase tracking-wide mb-3">
+                Daily Content Ideas for Hair Pros
+              </p>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
-                <span className="block">Attract Premium Clients.</span>
+                <span className="block">Know What to Post.</span>
                 <span className="block bg-gradient-to-r from-primary via-rose-500 to-amber-500 bg-clip-text text-transparent">
-                  Get Recognized.
+                  Every Single Day.
                 </span>
               </h1>
               
-              {/* Stakes: What's at risk / the problem in one line */}
+              {/* Clear value prop */}
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl lg:max-w-none mb-8">
-                You're amazing at hair. But figuring out what to post every day? That's exhausting. We give you 365 days of done-for-you content ideas so you can grow your following and become the go-to stylist in your area.
+                365 days of done-for-you social media post ideas for cutting, coloring, extensions, toppers, and wigs. Stop guessing. Start posting. Attract premium clients and get recognized.
               </p>
               
               {/* Direct CTA */}
