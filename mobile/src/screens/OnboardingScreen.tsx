@@ -18,9 +18,196 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../navigation';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const serviceIconsImage = require('../../assets/icons/service-icons-combined.jpeg');
+
+const CONFETTI_COLORS = ['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#f59e0b', '#10b981', '#D4A574', '#E8B4A0'];
+
+const ConfettiPiece = ({ delay, color, startX }: { delay: number; color: string; startX: number }) => {
+  const fallAnim = useRef(new Animated.Value(0)).current;
+  const swayAnim = useRef(new Animated.Value(0)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  
+  React.useEffect(() => {
+    const startAnimation = () => {
+      Animated.parallel([
+        Animated.timing(fallAnim, {
+          toValue: height + 50,
+          duration: 3000 + Math.random() * 1000,
+          delay,
+          useNativeDriver: true,
+        }),
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(swayAnim, {
+              toValue: 30,
+              duration: 500,
+              useNativeDriver: true,
+            }),
+            Animated.timing(swayAnim, {
+              toValue: -30,
+              duration: 500,
+              useNativeDriver: true,
+            }),
+          ])
+        ),
+        Animated.loop(
+          Animated.timing(rotateAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          })
+        ),
+      ]).start();
+    };
+    startAnimation();
+  }, []);
+  
+  const rotate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+  
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        left: startX,
+        top: -20,
+        width: 10 + Math.random() * 8,
+        height: 10 + Math.random() * 8,
+        backgroundColor: color,
+        borderRadius: Math.random() > 0.5 ? 50 : 2,
+        transform: [
+          { translateY: fallAnim },
+          { translateX: swayAnim },
+          { rotate },
+        ],
+      }}
+    />
+  );
+};
+
+const CelebrationAnimation = ({ onComplete }: { onComplete: () => void }) => {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const checkAnim = useRef(new Animated.Value(0)).current;
+  
+  React.useEffect(() => {
+    Animated.sequence([
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 5,
+          tension: 80,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(checkAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    
+    const timer = setTimeout(onComplete, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+  
+  const confettiPieces = React.useMemo(() => 
+    Array.from({ length: 50 }).map((_, i) => ({
+      id: i,
+      delay: Math.random() * 500,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      startX: Math.random() * width,
+    })),
+  []);
+  
+  return (
+    <View style={celebrationStyles.container}>
+      {confettiPieces.map(piece => (
+        <ConfettiPiece 
+          key={piece.id} 
+          delay={piece.delay} 
+          color={piece.color} 
+          startX={piece.startX} 
+        />
+      ))}
+      
+      <Animated.View style={[celebrationStyles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+        <View style={celebrationStyles.iconContainer}>
+          <Animated.View style={{ opacity: checkAnim, transform: [{ scale: checkAnim }] }}>
+            <Ionicons name="checkmark" size={48} color="#FFFFFF" />
+          </Animated.View>
+        </View>
+        <Text style={celebrationStyles.title}>You're All Set!</Text>
+        <Text style={celebrationStyles.subtitle}>Your personalized content calendar is ready</Text>
+        <View style={celebrationStyles.starsRow}>
+          <Ionicons name="star" size={20} color="#f59e0b" />
+          <Text style={celebrationStyles.encouragement}>Let's create amazing content!</Text>
+          <Ionicons name="star" size={20} color="#f59e0b" />
+        </View>
+      </Animated.View>
+    </View>
+  );
+};
+
+const celebrationStyles = StyleSheet.create({
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#FAF7F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  content: {
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  iconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#D4A574',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    shadowColor: '#D4A574',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#2D1810',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#8B7355',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  starsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  encouragement: {
+    fontSize: 14,
+    color: '#A89580',
+    fontWeight: '500',
+  },
+});
 
 const SERVICE_CATEGORIES = [
   { 
@@ -144,6 +331,7 @@ type OnboardingData = {
 export default function OnboardingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [step, setStep] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
   const [data, setData] = useState<OnboardingData>({
     services: [],
     location: '',
@@ -216,8 +404,12 @@ export default function OnboardingScreen() {
       setStep(nextStep);
       animateProgress(nextStep);
     } else {
-      navigation.navigate('Register');
+      setShowCelebration(true);
     }
+  };
+  
+  const handleCelebrationComplete = () => {
+    navigation.navigate('Register');
   };
 
   const handleBack = () => {
@@ -475,6 +667,10 @@ export default function OnboardingScreen() {
     }
   };
 
+  if (showCelebration) {
+    return <CelebrationAnimation onComplete={handleCelebrationComplete} />;
+  }
+  
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
