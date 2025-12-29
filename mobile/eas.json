@@ -20,9 +20,9 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "",
-        "ascAppId": "",
-        "appleTeamId": ""
+        "appleId": "hello@hairpro360.com",
+        "ascAppId": "6757116246",
+        "appleTeamId": "c4526547-a864-4c33-a0ef-566ee9b5d7b1"
       }
     }
   }
