@@ -790,7 +790,7 @@ export default function OnboardingPage() {
       
       {showBuildingAnimation && (
         <BuildingScheduleAnimation
-          duration={3000}
+          duration={5000}
           onComplete={() => {
             setShowBuildingAnimation(false);
             setShowTrialModal(true);
