@@ -11,6 +11,7 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -19,43 +20,76 @@ import { AuthStackParamList } from '../navigation';
 
 const { width } = Dimensions.get('window');
 
+const serviceIconsImage = require('../../assets/icons/service-icons-combined.jpeg');
+
 const SERVICE_CATEGORIES = [
   { 
     id: 'extensions', 
     label: 'Hair Extensions', 
-    icon: 'sparkles' as const,
+    iconIndex: 0,
     description: 'Tape-ins, sew-ins, fusion, etc.',
     color: '#E8B4A0',
   },
   { 
     id: 'toppers', 
     label: 'Hair Toppers', 
-    icon: 'flower' as const,
+    iconIndex: 1,
     description: 'Coverage for thinning hair',
     color: '#D4A574',
   },
   { 
     id: 'wigs', 
     label: 'Wigs & Units', 
-    icon: 'heart' as const,
+    iconIndex: 2,
     description: 'Full coverage solutions',
     color: '#C9A67A',
   },
   { 
     id: 'coloring', 
     label: 'Color Services', 
-    icon: 'color-palette' as const,
+    iconIndex: 3,
     description: 'Balayage, highlights, color',
     color: '#B8A090',
   },
   { 
     id: 'cutting', 
     label: 'Cut & Style', 
-    icon: 'cut' as const,
+    iconIndex: 4,
     description: 'Haircuts and styling',
     color: '#A89580',
   },
 ];
+
+const ServiceIcon = ({ iconIndex, size = 48, selected }: { iconIndex: number; size?: number; selected?: boolean }) => {
+  const iconWidth = 180;
+  const iconHeight = 180;
+  const imageWidth = 1024;
+  const spacing = 24;
+  const startX = 32;
+  
+  const xOffset = startX + (iconIndex * (iconWidth + spacing));
+  
+  return (
+    <View style={{ 
+      width: size, 
+      height: size, 
+      overflow: 'hidden',
+      borderRadius: 12,
+      backgroundColor: selected ? '#FDF5F0' : '#FAF7F5',
+    }}>
+      <Image
+        source={serviceIconsImage}
+        style={{
+          width: imageWidth * (size / iconHeight),
+          height: size,
+          marginLeft: -xOffset * (size / iconHeight),
+          marginTop: -40 * (size / iconHeight),
+        }}
+        resizeMode="cover"
+      />
+    </View>
+  );
+};
 
 const EXPERIENCE_LEVELS = [
   { id: 'new', label: 'Just Starting Out', description: 'Less than 1 year' },
@@ -234,13 +268,11 @@ export default function OnboardingScreen() {
                   ]}
                   onPress={() => toggleService(service.id)}
                 >
-                  <View style={[styles.serviceIconContainer, { backgroundColor: service.color + '20' }]}>
-                    <Ionicons
-                      name={service.icon}
-                      size={28}
-                      color={data.services.includes(service.id) ? '#D4A574' : service.color}
-                    />
-                  </View>
+                  <ServiceIcon 
+                    iconIndex={service.iconIndex} 
+                    size={52} 
+                    selected={data.services.includes(service.id)}
+                  />
                   <View style={styles.serviceTextContainer}>
                     <Text
                       style={[
