@@ -713,12 +713,28 @@ export async function registerRoutes(
       const hasPostedToday = await storage.hasPostedToday(userId, today);
       const logs = await storage.getPostingLogs(userId, 30);
       
+      // Check for Instagram post today
+      let hasInstagramPostToday = false;
+      let instagramConnected = false;
+      try {
+        const igAccount = await storage.getInstagramAccount(userId);
+        if (igAccount && igAccount.isActive) {
+          instagramConnected = true;
+          hasInstagramPostToday = await storage.hasInstagramPostOnDate(userId, today);
+        }
+      } catch (e) {
+        // Instagram not connected or error
+      }
+      
       res.json({
         currentStreak: profile?.currentStreak || 0,
         longestStreak: profile?.longestStreak || 0,
         totalPosts: profile?.totalPosts || 0,
         postingGoal: profile?.postingGoal || "casual",
-        hasPostedToday,
+        hasPostedToday: hasPostedToday || hasInstagramPostToday,
+        hasManualPostToday: hasPostedToday,
+        hasInstagramPostToday,
+        instagramConnected,
         recentLogs: logs.map(l => l.date),
       });
     } catch (error) {
@@ -2306,8 +2322,21 @@ Respond in JSON format with these fields:
         return res.status(401).json({ error: "Unauthorized" });
       }
       
-      const state = Buffer.from(JSON.stringify({ userId, timestamp: Date.now() })).toString('base64');
-      const authUrl = instagramService.getAuthUrl(state);
+      // Generate a random state token for CSRF protection
+      const crypto = await import('crypto');
+      const stateToken = crypto.randomBytes(32).toString('hex');
+      const stateData = Buffer.from(JSON.stringify({ userId, token: stateToken, timestamp: Date.now() })).toString('base64');
+      
+      // Store state token in session for validation on callback
+      req.session.instagramOAuthState = stateToken;
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err: any) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+      
+      const authUrl = instagramService.getAuthUrl(stateData);
       
       res.json({ authUrl });
     } catch (error) {
@@ -2333,9 +2362,21 @@ Respond in JSON format with these fields:
       }
       
       const userId = stateData.userId;
-      if (!userId) {
+      const stateToken = stateData.token;
+      
+      if (!userId || !stateToken) {
         return res.redirect("/?instagram_error=invalid_user");
       }
+      
+      // Validate state token against session (CSRF protection)
+      const sessionState = req.session?.instagramOAuthState;
+      if (!sessionState || sessionState !== stateToken) {
+        console.error("Instagram OAuth state mismatch - possible CSRF attempt");
+        return res.redirect("/?instagram_error=state_mismatch");
+      }
+      
+      // Clear the state token from session
+      delete req.session.instagramOAuthState;
       
       // Exchange code for token
       const tokenData = await instagramService.exchangeCodeForToken(code as string);

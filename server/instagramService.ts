@@ -179,6 +179,7 @@ export class InstagramService {
     const media = await this.getRecentMedia(account.instagramUserId, account.accessToken, 50);
     let synced = 0;
     let newPosts = 0;
+    const today = new Date().toISOString().split('T')[0];
 
     for (const item of media) {
       const postDate = new Date(item.timestamp).toISOString().split('T')[0];
@@ -188,6 +189,19 @@ export class InstagramService {
       
       if (isNew) {
         newPosts++;
+        
+        // Auto-log post for streak if it's from today or recent
+        // Only log if not already manually logged for that date
+        try {
+          const hasManualLog = await storage.hasPostedToday(userId, postDate);
+          if (!hasManualLog) {
+            await storage.logPost(userId, postDate, undefined);
+            await storage.updateStreak(userId);
+          }
+        } catch (e) {
+          // Streak logging failed, continue with media sync
+          console.error("Failed to auto-log Instagram post for streak:", e);
+        }
       }
 
       const insights = await this.getMediaInsights(item.id, account.accessToken);

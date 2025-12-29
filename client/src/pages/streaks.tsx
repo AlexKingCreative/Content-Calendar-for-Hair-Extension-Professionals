@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, differenceInDays } from "date-fns";
-import { ArrowLeft, Flame, Star, Trophy, Crown, Gem, Medal, Rocket, Sparkles, Check, Calendar, Target, TrendingUp, Award, Play, X, Heart, Loader2 } from "lucide-react";
+import { ArrowLeft, Flame, Star, Trophy, Crown, Gem, Medal, Rocket, Sparkles, Check, Calendar, Target, TrendingUp, Award, Play, X, Heart, Loader2, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -22,6 +22,9 @@ interface StreakData {
   totalPosts: number;
   postingGoal: PostingGoal;
   hasPostedToday: boolean;
+  hasManualPostToday?: boolean;
+  hasInstagramPostToday?: boolean;
+  instagramConnected?: boolean;
   recentLogs: string[];
 }
 
@@ -269,21 +272,48 @@ export default function StreaksPage() {
           </div>
 
           {streak?.hasPostedToday ? (
-            <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-green-500/10 text-green-700 dark:text-green-400">
-              <Check className="w-5 h-5" />
-              <span className="font-medium">You've posted today!</span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-green-500/10 text-green-700 dark:text-green-400">
+                <Check className="w-5 h-5" />
+                <span className="font-medium">You've posted today!</span>
+              </div>
+              {streak?.hasInstagramPostToday && (
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Instagram className="w-4 h-4" />
+                  <span>Detected from your Instagram</span>
+                </div>
+              )}
             </div>
           ) : (
-            <Button
-              onClick={() => logPostMutation.mutate()}
-              disabled={logPostMutation.isPending}
-              className="w-full"
-              size="lg"
-              data-testid="button-log-post"
-            >
-              <Calendar className="w-5 h-5 mr-2" />
-              {logPostMutation.isPending ? "Logging..." : "I Posted Today!"}
-            </Button>
+            <div className="space-y-3">
+              <Button
+                onClick={() => logPostMutation.mutate()}
+                disabled={logPostMutation.isPending}
+                className="w-full"
+                size="lg"
+                data-testid="button-log-post"
+              >
+                <Calendar className="w-5 h-5 mr-2" />
+                {logPostMutation.isPending ? "Logging..." : "I Posted Today!"}
+              </Button>
+              {streak?.instagramConnected && (
+                <p className="text-xs text-center text-muted-foreground">
+                  Your Instagram posts are tracked automatically
+                </p>
+              )}
+              {!streak?.instagramConnected && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setLocation("/account")}
+                  data-testid="button-connect-instagram-cta"
+                >
+                  <Instagram className="w-4 h-4 mr-2" />
+                  Connect Instagram for auto-tracking
+                </Button>
+              )}
+            </div>
           )}
         </div>
 
