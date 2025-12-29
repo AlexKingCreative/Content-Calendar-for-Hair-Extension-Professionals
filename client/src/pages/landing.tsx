@@ -518,47 +518,49 @@ export default function LandingPage() {
             >
               <Badge variant="secondary" className="mb-4">
                 <Heart className="w-3 h-3 mr-1" />
-                We Get It
+                Meet the Creator
               </Badge>
               <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-                We Know How Hard It Is
+                Built by a Stylist, for Stylists
               </h2>
               <p className="text-muted-foreground mb-4">
-                This app was created by Ashley Diana, founder of Rich Stylist Academy and a hair pro who has coached thousands of stylists to grow their businesses.
+                Hi, I'm Ashley Diana! I'm the founder of Rich Stylist Academy and I've spent years helping hairstylists grow on social media to attract premium clients and create their dream business.
               </p>
               <p className="text-muted-foreground mb-6">
-                She saw the same problem over and over: incredibly talented stylists who couldn't stay consistent on social media because they didn't know what to post.
+                I saw the same problem over and over: incredibly talented stylists who couldn't stay consistent on social media because they didn't know what to post.
               </p>
               <p className="font-medium text-lg">
-                So she built a solution. A full year of content ideas, made specifically for hair professionals.
+                So I built this app for you. Fresh content ideas every month, made specifically for hair professionals like us.
               </p>
-              <div className="mt-8">
-                <Link href="/about">
-                  <Button variant="outline" size="lg" className="gap-2" data-testid="button-meet-ashley">
+              <div className="mt-8 flex items-center gap-4">
+                <a href="https://instagram.com/missashleyhair" target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="lg" className="gap-2" data-testid="button-follow-ashley">
                     <Instagram className="w-4 h-4" />
-                    Meet Ashley
+                    @missashleyhair
                   </Button>
-                </Link>
+                </a>
               </div>
             </motion.div>
             <motion.div 
-              className="text-center"
+              className="flex justify-center"
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <div className="inline-block p-10 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-3xl border border-primary/10">
-                <div className="text-6xl sm:text-7xl font-bold bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent mb-2">
-                  <AnimatedCounter value={31} />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-rose-500/20 rounded-3xl blur-2xl scale-95" />
+                <img 
+                  src="/attached_assets/IMG_5580_1767050115161.JPG" 
+                  alt="Ashley Diana - Founder of Rich Stylist Academy" 
+                  className="relative w-80 h-96 object-cover object-top rounded-3xl border-4 border-background shadow-2xl"
+                />
+                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2">
+                  <Badge className="px-4 py-2 shadow-lg bg-background text-foreground border">
+                    <Star className="w-3.5 h-3.5 mr-1.5 fill-amber-400 text-amber-400" />
+                    Rich Stylist Academy
+                  </Badge>
                 </div>
-                <p className="text-muted-foreground text-lg">fresh post ideas every month</p>
-                <div className="flex justify-center gap-1 mt-6">
-                  {[1,2,3,4,5].map((i) => (
-                    <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">Created by hair pros, for hair pros</p>
               </div>
             </motion.div>
           </div>
