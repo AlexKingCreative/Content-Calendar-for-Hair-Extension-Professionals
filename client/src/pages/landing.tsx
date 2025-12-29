@@ -158,7 +158,6 @@ const comparisonData = [
   { feature: "Hair extension focused content", us: true, others: false },
   { feature: "Daily push notification reminders", us: true, others: false },
   { feature: "Streak tracking & badges", us: true, others: false },
-  { feature: "Works offline", us: true, others: false },
 ];
 
 export default function LandingPage() {
@@ -301,10 +300,6 @@ export default function LandingPage() {
                 <span className="flex items-center gap-1.5">
                   <Check className="w-4 h-4 text-emerald-500" />
                   No credit card required
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Check className="w-4 h-4 text-emerald-500" />
-                  Works offline
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Check className="w-4 h-4 text-emerald-500" />
