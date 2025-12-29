@@ -295,6 +295,59 @@ router.post('/streak/log', authenticateMobile, async (req: any, res) => {
   }
 });
 
+router.post('/challenges/:challengeId/start', authenticateMobile, async (req: any, res) => {
+  try {
+    const userId = req.mobileUserId;
+    const challengeId = parseInt(req.params.challengeId);
+    
+    if (isNaN(challengeId)) {
+      return res.status(400).json({ error: 'Invalid challenge ID' });
+    }
+    
+    const challenge = await storage.getChallengeById(challengeId);
+    if (!challenge) {
+      return res.status(404).json({ error: 'Challenge not found' });
+    }
+    
+    const existing = await storage.getActiveUserChallengeForChallenge(userId, challengeId);
+    if (existing) {
+      return res.status(400).json({ error: 'You already have this challenge active' });
+    }
+    
+    const userChallenge = await storage.startChallenge(userId, challengeId);
+    res.json({ ...userChallenge, challenge });
+  } catch (error) {
+    console.error('Mobile start challenge error:', error);
+    res.status(500).json({ error: 'Failed to start challenge' });
+  }
+});
+
+router.post('/user/challenges/:id/progress', authenticateMobile, async (req: any, res) => {
+  try {
+    const userId = req.mobileUserId;
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid user challenge ID' });
+    }
+    
+    const userChallenge = await storage.getUserChallengeById(id);
+    if (!userChallenge || userChallenge.userId !== userId) {
+      return res.status(404).json({ error: 'Challenge not found' });
+    }
+    
+    if (userChallenge.status !== 'active') {
+      return res.status(400).json({ error: 'Challenge is not active' });
+    }
+    
+    const updated = await storage.logChallengeProgress(id);
+    res.json(updated);
+  } catch (error) {
+    console.error('Mobile log challenge progress error:', error);
+    res.status(500).json({ error: 'Failed to log progress' });
+  }
+});
+
 router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
   try {
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;

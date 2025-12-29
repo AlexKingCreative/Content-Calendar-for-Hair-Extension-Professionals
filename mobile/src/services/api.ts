@@ -130,11 +130,11 @@ export const challengesApi = {
     return response.data;
   },
   start: async (challengeId: number) => {
-    const response = await api.post(`/api/challenges/${challengeId}/start`, {});
+    const response = await api.post(`/api/mobile/challenges/${challengeId}/start`, {});
     return response.data;
   },
   logProgress: async (userChallengeId: number) => {
-    const response = await api.post(`/api/user/challenges/${userChallengeId}/progress`, {});
+    const response = await api.post(`/api/mobile/user/challenges/${userChallengeId}/progress`, {});
     return response.data;
   },
   abandon: async (userChallengeId: number) => {
