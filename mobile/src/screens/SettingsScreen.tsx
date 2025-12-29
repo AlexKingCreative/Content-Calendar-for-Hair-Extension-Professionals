@@ -112,9 +112,6 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleInstagramAnalytics = () => {
-    openLink(`${API_URL}/instagram`);
-  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -131,10 +128,12 @@ export default function SettingsScreen() {
             <Text style={styles.menuText}>Upgrade Plan</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={handleInstagramAnalytics}>
+          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={() => Alert.alert('Coming Soon', 'Instagram Analytics will be available in a future update.')}>
             <Ionicons name="logo-instagram" size={22} color={colors.text} />
             <Text style={styles.menuText}>Instagram Analytics</Text>
-            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+            <View style={styles.comingSoonBadge}>
+              <Text style={styles.comingSoonText}>Coming Soon</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -298,5 +297,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: spacing.xxl,
     marginBottom: spacing.lg,
+  },
+  comingSoonBadge: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: borderRadius.pill,
+  },
+  comingSoonText: {
+    color: colors.textOnPrimary,
+    fontSize: 10,
+    fontWeight: '600',
   },
 });
