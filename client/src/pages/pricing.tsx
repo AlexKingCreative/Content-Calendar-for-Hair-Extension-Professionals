@@ -80,9 +80,16 @@ export default function PricingPage() {
               <CardDescription>Perfect for solo stylists</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-6">
-                <span className="text-3xl font-bold text-foreground">$10</span>
-                <span className="text-muted-foreground">/month</span>
+              <div className="mb-4 space-y-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold text-foreground">$9.99</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-semibold text-foreground">$60</span>
+                  <span className="text-muted-foreground">/year</span>
+                  <Badge variant="secondary" className="text-xs">Save 50%</Badge>
+                </div>
               </div>
               
               <ul className="space-y-3 mb-6">
