@@ -37,6 +37,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { LandingAnimation } from "@/components/LandingAnimation";
 import { CalendarDemo, AICaptionDemo, StreakDemo, InstagramDemo, HashtagDemo } from "@/components/LandingDemos";
+import denaePhoto from "@assets/Denae_Tafoya_1767024771840.jpg";
+import danniPhoto from "@assets/Dannielle_Vizzini_1767024800600.jpg";
 
 function AnimatedCounter({ value, duration = 2000 }: { value: number; duration?: number }) {
   const [count, setCount] = useState(0);
@@ -70,22 +72,24 @@ const staggerContainer = {
 
 const testimonials = [
   {
-    name: "Sarah Mitchell",
-    role: "Extension Specialist",
-    location: "Los Angeles, CA",
-    avatar: "SM",
+    name: "Denae Tafoya",
+    role: "Hair Extensionist",
+    location: "Denver, CO",
+    avatar: "DT",
+    photo: denaePhoto,
     rating: 5,
-    problem: "I was posting randomly and attracting budget clients.",
-    transformation: "Now I'm booked 6 weeks out with premium clients who pay my full price. My engagement doubled and I'm finally known as THE extension specialist in LA!",
+    problem: "I struggled to come up with fresh content ideas every day.",
+    transformation: "Now I have a whole year of content planned out! The daily prompts keep me inspired and my clients love seeing consistent, professional posts.",
   },
   {
-    name: "Jessica Turner",
+    name: "Danni V",
     role: "Salon Owner",
-    location: "Miami, FL",
-    avatar: "JT",
+    location: "Florida",
+    avatar: "DV",
+    photo: danniPhoto,
     rating: 5,
-    problem: "Nobody outside my neighborhood knew who I was.",
-    transformation: "The personalized hashtags helped me get discovered. I've been featured in a local magazine and my following grew by 3,000 in two months!",
+    problem: "Getting my team to post consistently was like pulling teeth.",
+    transformation: "Now we use the app to inspire and reward our team members. The streak challenges turned social media into a fun competition and everyone's engaged!",
   },
   {
     name: "Amanda Rodriguez",
@@ -790,9 +794,18 @@ export default function LandingPage() {
               <motion.div key={index} variants={fadeInUp}>
                 <Card className="p-6 h-full hover-elevate" data-testid={`testimonial-card-${index}`}>
                   <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary font-semibold flex-shrink-0 text-lg">
-                      {testimonial.avatar}
-                    </div>
+                    {testimonial.photo ? (
+                      <img 
+                        src={testimonial.photo} 
+                        alt={testimonial.name}
+                        className="w-14 h-14 rounded-2xl object-cover flex-shrink-0"
+                        data-testid={`img-testimonial-${index}`}
+                      />
+                    ) : (
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary font-semibold flex-shrink-0 text-lg">
+                        {testimonial.avatar}
+                      </div>
+                    )}
                     <div className="flex-1">
                       <div className="flex items-center gap-1 mb-3">
                         {Array.from({ length: testimonial.rating }).map((_, i) => (
