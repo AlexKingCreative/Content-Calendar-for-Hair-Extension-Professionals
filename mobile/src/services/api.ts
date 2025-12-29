@@ -91,7 +91,7 @@ export const streakApi = {
     return response.data;
   },
   logPost: async (postId?: number) => {
-    const response = await api.post('/api/streak/log', { postId });
+    const response = await api.post('/api/mobile/streak/log', { postId });
     return response.data;
   },
 };

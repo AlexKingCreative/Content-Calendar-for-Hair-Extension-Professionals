@@ -5,6 +5,7 @@ import { db } from './db';
 import { users } from '@shared/models/auth';
 import { userProfiles } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import { storage } from './storage';
 
 const router = Router();
 
@@ -211,6 +212,31 @@ router.put('/profile', authenticateMobile, async (req: any, res) => {
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ message: 'Failed to update profile' });
+  }
+});
+
+router.post('/streak/log', authenticateMobile, async (req: any, res) => {
+  try {
+    const userId = req.mobileUserId;
+    const today = new Date().toISOString().split('T')[0];
+    const { postId } = req.body;
+    
+    const hasPosted = await storage.hasPostedToday(userId, today);
+    if (hasPosted) {
+      return res.status(400).json({ error: "Already logged a post today" });
+    }
+    
+    await storage.logPost(userId, today, postId);
+    const profile = await storage.updateStreak(userId);
+    
+    res.json({ 
+      success: true, 
+      currentStreak: profile?.currentStreak || 0,
+      longestStreak: profile?.longestStreak || 0
+    });
+  } catch (error) {
+    console.error('Mobile streak log error:', error);
+    res.status(500).json({ error: 'Failed to log post' });
   }
 });
 
