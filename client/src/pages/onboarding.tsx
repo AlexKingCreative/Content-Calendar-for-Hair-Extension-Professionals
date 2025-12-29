@@ -194,16 +194,6 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleSkip = () => {
-    if (isLoggedIn) {
-      saveMutation.mutate();
-    } else if (email) {
-      onboardMutation.mutate();
-    } else {
-      setLocation("/calendar");
-    }
-  };
-
   const getServiceIcon = (service: string) => {
     switch (service) {
       case "Cutting Services":
@@ -485,14 +475,10 @@ export default function OnboardingPage() {
 
           <div className="flex justify-between pt-4">
             <div>
-              {(isLoggedIn && step > 1) || (!isLoggedIn && step > 1) ? (
+              {step > 1 && (
                 <Button variant="ghost" onClick={handleBack} data-testid="button-back">
                   <ChevronLeft className="w-4 h-4 mr-1" />
                   Back
-                </Button>
-              ) : (
-                <Button variant="ghost" onClick={handleSkip} data-testid="button-skip">
-                  Skip for now
                 </Button>
               )}
             </div>
