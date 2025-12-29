@@ -6,14 +6,15 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Modal,
+  Switch,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
-import { stripeApi, profileApi, streakApi } from '../services/api';
+import { stripeApi, profileApi } from '../services/api';
 
 const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://content-calendar-hair-pro.replit.app';
 
@@ -22,36 +23,29 @@ interface Profile {
   longestStreak: number;
   totalPosts: number;
   postingGoal: string;
-  certifiedBrands: string[];
-  extensionMethods: string[];
-  city: string;
+  showStreaks: boolean;
+  pushNotifications: boolean;
 }
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
   const queryClient = useQueryClient();
-  const [showGoalModal, setShowGoalModal] = useState(false);
+  const [showStreaks, setShowStreaks] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(false);
 
   const { data: profile } = useQuery<Profile>({
     queryKey: ['profile'],
     queryFn: profileApi.get,
+    onSuccess: (data: Profile) => {
+      if (data?.showStreaks !== undefined) setShowStreaks(data.showStreaks);
+      if (data?.pushNotifications !== undefined) setPushNotifications(data.pushNotifications);
+    },
   });
 
-  const { data: streakData } = useQuery({
-    queryKey: ['streak'],
-    queryFn: streakApi.get,
-  });
-
-  const updateGoalMutation = useMutation({
-    mutationFn: (postingGoal: string) => profileApi.update({ postingGoal }),
+  const updatePreferenceMutation = useMutation({
+    mutationFn: (data: Partial<Profile>) => profileApi.update(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['streak'] });
-      setShowGoalModal(false);
-      Alert.alert('Success', 'Your posting goal has been updated');
-    },
-    onError: (error: any) => {
-      Alert.alert('Error', error?.response?.data?.message || 'Failed to update posting goal');
     },
   });
 
@@ -83,164 +77,108 @@ export default function SettingsScreen() {
     await WebBrowser.openBrowserAsync(url);
   };
 
+  const toggleShowStreaks = (value: boolean) => {
+    setShowStreaks(value);
+    updatePreferenceMutation.mutate({ showStreaks: value });
+  };
+
+  const togglePushNotifications = (value: boolean) => {
+    setPushNotifications(value);
+    updatePreferenceMutation.mutate({ pushNotifications: value });
+  };
+
+  const handleManageAccount = () => {
+    openLink(`${API_URL}/account`);
+  };
+
+  const handleInstagramAnalytics = () => {
+    openLink(`${API_URL}/instagram`);
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
+        <Text style={styles.sectionTitle}>ACCOUNT</Text>
         <View style={styles.card}>
-          <View style={styles.userInfo}>
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={32} color="#D4A574" />
+          <TouchableOpacity style={styles.menuItem} onPress={handleManageAccount}>
+            <Ionicons name="person-outline" size={22} color="#5D4E3C" />
+            <Text style={styles.menuText}>Manage Account</Text>
+            <Ionicons name="chevron-forward" size={20} color="#A89580" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={handleUpgrade}>
+            <Ionicons name="diamond-outline" size={22} color="#5D4E3C" />
+            <Text style={styles.menuText}>Upgrade Plan</Text>
+            <Ionicons name="chevron-forward" size={20} color="#A89580" />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={handleInstagramAnalytics}>
+            <Ionicons name="logo-instagram" size={22} color="#5D4E3C" />
+            <Text style={styles.menuText}>Instagram Analytics</Text>
+            <Ionicons name="chevron-forward" size={20} color="#A89580" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>PREFERENCES</Text>
+        <View style={styles.card}>
+          <View style={styles.switchItem}>
+            <View style={styles.switchLeft}>
+              <Ionicons name="flame-outline" size={22} color="#5D4E3C" />
+              <View style={styles.switchTextContainer}>
+                <Text style={styles.switchTitle}>Show Streaks</Text>
+                <Text style={styles.switchDescription}>Display your posting streak on calendar</Text>
+              </View>
             </View>
-            <View>
-              <Text style={styles.userName}>{user?.name || 'Hair Professional'}</Text>
-              <Text style={styles.userEmail}>{user?.email}</Text>
+            <Switch
+              value={showStreaks}
+              onValueChange={toggleShowStreaks}
+              trackColor={{ false: '#E5D5C5', true: '#D4A574' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+          <View style={[styles.switchItem, styles.menuItemLast]}>
+            <View style={styles.switchLeft}>
+              <Ionicons name="notifications-outline" size={22} color="#5D4E3C" />
+              <View style={styles.switchTextContainer}>
+                <Text style={styles.switchTitle}>Push Notifications</Text>
+                <Text style={styles.switchDescription}>Get reminders to post</Text>
+              </View>
             </View>
+            <Switch
+              value={pushNotifications}
+              onValueChange={togglePushNotifications}
+              trackColor={{ false: '#E5D5C5', true: '#D4A574' }}
+              thumbColor="#FFFFFF"
+            />
           </View>
         </View>
       </View>
 
-      {streakData && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Progress</Text>
-          <View style={styles.card}>
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Ionicons name="flame" size={20} color="#D4A574" />
-                <Text style={styles.statNumber}>{streakData.currentStreak}</Text>
-                <Text style={styles.statLabel}>Day Streak</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Ionicons name="trophy" size={20} color="#D4A574" />
-                <Text style={styles.statNumber}>{streakData.longestStreak}</Text>
-                <Text style={styles.statLabel}>Best Streak</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Ionicons name="checkmark-circle" size={20} color="#D4A574" />
-                <Text style={styles.statNumber}>{streakData.totalPosts}</Text>
-                <Text style={styles.statLabel}>Total Posts</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      )}
-
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Posting Goal</Text>
-        <TouchableOpacity 
-          style={styles.goalCard}
-          onPress={() => setShowGoalModal(true)}
-        >
-          <View style={styles.goalContent}>
-            <Ionicons name="calendar" size={24} color="#D4A574" />
-            <View style={styles.goalText}>
-              <Text style={styles.goalTitle}>
-                {profile?.postingGoal === 'daily' ? 'Daily' : 
-                 profile?.postingGoal === 'casual' ? 'Casual (3-4x/week)' : 
-                 'Occasional (1-2x/week)'}
-              </Text>
-              <Text style={styles.goalDescription}>Tap to change your posting goal</Text>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#D4A574" />
+        <TouchableOpacity style={styles.notificationRow} onPress={() => openLink(`${API_URL}/notifications`)}>
+          <Ionicons name="notifications" size={22} color="#5D4E3C" />
+          <Text style={styles.menuText}>Notifications</Text>
+          <Ionicons name="chevron-forward" size={20} color="#A89580" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Subscription</Text>
-        <TouchableOpacity style={styles.upgradeCard} onPress={handleUpgrade}>
-          <View style={styles.upgradeContent}>
-            <Ionicons name="star" size={24} color="#D4A574" />
-            <View style={styles.upgradeText}>
-              <Text style={styles.upgradeTitle}>Upgrade to Pro</Text>
-              <Text style={styles.upgradeDescription}>
-                Get AI-generated captions and unlimited access
-              </Text>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#D4A574" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Support</Text>
+        <Text style={styles.sectionTitle}>SUPPORT</Text>
         <View style={styles.card}>
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => openLink(`${API_URL}/contact`)}
-          >
-            <Ionicons name="mail-outline" size={20} color="#5D4E3C" />
-            <Text style={styles.menuText}>Contact Us</Text>
-            <Ionicons name="chevron-forward" size={20} color="#D4A574" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => openLink(`${API_URL}/privacy`)}
-          >
-            <Ionicons name="shield-outline" size={20} color="#5D4E3C" />
-            <Text style={styles.menuText}>Privacy Policy</Text>
-            <Ionicons name="chevron-forward" size={20} color="#D4A574" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.menuItem, styles.menuItemLast]}
-            onPress={() => openLink(`${API_URL}/terms`)}
-          >
-            <Ionicons name="document-text-outline" size={20} color="#5D4E3C" />
-            <Text style={styles.menuText}>Terms of Service</Text>
-            <Ionicons name="chevron-forward" size={20} color="#D4A574" />
+          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={() => openLink(`${API_URL}/help`)}>
+            <Ionicons name="help-circle-outline" size={22} color="#5D4E3C" />
+            <Text style={styles.menuText}>Help & Support</Text>
+            <Ionicons name="chevron-forward" size={20} color="#A89580" />
           </TouchableOpacity>
         </View>
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={20} color="#DC2626" />
+        <Ionicons name="log-out-outline" size={22} color="#DC2626" />
         <Text style={styles.logoutText}>Sign Out</Text>
       </TouchableOpacity>
 
       <Text style={styles.version}>Version 1.0.0</Text>
-
-      <Modal
-        visible={showGoalModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowGoalModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Posting Goal</Text>
-            {[
-              { value: 'daily', label: 'Daily', desc: 'Post every day' },
-              { value: 'casual', label: 'Casual', desc: '3-4 times per week' },
-              { value: 'occasional', label: 'Occasional', desc: '1-2 times per week' },
-            ].map((goal) => (
-              <TouchableOpacity
-                key={goal.value}
-                style={[
-                  styles.goalOption,
-                  profile?.postingGoal === goal.value && styles.goalOptionSelected
-                ]}
-                onPress={() => updateGoalMutation.mutate(goal.value)}
-              >
-                <View>
-                  <Text style={styles.goalOptionTitle}>{goal.label}</Text>
-                  <Text style={styles.goalOptionDesc}>{goal.desc}</Text>
-                </View>
-                {profile?.postingGoal === goal.value && (
-                  <Ionicons name="checkmark" size={24} color="#D4A574" />
-                )}
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowGoalModal(false)}
-            >
-              <Text style={styles.modalCloseText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </ScrollView>
   );
 }
@@ -252,73 +190,28 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingBottom: 40,
   },
   section: {
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: '#8B7355',
-    marginBottom: 12,
+    marginBottom: 10,
     marginLeft: 4,
+    letterSpacing: 0.5,
   },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     overflow: 'hidden',
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 12,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#FFF8F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  userName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#5D4E3C',
-  },
-  userEmail: {
-    fontSize: 14,
-    color: '#8B7355',
-    marginTop: 2,
-  },
-  upgradeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#D4A574',
-  },
-  upgradeContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  upgradeText: {
-    flex: 1,
-  },
-  upgradeTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#5D4E3C',
-  },
-  upgradeDescription: {
-    fontSize: 13,
-    color: '#8B7355',
-    marginTop: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
   },
   menuItem: {
     flexDirection: 'row',
@@ -326,7 +219,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F5EDE4',
-    gap: 12,
+    gap: 14,
   },
   menuItemLast: {
     borderBottomWidth: 0,
@@ -336,11 +229,50 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#5D4E3C',
   },
+  switchItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5EDE4',
+  },
+  switchLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 14,
+  },
+  switchTextContainer: {
+    flex: 1,
+  },
+  switchTitle: {
+    fontSize: 16,
+    color: '#5D4E3C',
+  },
+  switchDescription: {
+    fontSize: 13,
+    color: '#8B7355',
+    marginTop: 2,
+  },
+  notificationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    gap: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
     backgroundColor: '#FEE2E2',
     padding: 16,
     borderRadius: 12,
@@ -353,112 +285,9 @@ const styles = StyleSheet.create({
   },
   version: {
     textAlign: 'center',
-    color: '#8B7355',
-    fontSize: 12,
+    color: '#A89580',
+    fontSize: 13,
     marginTop: 24,
     marginBottom: 16,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    padding: 16,
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#5D4E3C',
-    marginTop: 4,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: '#8B7355',
-    marginTop: 2,
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: '#F5EDE4',
-  },
-  goalCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-  },
-  goalContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  goalText: {
-    flex: 1,
-  },
-  goalTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#5D4E3C',
-  },
-  goalDescription: {
-    fontSize: 13,
-    color: '#8B7355',
-    marginTop: 2,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    paddingBottom: 40,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#5D4E3C',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  goalOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#FFF8F0',
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  goalOptionSelected: {
-    borderWidth: 2,
-    borderColor: '#D4A574',
-  },
-  goalOptionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#5D4E3C',
-  },
-  goalOptionDesc: {
-    fontSize: 13,
-    color: '#8B7355',
-    marginTop: 2,
-  },
-  modalCloseButton: {
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  modalCloseText: {
-    fontSize: 16,
-    color: '#8B7355',
   },
 });

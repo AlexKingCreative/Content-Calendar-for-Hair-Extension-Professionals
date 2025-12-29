@@ -99,4 +99,34 @@ export const stripeApi = {
   },
 };
 
+export const trendsApi = {
+  getAll: async () => {
+    const response = await api.get('/api/trends');
+    return response.data;
+  },
+};
+
+export const challengesApi = {
+  getAll: async () => {
+    const response = await api.get('/api/challenges');
+    return response.data;
+  },
+  getUserChallenges: async () => {
+    const response = await api.get('/api/user/challenges');
+    return response.data;
+  },
+  start: async (challengeId: number) => {
+    const response = await api.post(`/api/challenges/${challengeId}/start`, {});
+    return response.data;
+  },
+  logProgress: async (userChallengeId: number) => {
+    const response = await api.post(`/api/user/challenges/${userChallengeId}/progress`, {});
+    return response.data;
+  },
+  abandon: async (userChallengeId: number) => {
+    const response = await api.post(`/api/user/challenges/${userChallengeId}/abandon`, {});
+    return response.data;
+  },
+};
+
 export default api;

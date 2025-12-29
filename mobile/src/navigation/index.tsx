@@ -10,6 +10,8 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import TodayScreen from '../screens/TodayScreen';
 import CalendarScreen from '../screens/CalendarScreen';
+import TrendsScreen from '../screens/TrendsScreen';
+import StreaksScreen from '../screens/StreaksScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import PostDetailScreen from '../screens/PostDetailScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
@@ -32,6 +34,8 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Today: undefined;
   Calendar: undefined;
+  Trends: undefined;
+  Streaks: undefined;
   Settings: undefined;
 };
 
@@ -58,9 +62,13 @@ function MainTabs() {
           let iconName: keyof typeof Ionicons.glyphMap = 'home';
           
           if (route.name === 'Today') {
-            iconName = focused ? 'today' : 'today-outline';
+            iconName = focused ? 'sparkles' : 'sparkles-outline';
           } else if (route.name === 'Calendar') {
             iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'Trends') {
+            iconName = focused ? 'trending-up' : 'trending-up-outline';
+          } else if (route.name === 'Streaks') {
+            iconName = focused ? 'flame' : 'flame-outline';
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
           }
@@ -75,8 +83,10 @@ function MainTabs() {
         headerTintColor: '#fff',
       })}
     >
-      <Tab.Screen name="Today" component={TodayScreen} options={{ title: "Today's Post" }} />
-      <Tab.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Content Calendar' }} />
+      <Tab.Screen name="Today" component={TodayScreen} options={{ title: 'Today' }} />
+      <Tab.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendar' }} />
+      <Tab.Screen name="Trends" component={TrendsScreen} options={{ title: 'Trends' }} />
+      <Tab.Screen name="Streaks" component={StreaksScreen} options={{ title: 'Streaks' }} />
       <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
     </Tab.Navigator>
   );
