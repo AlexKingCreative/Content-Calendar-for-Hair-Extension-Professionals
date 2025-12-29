@@ -21,7 +21,6 @@ const freeFeatures = [
   "Browse all daily post ideas",
   "Category filtering",
   "Content type filtering",
-  "3-day full access trial",
 ];
 
 const proFeatures = [
@@ -75,7 +74,7 @@ export default function SignupPage() {
               Start Your Content Journey
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Sign up free and get 3 days of full access. Then choose the plan that works for you.
+              Sign up free and explore the calendar. Start a 7-day free trial when you're ready.
             </p>
           </div>
 
