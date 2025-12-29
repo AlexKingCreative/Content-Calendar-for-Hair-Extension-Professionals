@@ -58,12 +58,12 @@ export function StreakWidget() {
       if (isFirstPost) {
         toast({ 
           title: "Your first post logged!",
-          description: "Keep posting for 7 days to earn 50% off your first month!",
+          description: "Keep posting daily to build your streak and unlock rewards!",
         });
       } else if (newStreak === 7) {
         toast({ 
           title: "7-day streak achieved!",
-          description: "You've unlocked 50% off! Visit Subscribe to claim your reward.",
+          description: "Amazing! You've unlocked the Gold Badge milestone!",
         });
       } else {
         toast({ 

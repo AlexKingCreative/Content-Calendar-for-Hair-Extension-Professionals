@@ -415,7 +415,7 @@ export default function LandingPage() {
               <StreakDemo />
               <div className="text-center mt-4">
                 <h3 className="font-semibold mb-1">Streak Rewards</h3>
-                <p className="text-sm text-muted-foreground">Stay consistent and earn 50% off</p>
+                <p className="text-sm text-muted-foreground">Stay consistent and build your brand</p>
               </div>
             </motion.div>
             
@@ -910,7 +910,7 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
                   <Gift className="w-5 h-5 text-primary flex-shrink-0" />
-                  <span className="text-primary font-medium">Earn 50% off by posting 7 days straight!</span>
+                  <span className="text-primary font-medium">Streak milestones unlock special rewards!</span>
                 </li>
               </ul>
               <Link href="/onboarding">
@@ -990,7 +990,7 @@ export default function LandingPage() {
               },
               {
                 q: "What's the streak reward?",
-                a: "If you post for 7 days straight during your trial, you earn 50% off your first month. It's our way of rewarding you for being consistent!"
+                a: "Posting consistently unlocks milestone rewards and keeps you motivated. Building a daily posting habit is the secret to growing your audience!"
               },
               {
                 q: "I'm a salon owner. Can my whole team use this?",

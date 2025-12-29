@@ -125,7 +125,7 @@ export default function Subscribe() {
       queryClient.invalidateQueries({ queryKey: ["/api/users/me/profile"] });
       toast({
         title: "Reward Claimed!",
-        description: "You've unlocked 50% off your first month. Use it when you subscribe!",
+        description: "Congratulations on completing your 7-day streak!",
       });
     },
     onError: (error: Error) => {
@@ -215,7 +215,7 @@ export default function Subscribe() {
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Get full access to 365 days of content ideas, AI-powered captions,
-            and earn 50% off by completing a 7-day posting streak.
+            and streak tracking to keep you consistent.
           </p>
         </div>
 
@@ -231,9 +231,9 @@ export default function Subscribe() {
                   <p className="text-sm text-muted-foreground">
                     {hasEarnedReward 
                       ? hasClaimedReward 
-                        ? "Reward claimed! Use your 50% discount below."
-                        : "You did it! Claim your 50% off reward."
-                      : `Post for 7 days straight to unlock 50% off your first month`
+                        ? "Amazing! You completed the 7-day streak challenge!"
+                        : "You did it! Claim your streak milestone reward."
+                      : `Post for 7 days straight to complete the challenge`
                     }
                   </p>
                 </div>
@@ -258,7 +258,7 @@ export default function Subscribe() {
                   data-testid="button-claim-reward"
                 >
                   <Gift className="w-4 h-4 mr-2" />
-                  {claimRewardMutation.isPending ? "Claiming..." : "Claim Your 50% Off Reward"}
+                  {claimRewardMutation.isPending ? "Claiming..." : "Claim Your Streak Reward"}
                 </Button>
               )}
             </CardContent>
@@ -340,7 +340,7 @@ export default function Subscribe() {
               {billingInterval === 'month' && hasCoupon && (
                 <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                   <Percent className="w-3 h-3 mr-1" />
-                  50% off first month applied
+                  Streak reward applied
                 </Badge>
               )}
 

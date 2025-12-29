@@ -101,10 +101,10 @@ export function TrialOfferModal({ open, onClose, onSkip }: TrialOfferModalProps)
           >
             <div className="flex items-center gap-2 mb-1">
               <Flame className="w-4 h-4 text-amber-500" />
-              <span className="font-medium text-sm">Bonus: 50% Off Reward</span>
+              <span className="font-medium text-sm">Streak Milestone Rewards</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Complete a 7-day posting streak during your trial to unlock 50% off your first paid month!
+              Build your posting habit and unlock badges as you reach streak milestones!
             </p>
           </motion.div>
         </div>

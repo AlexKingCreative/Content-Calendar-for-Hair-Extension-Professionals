@@ -88,7 +88,7 @@ export default function PricingPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-xl font-semibold text-foreground">$60</span>
                   <span className="text-muted-foreground">/year</span>
-                  <Badge variant="secondary" className="text-xs">Save 50%</Badge>
+                  <Badge variant="secondary" className="text-xs">Best Value</Badge>
                 </div>
               </div>
               

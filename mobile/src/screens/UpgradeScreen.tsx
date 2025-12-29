@@ -10,10 +10,12 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import * as WebBrowser from 'expo-web-browser';
+import { useQuery } from '@tanstack/react-query';
 import { colors } from '../theme';
-import { stripeApi } from '../services/api';
+import { stripeApi, profileApi } from '../services/api';
+import { RootStackParamList } from '../navigation';
 
 const FEATURES = [
   { icon: 'calendar-outline', text: '365 days of pre-planned content' },
@@ -24,10 +26,30 @@ const FEATURES = [
   { icon: 'trending-up-outline', text: 'Trend alerts' },
 ];
 
+interface Profile {
+  currentStreak: number;
+  subscriptionStatus?: string;
+  trialEndsAt?: string;
+}
+
 export default function UpgradeScreen() {
   const navigation = useNavigation();
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
   const [isLoading, setIsLoading] = useState(false);
+  
+  const { data: profile } = useQuery<Profile>({
+    queryKey: ['profile'],
+    queryFn: profileApi.get,
+  });
+  
+  const currentStreak = profile?.currentStreak || 0;
+  const isOnTrial = profile?.subscriptionStatus === 'trialing';
+  const trialEndsAt = profile?.trialEndsAt ? new Date(profile.trialEndsAt) : null;
+  const now = new Date();
+  const daysLeftInTrial = trialEndsAt ? Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
+  const isTrialEnding = daysLeftInTrial !== null && daysLeftInTrial <= 3 && daysLeftInTrial > 0;
+  const isTrialExpired = daysLeftInTrial !== null && daysLeftInTrial <= 0;
+  const showStreakWarning = (isTrialEnding || isTrialExpired) && currentStreak > 0;
 
   const handleUpgrade = async () => {
     setIsLoading(true);
@@ -74,6 +96,22 @@ export default function UpgradeScreen() {
           </Text>
         </View>
 
+        {showStreakWarning && (
+          <View style={styles.streakWarning}>
+            <View style={styles.streakWarningIcon}>
+              <Ionicons name="flame" size={24} color="#FF6B35" />
+            </View>
+            <View style={styles.streakWarningContent}>
+              <Text style={styles.streakWarningTitle}>
+                {isTrialExpired ? 'Your trial has expired' : `Only ${daysLeftInTrial} day${daysLeftInTrial === 1 ? '' : 's'} left in your trial`}
+              </Text>
+              <Text style={styles.streakWarningText}>
+                Upgrade now to keep your {currentStreak}-day posting streak! Without a subscription, your streak progress will be lost.
+              </Text>
+            </View>
+          </View>
+        )}
+
         <View style={styles.plansContainer}>
           <TouchableOpacity
             style={[
@@ -101,7 +139,7 @@ export default function UpgradeScreen() {
                   <Text style={styles.priceAmount}>$60</Text>
                   <Text style={styles.pricePeriod}>/year</Text>
                 </Text>
-                <Text style={styles.planSavings}>Save 50% - just $5/month</Text>
+                <Text style={styles.planSavings}>Just $5/month</Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -244,6 +282,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  streakWarning: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF3EE',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#FFD4C4',
+    gap: 12,
+  },
+  streakWarningIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFE8DD',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  streakWarningContent: {
+    flex: 1,
+  },
+  streakWarningTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#C04000',
+    marginBottom: 4,
+  },
+  streakWarningText: {
+    fontSize: 13,
+    color: '#8B4513',
+    lineHeight: 18,
   },
   plansContainer: {
     gap: 12,

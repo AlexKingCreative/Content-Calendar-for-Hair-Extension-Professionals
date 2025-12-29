@@ -227,7 +227,7 @@ export function StreakDemo() {
   const rewards = [
     { day: 3, label: "Bronze Badge", icon: Award },
     { day: 5, label: "Silver Badge", icon: Award },
-    { day: 7, label: "50% Off!", icon: Zap },
+    { day: 7, label: "Gold Badge!", icon: Zap },
   ];
 
   useEffect(() => {
