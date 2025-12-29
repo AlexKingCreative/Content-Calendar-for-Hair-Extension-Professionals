@@ -220,7 +220,7 @@ router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
     
     const baseUrl = process.env.REPLIT_DEV_DOMAIN 
       ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-      : 'https://content-calendar-hair-pro.replit.app';
+      : 'https://contentcalendarforhairpros.com';
     
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
