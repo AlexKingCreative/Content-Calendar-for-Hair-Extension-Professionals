@@ -16,6 +16,7 @@ export interface IStorage {
   upsertUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
   setUserAdmin(userId: string, isAdmin: boolean): Promise<void>;
   updateUserStripeInfo(userId: string, info: { stripeCustomerId?: string; subscriptionStatus?: string }): Promise<UserProfile>;
+  claimStreakReward(userId: string, couponId: string): Promise<UserProfile>;
   
   createPushSubscription(sub: InsertPushSubscription): Promise<PushSubscription>;
   getPushSubscription(endpoint: string): Promise<PushSubscription | undefined>;
@@ -197,6 +198,19 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(userProfiles)
       .set({ ...info, updatedAt: new Date() })
+      .where(eq(userProfiles.userId, userId))
+      .returning();
+    return updated;
+  }
+
+  async claimStreakReward(userId: string, couponId: string): Promise<UserProfile> {
+    const [updated] = await db
+      .update(userProfiles)
+      .set({ 
+        firstStreakRewardClaimed: true, 
+        firstStreakRewardCoupon: couponId,
+        updatedAt: new Date() 
+      })
       .where(eq(userProfiles.userId, userId))
       .returning();
     return updated;

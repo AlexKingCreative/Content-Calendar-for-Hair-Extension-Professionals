@@ -76,6 +76,37 @@ export class StripeService {
     );
     return result.rows[0] || null;
   }
+
+  async createStreakRewardCoupon(userId: string) {
+    const stripe = await getUncachableStripeClient();
+    const coupon = await stripe.coupons.create({
+      percent_off: 50,
+      duration: 'once',
+      max_redemptions: 1,
+      metadata: { userId, type: 'streak_reward' },
+      name: '7-Day Streak Reward - 50% Off First Month',
+    });
+    return coupon;
+  }
+
+  async createCheckoutSessionWithCoupon(
+    customerId: string, 
+    priceId: string, 
+    couponId: string,
+    successUrl: string, 
+    cancelUrl: string
+  ) {
+    const stripe = await getUncachableStripeClient();
+    return await stripe.checkout.sessions.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: 'subscription',
+      discounts: [{ coupon: couponId }],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+    });
+  }
 }
 
 export const stripeService = new StripeService();

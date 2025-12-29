@@ -1301,6 +1301,104 @@ Respond in JSON format with these fields:
     }
   });
 
+  // Claim streak reward - unlocks 50% off coupon for completing first 7-day streak
+  app.post("/api/billing/claim-streak-reward", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const profile = await storage.getUserProfile(userId);
+      if (!profile) {
+        return res.status(400).json({ error: "Profile not found" });
+      }
+
+      // Check if already claimed
+      if (profile.firstStreakRewardClaimed) {
+        return res.status(400).json({ 
+          error: "Reward already claimed", 
+          couponId: profile.firstStreakRewardCoupon 
+        });
+      }
+
+      // Verify user has achieved 7+ day streak (current or longest)
+      const hasEligibleStreak = (profile.currentStreak ?? 0) >= 7 || (profile.longestStreak ?? 0) >= 7;
+      if (!hasEligibleStreak) {
+        return res.status(400).json({ 
+          error: "Complete a 7-day posting streak to unlock this reward",
+          currentStreak: profile.currentStreak,
+          longestStreak: profile.longestStreak
+        });
+      }
+
+      // Create the coupon in Stripe
+      const coupon = await stripeService.createStreakRewardCoupon(userId);
+      
+      // Save to user profile
+      await storage.claimStreakReward(userId, coupon.id);
+
+      res.json({ 
+        success: true, 
+        couponId: coupon.id,
+        discount: "50% off your first month"
+      });
+    } catch (error) {
+      console.error("Error claiming streak reward:", error);
+      res.status(500).json({ error: "Failed to claim streak reward" });
+    }
+  });
+
+  // Checkout with streak reward coupon
+  app.post("/api/billing/checkout-with-reward", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const profile = await storage.getUserProfile(userId);
+      if (!profile) {
+        return res.status(400).json({ error: "Profile not found" });
+      }
+
+      // Check if user has a streak reward coupon
+      if (!profile.firstStreakRewardCoupon) {
+        return res.status(400).json({ error: "No streak reward coupon available" });
+      }
+
+      const userEmail = await getUserEmail(userId) || `${userId}@user.app`;
+
+      let customerId = profile.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripeService.createCustomer(userEmail, userId);
+        await storage.updateUserStripeInfo(userId, { stripeCustomerId: customer.id });
+        customerId = customer.id;
+      }
+
+      const priceInfo = await stripeService.getActiveSubscriptionPrice();
+      if (!priceInfo?.price_id) {
+        return res.status(500).json({ error: "No subscription product available" });
+      }
+
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const priceId = priceInfo.price_id as string;
+      
+      const session = await stripeService.createCheckoutSessionWithCoupon(
+        customerId,
+        priceId,
+        profile.firstStreakRewardCoupon,
+        `${baseUrl}/account?success=true`,
+        `${baseUrl}/subscribe?canceled=true`
+      );
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Error creating checkout with reward:", error);
+      res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
   // ==================== POST SUBMISSIONS ====================
   
   // Submit an Instagram post to be featured
