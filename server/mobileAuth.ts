@@ -152,7 +152,7 @@ router.get('/profile', authenticateMobile, async (req: any, res) => {
 
 router.put('/profile', authenticateMobile, async (req: any, res) => {
   try {
-    const { postingGoal, certifiedBrands, extensionMethods, city, postingServices } = req.body;
+    const { postingGoal, certifiedBrands, extensionMethods, city, postingServices, showStreaks, pushNotificationsEnabled } = req.body;
     
     const updateData: Record<string, any> = {};
     
@@ -182,6 +182,12 @@ router.put('/profile', authenticateMobile, async (req: any, res) => {
         return res.status(400).json({ message: 'postingServices must be an array' });
       }
       updateData.postingServices = postingServices;
+    }
+    if (typeof showStreaks === 'boolean') {
+      updateData.showStreaks = showStreaks;
+    }
+    if (typeof pushNotificationsEnabled === 'boolean') {
+      updateData.pushNotificationsEnabled = pushNotificationsEnabled;
     }
 
     if (Object.keys(updateData).length === 0) {

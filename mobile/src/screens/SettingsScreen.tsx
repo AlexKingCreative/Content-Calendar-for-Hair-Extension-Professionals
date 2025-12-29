@@ -24,23 +24,24 @@ interface Profile {
   totalPosts: number;
   postingGoal: string;
   showStreaks: boolean;
-  pushNotifications: boolean;
+  pushNotificationsEnabled: boolean;
 }
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
   const queryClient = useQueryClient();
   const [showStreaks, setShowStreaks] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(false);
+  const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(false);
 
   const { data: profile } = useQuery<Profile>({
     queryKey: ['profile'],
     queryFn: profileApi.get,
-    onSuccess: (data: Profile) => {
-      if (data?.showStreaks !== undefined) setShowStreaks(data.showStreaks);
-      if (data?.pushNotifications !== undefined) setPushNotifications(data.pushNotifications);
-    },
   });
+
+  React.useEffect(() => {
+    if (profile?.showStreaks !== undefined) setShowStreaks(profile.showStreaks);
+    if (profile?.pushNotificationsEnabled !== undefined) setPushNotificationsEnabled(profile.pushNotificationsEnabled);
+  }, [profile]);
 
   const updatePreferenceMutation = useMutation({
     mutationFn: (data: Partial<Profile>) => profileApi.update(data),
@@ -83,8 +84,8 @@ export default function SettingsScreen() {
   };
 
   const togglePushNotifications = (value: boolean) => {
-    setPushNotifications(value);
-    updatePreferenceMutation.mutate({ pushNotifications: value });
+    setPushNotificationsEnabled(value);
+    updatePreferenceMutation.mutate({ pushNotificationsEnabled: value });
   };
 
   const handleManageAccount = () => {
@@ -145,7 +146,7 @@ export default function SettingsScreen() {
               </View>
             </View>
             <Switch
-              value={pushNotifications}
+              value={pushNotificationsEnabled}
               onValueChange={togglePushNotifications}
               trackColor={{ false: '#E5D5C5', true: '#D4A574' }}
               thumbColor="#FFFFFF"
