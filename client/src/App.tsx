@@ -14,6 +14,7 @@ import SettingsPage from "@/pages/settings";
 import AccountPage from "@/pages/account";
 import TodayPage from "@/pages/today";
 import StreaksPage from "@/pages/streaks";
+import TrendsPage from "@/pages/trends";
 import PostPage from "@/pages/post";
 import TermsPage from "@/pages/terms";
 import PrivacyPage from "@/pages/privacy";
@@ -173,6 +174,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/today" component={TodayPage} />
+      <Route path="/trends" component={TrendsPage} />
       <Route path="/streaks" component={StreaksPage} />
       <Route path="/post/:id" component={PostPage} />
       <Route path="/subscribe">

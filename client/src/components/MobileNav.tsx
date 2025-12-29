@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Settings, Sparkles, Flame } from "lucide-react";
+import { Calendar, Settings, Sparkles, Flame, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navigateToLogin } from "@/lib/auth-utils";
 
@@ -48,6 +48,21 @@ export function MobileNav({ isLoggedIn }: MobileNavProps) {
             >
               <Calendar className="w-5 h-5" />
               <span className="text-[10px] font-medium">Calendar</span>
+            </div>
+          </Link>
+
+          <Link href="/trends" className="flex-1">
+            <div
+              className={cn(
+                "flex flex-col items-center justify-center gap-0.5 h-full rounded-2xl fluid-transition active:scale-95",
+                location === "/trends" 
+                  ? "text-primary" 
+                  : "text-muted-foreground"
+              )}
+              data-testid="nav-trends"
+            >
+              <TrendingUp className="w-5 h-5" />
+              <span className="text-[10px] font-medium">Trends</span>
             </div>
           </Link>
 

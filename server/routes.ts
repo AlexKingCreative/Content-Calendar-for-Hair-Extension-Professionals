@@ -1871,8 +1871,33 @@ Respond in JSON format with these fields:
   // Public: Get active trend alerts for users
   app.get("/api/trends", async (req, res) => {
     try {
-      const trends = await storage.getActiveTrendAlerts();
-      res.json(trends);
+      const includeExpired = req.query.includeExpired === "true";
+      const allTrends = await storage.getAllTrendAlerts();
+      const now = new Date();
+      
+      const trendsWithStatus = allTrends
+        .filter(t => t.isActive === true)
+        .map(trend => {
+          const publishedAt = new Date(trend.publishedAt);
+          const expiresAt = new Date(publishedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+          const isExpired = now > expiresAt;
+          const daysRemaining = isExpired ? 0 : Math.ceil((expiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+          const daysSinceExpired = isExpired ? Math.floor((now.getTime() - expiresAt.getTime()) / (24 * 60 * 60 * 1000)) : 0;
+          
+          return {
+            ...trend,
+            expiresAt: expiresAt.toISOString(),
+            isExpired,
+            daysRemaining,
+            daysSinceExpired,
+          };
+        });
+      
+      if (includeExpired) {
+        res.json(trendsWithStatus);
+      } else {
+        res.json(trendsWithStatus.filter(t => !t.isExpired));
+      }
     } catch (error) {
       console.error("Error fetching trends:", error);
       res.status(500).json({ error: "Failed to fetch trends" });
