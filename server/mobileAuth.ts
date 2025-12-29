@@ -215,6 +215,16 @@ router.put('/profile', authenticateMobile, async (req: any, res) => {
   }
 });
 
+router.get('/web-login-token', authenticateMobile, async (req: any, res) => {
+  try {
+    const token = jwt.sign({ userId: req.mobileUserId, type: 'web-login' }, JWT_SECRET, { expiresIn: '5m' });
+    res.json({ token });
+  } catch (error) {
+    console.error('Web login token error:', error);
+    res.status(500).json({ message: 'Failed to generate login token' });
+  }
+});
+
 router.post('/streak/log', authenticateMobile, async (req: any, res) => {
   try {
     const userId = req.mobileUserId;

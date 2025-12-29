@@ -103,6 +103,13 @@ export const stripeApi = {
   },
 };
 
+export const webApi = {
+  getLoginToken: async () => {
+    const response = await api.get('/api/mobile/web-login-token');
+    return response.data;
+  },
+};
+
 export const trendsApi = {
   getAll: async () => {
     const response = await api.get('/api/trends');

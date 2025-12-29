@@ -60,7 +60,19 @@ export default function SettingsScreen() {
         Alert.alert('Error', 'Could not create checkout session.');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Could not open payment page. Please try again.');
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Could not open payment page.';
+      if (errorMessage.includes('Unauthorized') || error.response?.status === 401) {
+        Alert.alert(
+          'Session Expired',
+          'Please sign out and sign back in to continue.',
+          [
+            { text: 'OK' },
+            { text: 'Sign Out', style: 'destructive', onPress: logout },
+          ]
+        );
+      } else {
+        Alert.alert('Error', errorMessage);
+      }
     }
   };
 
@@ -90,7 +102,14 @@ export default function SettingsScreen() {
   };
 
   const handleManageAccount = () => {
-    openLink(`${API_URL}/account`);
+    Alert.alert(
+      'Manage Account',
+      'Account settings are available on the web app. You will be redirected to the website where you can log in to manage your account.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open Website', onPress: () => openLink(`${API_URL}/account`) },
+      ]
+    );
   };
 
   const handleInstagramAnalytics = () => {
