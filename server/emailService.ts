@@ -43,7 +43,7 @@ export async function sendMagicLinkEmail(email: string, magicLinkUrl: string): P
     const { client, fromEmail } = await getResendClient();
     
     await client.emails.send({
-      from: fromEmail || 'Content Calendar <noreply@yourdomain.com>',
+      from: fromEmail || 'Content Calendar <hello@contentcalendarforhairpros.com>',
       to: email,
       subject: 'Your Magic Login Link - Content Calendar for Hair Pros',
       html: `
