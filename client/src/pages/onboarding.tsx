@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, MapPin, ChevronRight, ChevronLeft, Check, Users, Diamond, Calendar, Star, GraduationCap, Heart, Scissors, Award, Palette, Mail } from "lucide-react";
+import { Sparkles, MapPin, ChevronRight, ChevronLeft, Check, Users, Diamond, Calendar, Star, GraduationCap, Heart, Scissors, Award, Palette, Mail, User, Building2 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import ashleyDianaImg from "@assets/IMG_8599_3_1766974570149.JPG";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { TrialOfferModal } from "@/components/trial-offer-modal";
 import { BuildingScheduleAnimation } from "@/components/building-schedule-animation";
-import { experienceLevelDescriptions, contentGoalOptions, certifiedBrands, extensionMethods } from "@shared/schema";
+import { experienceLevelDescriptions, contentGoalOptions, certifiedBrands, extensionMethods, accountTypes } from "@shared/schema";
 
 interface User {
   id: string;
@@ -81,6 +81,7 @@ export default function OnboardingPage() {
   const [goals, setGoals] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [methods, setMethods] = useState<string[]>([]);
+  const [accountType, setAccountType] = useState<string>("");
   const [showTrialModal, setShowTrialModal] = useState(false);
   const [showBuildingAnimation, setShowBuildingAnimation] = useState(false);
 
@@ -92,7 +93,7 @@ export default function OnboardingPage() {
   });
 
   const isLoggedIn = !!user;
-  const baseSteps = isLoggedIn ? 4 : 5;
+  const baseSteps = isLoggedIn ? 5 : 6;
   const totalSteps = hasExtensions ? baseSteps + 1 : baseSteps;
 
   useEffect(() => {
@@ -113,6 +114,7 @@ export default function OnboardingPage() {
         if (data.goals?.length) setGoals(data.goals);
         if (data.brands?.length) setBrands(data.brands);
         if (data.methods?.length) setMethods(data.methods);
+        if (data.accountType) setAccountType(data.accountType);
         localStorage.removeItem("pendingOnboarding");
       } catch (e) {
         console.error("Failed to parse pending onboarding data");
@@ -139,6 +141,7 @@ export default function OnboardingPage() {
         city: city || null,
         instagram: instagram || null,
         experience: experience || null,
+        accountType: accountType || "solo",
         contentGoals: goals,
         offeredServices: postingServices,
         postingServices: postingServices,
@@ -170,6 +173,7 @@ export default function OnboardingPage() {
         city: city || null,
         instagram: instagram || null,
         experience: experience || null,
+        accountType: accountType || "solo",
         contentGoals: goals,
         offeredServices: postingServices,
         postingServices: postingServices,
@@ -239,9 +243,10 @@ export default function OnboardingPage() {
   const getLogicalStep = () => {
     const adjusted = getAdjustedStep();
     if (adjusted <= 1) return adjusted;
-    if (hasExtensions && adjusted === 2) return "brands";
+    if (adjusted === 2) return "accountType";
+    if (hasExtensions && adjusted === 3) return "brands";
     if (hasExtensions) return adjusted - 1;
-    return adjusted;
+    return adjusted - 1;
   };
 
   const canContinue = () => {
@@ -252,6 +257,8 @@ export default function OnboardingPage() {
     switch (logicalStep) {
       case 1:
         return services.length > 0;
+      case "accountType":
+        return accountType !== '';
       case "brands":
         return brands.length > 0 && methods.length > 0;
       case 2:
@@ -288,6 +295,7 @@ export default function OnboardingPage() {
     const logicalStep = getLogicalStep();
     switch (logicalStep) {
       case 1: return "What services do you offer?";
+      case "accountType": return "Who's posting?";
       case "brands": return "Extension Expertise";
       case 2: return "Where are you located?";
       case 3: return "How long have you been styling?";
@@ -301,6 +309,7 @@ export default function OnboardingPage() {
     const logicalStep = getLogicalStep();
     switch (logicalStep) {
       case 1: return "Select all that apply - we'll personalize your content";
+      case "accountType": return "This helps us write captions in your voice";
       case "brands": return "Select the brands you're certified in and methods you specialize in";
       case 2: return "We'll include location-based hashtags for you";
       case 3: return "This helps us tailor content to your experience level";
@@ -374,6 +383,71 @@ export default function OnboardingPage() {
                   </button>
                 );
               })}
+            </div>
+          </div>
+        );
+
+      case "accountType":
+        return (
+          <div className="space-y-4" data-testid="step-account-type">
+            <div className="grid gap-4">
+              <button
+                onClick={() => setAccountType("solo")}
+                className={`relative flex items-center gap-4 p-5 rounded-md border-2 text-left transition-all ${
+                  accountType === "solo"
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover-elevate'
+                }`}
+                data-testid="button-account-solo"
+              >
+                <div className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center ${
+                  accountType === "solo" ? 'bg-primary/20' : 'bg-muted'
+                }`}>
+                  <User className={`w-7 h-7 ${accountType === "solo" ? 'text-primary' : 'text-muted-foreground'}`} />
+                </div>
+                <div className="flex-1">
+                  <p className={`font-semibold text-lg ${accountType === "solo" ? 'text-primary' : ''}`}>
+                    Solo Stylist
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    "I specialize in..." "Book with me..."
+                  </p>
+                </div>
+                {accountType === "solo" && (
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="w-4 h-4 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
+
+              <button
+                onClick={() => setAccountType("salon")}
+                className={`relative flex items-center gap-4 p-5 rounded-md border-2 text-left transition-all ${
+                  accountType === "salon"
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover-elevate'
+                }`}
+                data-testid="button-account-salon"
+              >
+                <div className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center ${
+                  accountType === "salon" ? 'bg-primary/20' : 'bg-muted'
+                }`}>
+                  <Building2 className={`w-7 h-7 ${accountType === "salon" ? 'text-primary' : 'text-muted-foreground'}`} />
+                </div>
+                <div className="flex-1">
+                  <p className={`font-semibold text-lg ${accountType === "salon" ? 'text-primary' : ''}`}>
+                    Salon / Team
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    "We offer..." "Our team..."
+                  </p>
+                </div>
+                {accountType === "salon" && (
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="w-4 h-4 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
             </div>
           </div>
         );

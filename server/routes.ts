@@ -840,6 +840,22 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Post not found" });
       }
 
+      // Get user's account type for personalized voice
+      let accountType = "solo";
+      const userId = req.session?.userId;
+      if (userId) {
+        const profile = await storage.getUserProfile(userId);
+        if (profile?.accountType) {
+          accountType = profile.accountType;
+        }
+      }
+
+      const voiceGuideline = accountType === "salon" 
+        ? `- Write in first person PLURAL ("we", "us", "our team") since this is a salon/team account
+- Example: "We specialize in..." "Our team loves..." "Book with us..."`
+        : `- Write in first person SINGULAR ("I", "me", "my") since this is a solo stylist account
+- Example: "I specialize in..." "I love creating..." "Book with me..."`;
+
       const prompt = `You are an expert social media copywriter for hair professionals. Generate an engaging Instagram caption for the following post idea.
 
 Post Title: ${post.title}
@@ -848,6 +864,7 @@ Content Type: ${post.contentType}
 Description: ${post.description}
 
 Guidelines:
+${voiceGuideline}
 - Write in a friendly, professional tone that connects with clients
 - Include a call-to-action (book now, DM for details, comment below, etc.)
 - Keep it concise but engaging (2-4 short paragraphs max)

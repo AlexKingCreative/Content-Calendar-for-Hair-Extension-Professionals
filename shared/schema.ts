@@ -135,12 +135,16 @@ export const insertPostSchema = createInsertSchema(posts).omit({
 export type Post = typeof posts.$inferSelect;
 export type InsertPost = z.infer<typeof insertPostSchema>;
 
+export const accountTypes = ["solo", "salon"] as const;
+export type AccountType = typeof accountTypes[number];
+
 export const userProfiles = pgTable("user_profiles", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().unique(),
   city: text("city"),
   instagram: text("instagram"),
   experience: text("experience"),
+  accountType: text("account_type").default("solo"),
   contentGoals: text("content_goals").array().default(sql`'{}'::text[]`),
   certifiedBrands: text("certified_brands").array().default(sql`'{}'::text[]`),
   extensionMethods: text("extension_methods").array().default(sql`'{}'::text[]`),
@@ -195,6 +199,7 @@ export const leads = pgTable("leads", {
   city: text("city"),
   instagram: text("instagram"),
   experience: text("experience"),
+  accountType: text("account_type").default("solo"),
   contentGoals: text("content_goals").array().default(sql`'{}'::text[]`),
   offeredServices: text("offered_services").array().default(sql`'{}'::text[]`),
   postingServices: text("posting_services").array().default(sql`'{}'::text[]`),
