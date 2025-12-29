@@ -5,11 +5,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation';
+import { AuthStackParamList } from '../navigation';
 
 const SERVICE_CATEGORIES = [
   { id: 'cutting', label: 'Cutting Services', icon: 'cut-outline' as const },
@@ -20,7 +21,7 @@ const SERVICE_CATEGORIES = [
 ];
 
 export default function OnboardingScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   const toggleService = (id: string) => {
@@ -32,11 +33,24 @@ export default function OnboardingScreen() {
   };
 
   const handleContinue = () => {
-    navigation.navigate('Main');
+    navigation.navigate('Register');
+  };
+
+  const handleSignIn = () => {
+    navigation.navigate('Login');
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.topHeader}>
+        <View style={styles.logoContainer}>
+          <Ionicons name="calendar" size={24} color="#D4A574" />
+          <Text style={styles.logoText}>Content Calendar</Text>
+        </View>
+        <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
+          <Text style={styles.signInText}>Sign In</Text>
+        </TouchableOpacity>
+      </View>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>What services do you offer?</Text>
@@ -84,11 +98,11 @@ export default function OnboardingScreen() {
           onPress={handleContinue}
           disabled={selectedServices.length === 0}
         >
-          <Text style={styles.buttonText}>Continue</Text>
+          <Text style={styles.buttonText}>Get Started</Text>
           <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -96,6 +110,38 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF8F0',
+  },
+  topHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5D5C5',
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#5D4E3C',
+  },
+  signInButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D4A574',
+  },
+  signInText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#D4A574',
   },
   content: {
     padding: 24,
