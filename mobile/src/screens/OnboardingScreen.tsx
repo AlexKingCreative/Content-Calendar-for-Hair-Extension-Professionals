@@ -454,13 +454,6 @@ const ServiceIcon = ({ iconIndex, size = 48, selected }: { iconIndex: number; si
   );
 };
 
-const EXPERIENCE_LEVELS = [
-  { id: 'new', label: 'Just Starting Out', description: 'Less than 1 year' },
-  { id: 'growing', label: 'Building My Business', description: '1-3 years' },
-  { id: 'established', label: 'Established Pro', description: '3-5 years' },
-  { id: 'expert', label: 'Industry Expert', description: '5+ years' },
-];
-
 const CONTENT_GOALS = [
   { id: 'clients', label: 'Attract More Clients', icon: 'people' as const },
   { id: 'premium', label: 'Book Premium Services', icon: 'diamond' as const },
@@ -498,7 +491,6 @@ const EXTENSION_METHODS = [
 type OnboardingData = {
   services: string[];
   location: string;
-  experience: string;
   goals: string[];
   instagram: string;
   selectedBrand: string;
@@ -514,7 +506,6 @@ export default function OnboardingScreen() {
   const [data, setData] = useState<OnboardingData>({
     services: [],
     location: '',
-    experience: '',
     goals: [],
     instagram: '',
     selectedBrand: '',
@@ -525,7 +516,7 @@ export default function OnboardingScreen() {
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   const hasExtensions = data.services.includes('extensions');
-  const baseSteps = 4;
+  const baseSteps = 3;
   const totalSteps = hasExtensions ? baseSteps + 1 : baseSteps;
 
   const animateProgress = (toStep: number) => {
@@ -619,8 +610,6 @@ export default function OnboardingScreen() {
       case 1:
         return data.location.trim().length > 0;
       case 2:
-        return data.experience !== '';
-      case 3:
         return data.goals.length > 0;
       default:
         return false;
@@ -821,45 +810,6 @@ export default function OnboardingScreen() {
         );
 
       case 2:
-        return (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>How long have you been styling?</Text>
-            <Text style={styles.stepSubtitle}>
-              This helps us tailor content to your experience level
-            </Text>
-            <View style={styles.experienceList}>
-              {EXPERIENCE_LEVELS.map((level) => (
-                <TouchableOpacity
-                  key={level.id}
-                  style={[
-                    styles.experienceCard,
-                    data.experience === level.id && styles.experienceCardSelected,
-                  ]}
-                  onPress={() => setData(prev => ({ ...prev, experience: level.id }))}
-                >
-                  <View style={styles.experienceRadio}>
-                    {data.experience === level.id && (
-                      <View style={styles.experienceRadioInner} />
-                    )}
-                  </View>
-                  <View style={styles.experienceText}>
-                    <Text
-                      style={[
-                        styles.experienceLabel,
-                        data.experience === level.id && styles.experienceLabelSelected,
-                      ]}
-                    >
-                      {level.label}
-                    </Text>
-                    <Text style={styles.experienceDescription}>{level.description}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        );
-
-      case 3:
         return (
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>What are your content goals?</Text>

@@ -13,7 +13,7 @@ import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { TrialOfferModal } from "@/components/trial-offer-modal";
 import { BuildingScheduleAnimation } from "@/components/building-schedule-animation";
-import { experienceLevelDescriptions, contentGoalOptions, certifiedBrands, extensionMethods, accountTypes } from "@shared/schema";
+import { contentGoalOptions, certifiedBrands, extensionMethods, accountTypes } from "@shared/schema";
 
 interface User {
   id: string;
@@ -53,12 +53,6 @@ const SERVICE_CATEGORIES = [
   },
 ];
 
-const EXPERIENCE_LEVELS = Object.entries(experienceLevelDescriptions).map(([id, data]) => ({
-  id,
-  label: data.label,
-  description: data.description,
-}));
-
 const CONTENT_GOALS = contentGoalOptions.map(goal => ({
   id: goal.id,
   label: goal.label,
@@ -78,7 +72,6 @@ export default function OnboardingPage() {
   const [services, setServices] = useState<string[]>([]);
   const [city, setCity] = useState("");
   const [instagram, setInstagram] = useState("");
-  const [experience, setExperience] = useState("");
   const [goals, setGoals] = useState<string[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [customBrand, setCustomBrand] = useState<string>("");
@@ -96,7 +89,7 @@ export default function OnboardingPage() {
   });
 
   const isLoggedIn = !!user;
-  const baseSteps = isLoggedIn ? 6 : 7;
+  const baseSteps = isLoggedIn ? 5 : 6;
   const totalSteps = hasExtensions ? baseSteps + 1 : baseSteps;
 
   useEffect(() => {
@@ -113,7 +106,6 @@ export default function OnboardingPage() {
         if (data.services?.length) setServices(data.services);
         if (data.city) setCity(data.city);
         if (data.instagram) setInstagram(data.instagram);
-        if (data.experience) setExperience(data.experience);
         if (data.goals?.length) setGoals(data.goals);
         if (data.selectedBrand) setSelectedBrand(data.selectedBrand);
         if (data.customBrand) setCustomBrand(data.customBrand);
@@ -145,7 +137,6 @@ export default function OnboardingPage() {
       return apiRequest("PUT", "/api/profile", {
         city: city || null,
         instagram: instagram || null,
-        experience: experience || null,
         accountType: accountType || "solo",
         isSalonOwner: isSalonOwner || false,
         contentGoals: goals,
@@ -179,7 +170,6 @@ export default function OnboardingPage() {
         email,
         city: city || null,
         instagram: instagram || null,
-        experience: experience || null,
         accountType: accountType || "solo",
         isSalonOwner: isSalonOwner || false,
         contentGoals: goals,
@@ -271,8 +261,6 @@ export default function OnboardingPage() {
       case 2:
         return city.trim().length > 0;
       case 3:
-        return experience !== '';
-      case 4:
         return goals.length > 0;
       default:
         return false;
@@ -306,8 +294,7 @@ export default function OnboardingPage() {
       case "salonOwner": return "Do you have a team?";
       case "brands": return "Extension Expertise";
       case 2: return "Where are you located?";
-      case 3: return "How long have you been styling?";
-      case 4: return "What are your content goals?";
+      case 3: return "What are your content goals?";
       default: return "";
     }
   };
@@ -321,8 +308,7 @@ export default function OnboardingPage() {
       case "salonOwner": return "This helps us understand your business setup";
       case "brands": return "Select the brands you're certified in and methods you specialize in";
       case 2: return "We'll include location-based hashtags for you";
-      case 3: return "This helps us tailor content to your experience level";
-      case 4: return "Choose what you want to achieve with your posts";
+      case 3: return "Choose what you want to achieve with your posts";
       default: return "";
     }
   };
@@ -638,43 +624,6 @@ export default function OnboardingPage() {
         );
 
       case 3:
-        return (
-          <div className="space-y-4" data-testid="step-experience">
-            <div className="grid gap-3">
-              {EXPERIENCE_LEVELS.map((level) => {
-                const isSelected = experience === level.id;
-                return (
-                  <button
-                    key={level.id}
-                    onClick={() => setExperience(level.id)}
-                    className={`flex items-center justify-between p-4 rounded-md border-2 text-left transition-all ${
-                      isSelected 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border hover-elevate'
-                    }`}
-                    data-testid={`button-experience-${level.id}`}
-                  >
-                    <div>
-                      <p className={`font-medium ${isSelected ? 'text-primary' : ''}`}>
-                        {level.label}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {level.description}
-                      </p>
-                    </div>
-                    {isSelected && (
-                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                        <Check className="w-4 h-4 text-primary-foreground" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-
-      case 4:
         return (
           <div className="space-y-4" data-testid="step-goals">
             <div className="grid grid-cols-2 gap-3">
