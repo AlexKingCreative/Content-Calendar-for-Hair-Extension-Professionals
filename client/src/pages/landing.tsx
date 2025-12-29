@@ -512,7 +512,7 @@ export default function LandingPage() {
               Start Free, Upgrade When You're Ready
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Try it free for 3 days. Then just $10/month for unlimited access.
+              Try it free for 7 days. Then just $10/month for unlimited access.
             </p>
           </div>
           
@@ -522,7 +522,7 @@ export default function LandingPage() {
               <div className="text-center mb-6">
                 <h3 className="text-xl font-semibold mb-2">Free Trial</h3>
                 <div className="text-4xl font-bold mb-1">$0</div>
-                <p className="text-sm text-muted-foreground">3-day full access</p>
+                <p className="text-sm text-muted-foreground">7-day full access</p>
               </div>
               <ul className="space-y-3 mb-6">
                 <li className="flex items-center gap-2 text-sm">
