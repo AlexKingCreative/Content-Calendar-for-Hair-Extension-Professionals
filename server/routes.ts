@@ -1494,6 +1494,33 @@ Respond in JSON format with these fields:
     }
   });
 
+  // Get user's own profile (for streak data, etc.)
+  app.get("/api/users/me/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const profile = await storage.getUserProfile(userId);
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+      
+      res.json({
+        currentStreak: profile.currentStreak,
+        longestStreak: profile.longestStreak,
+        totalPosts: profile.totalPosts,
+        firstStreakRewardClaimed: profile.firstStreakRewardClaimed,
+        firstStreakRewardCoupon: profile.firstStreakRewardCoupon,
+        subscriptionStatus: profile.subscriptionStatus,
+      });
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ error: "Failed to fetch profile" });
+    }
+  });
+
   // Get user's own submissions
   app.get("/api/users/me/submissions", isAuthenticated, async (req: any, res) => {
     try {

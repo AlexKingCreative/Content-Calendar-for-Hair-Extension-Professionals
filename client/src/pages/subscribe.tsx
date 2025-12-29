@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 import { 
   Calendar, 
   Sparkles, 
@@ -12,15 +13,24 @@ import {
   Gift, 
   Star, 
   Crown,
-  Clock
+  Clock,
+  Flame,
+  Percent
 } from "lucide-react";
-import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { apiRequest, getQueryFn, queryClient } from "@/lib/queryClient";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
 interface User {
   id: string;
   email?: string;
+}
+
+interface UserProfile {
+  currentStreak?: number;
+  longestStreak?: number;
+  firstStreakRewardClaimed?: boolean;
+  firstStreakRewardCoupon?: string | null;
 }
 
 const features = [
@@ -39,6 +49,12 @@ export default function Subscribe() {
   const { data: user, isLoading: userLoading } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
+  const { data: profile } = useQuery<UserProfile | null>({
+    queryKey: ["/api/users/me/profile"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!user,
   });
 
   const { data: priceInfo, isLoading: priceLoading } = useQuery<{
@@ -80,6 +96,54 @@ export default function Subscribe() {
     },
   });
 
+  const claimRewardMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/billing/claim-streak-reward");
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to claim reward");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users/me/profile"] });
+      toast({
+        title: "Reward Claimed!",
+        description: "You've unlocked 50% off your first month. Use it when you subscribe!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Could not claim reward",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const checkoutWithRewardMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/billing/checkout-with-reward");
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to start checkout");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Checkout Error",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubscribe = (trial: boolean) => {
     if (!user?.id) {
       toast({
@@ -98,6 +162,16 @@ export default function Subscribe() {
   const daysRemaining = accessStatus?.freeAccessEndsAt 
     ? Math.max(0, Math.ceil((new Date(accessStatus.freeAccessEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
+
+  const currentStreak = profile?.currentStreak ?? 0;
+  const longestStreak = profile?.longestStreak ?? 0;
+  const bestStreak = Math.max(currentStreak, longestStreak);
+  const streakProgress = Math.min(bestStreak / 7 * 100, 100);
+  const hasEarnedReward = bestStreak >= 7;
+  const hasClaimedReward = profile?.firstStreakRewardClaimed ?? false;
+  const hasCoupon = !!profile?.firstStreakRewardCoupon;
+
+  const isLoading = checkoutMutation.isPending || claimRewardMutation.isPending || checkoutWithRewardMutation.isPending;
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -124,6 +198,52 @@ export default function Subscribe() {
           </p>
         </div>
 
+        {user && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <Flame className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">7-Day Streak Challenge</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {hasEarnedReward 
+                      ? hasClaimedReward 
+                        ? "Reward claimed! Use your 50% discount below."
+                        : "You did it! Claim your 50% off reward."
+                      : `Post for 7 days straight to unlock 50% off your first month`
+                    }
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-1">
+                    <Flame className="w-4 h-4 text-orange-500" />
+                    {currentStreak} day{currentStreak !== 1 ? 's' : ''} current streak
+                  </span>
+                  <span>{bestStreak}/7 days</span>
+                </div>
+                <Progress value={streakProgress} className="h-2" />
+              </div>
+
+              {hasEarnedReward && !hasClaimedReward && (
+                <Button 
+                  className="w-full mt-4"
+                  onClick={() => claimRewardMutation.mutate()}
+                  disabled={claimRewardMutation.isPending}
+                  data-testid="button-claim-reward"
+                >
+                  <Gift className="w-4 h-4 mr-2" />
+                  {claimRewardMutation.isPending ? "Claiming..." : "Claim Your 50% Off Reward"}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="relative overflow-visible">
             <CardHeader>
@@ -133,9 +253,26 @@ export default function Subscribe() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-baseline gap-1">
-                <span className="text-5xl font-bold">${price}</span>
-                <span className="text-muted-foreground">/month</span>
+                {hasCoupon ? (
+                  <>
+                    <span className="text-3xl line-through text-muted-foreground">${price}</span>
+                    <span className="text-5xl font-bold text-green-600">${(parseInt(price) / 2).toFixed(0)}</span>
+                    <span className="text-muted-foreground">/first month</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-5xl font-bold">${price}</span>
+                    <span className="text-muted-foreground">/month</span>
+                  </>
+                )}
               </div>
+
+              {hasCoupon && (
+                <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                  <Percent className="w-3 h-3 mr-1" />
+                  50% off first month applied
+                </Badge>
+              )}
 
               <ul className="space-y-3">
                 {features.map((feature, i) => (
@@ -151,22 +288,35 @@ export default function Subscribe() {
               <Separator />
 
               <div className="space-y-3">
-                <Button
-                  className="w-full"
-                  size="lg"
-                  onClick={() => handleSubscribe(false)}
-                  disabled={checkoutMutation.isPending || priceLoading || userLoading}
-                  data-testid="button-subscribe-now"
-                >
-                  {checkoutMutation.isPending ? "Redirecting to checkout..." : userLoading ? "Loading..." : "Subscribe Now"}
-                </Button>
+                {hasCoupon ? (
+                  <Button
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    size="lg"
+                    onClick={() => checkoutWithRewardMutation.mutate()}
+                    disabled={isLoading || priceLoading || userLoading}
+                    data-testid="button-subscribe-with-reward"
+                  >
+                    <Percent className="w-4 h-4 mr-2" />
+                    {checkoutWithRewardMutation.isPending ? "Redirecting..." : `Subscribe - $${(parseInt(price) / 2).toFixed(0)} First Month`}
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={() => handleSubscribe(false)}
+                    disabled={isLoading || priceLoading || userLoading}
+                    data-testid="button-subscribe-now"
+                  >
+                    {checkoutMutation.isPending ? "Redirecting to checkout..." : userLoading ? "Loading..." : "Subscribe Now"}
+                  </Button>
+                )}
 
                 <Button
                   variant="outline"
                   className="w-full"
                   size="lg"
                   onClick={() => handleSubscribe(true)}
-                  disabled={checkoutMutation.isPending || priceLoading || userLoading}
+                  disabled={isLoading || priceLoading || userLoading}
                   data-testid="button-start-trial"
                 >
                   {checkoutMutation.isPending ? "Redirecting..." : "Start 7-Day Free Trial"}
