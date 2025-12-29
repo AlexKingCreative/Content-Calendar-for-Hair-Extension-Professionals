@@ -29,6 +29,7 @@ import JoinSalonPage from "@/pages/join-salon";
 import PricingPage from "@/pages/pricing";
 import LoginPage from "@/pages/login";
 import RegisterPage from "@/pages/register";
+import InstagramPage from "@/pages/instagram";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
@@ -195,6 +196,11 @@ function Router() {
       <Route path="/salon-dashboard">
         <ProtectedRoute>
           <SalonDashboardPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/instagram">
+        <ProtectedRoute>
+          <InstagramPage />
         </ProtectedRoute>
       </Route>
       <Route path="/join-salon/:token" component={JoinSalonPage} />
