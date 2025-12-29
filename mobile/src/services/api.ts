@@ -64,6 +64,10 @@ export const postsApi = {
     const response = await api.get('/api/posts/today');
     return response.data;
   },
+  generateCaption: async (id: number) => {
+    const response = await api.post(`/api/posts/${id}/generate-caption`);
+    return response.data;
+  },
 };
 
 export const profileApi = {
