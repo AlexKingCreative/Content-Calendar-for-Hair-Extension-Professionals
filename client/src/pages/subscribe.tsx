@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 const specialDays = [
   { name: "National Hairstylist Appreciation Day", date: "April 30" },
@@ -39,7 +39,11 @@ const features = [
 
 export default function Subscribe() {
   const [, setLocation] = useLocation();
-  const [withTrial, setWithTrial] = useState(false);
+  const { toast } = useToast();
+
+  const { data: user } = useQuery<{ id?: string } | null>({
+    queryKey: ["/api/auth/user"],
+  });
 
   const { data: priceInfo, isLoading: priceLoading } = useQuery<{
     unit_amount?: number;
@@ -60,6 +64,10 @@ export default function Subscribe() {
   const checkoutMutation = useMutation({
     mutationFn: async (trial: boolean) => {
       const res = await apiRequest("POST", "/api/billing/checkout", { withTrial: trial });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to start checkout");
+      }
       return res.json();
     },
     onSuccess: (data) => {
@@ -67,7 +75,27 @@ export default function Subscribe() {
         window.location.href = data.url;
       }
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Checkout Error",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
+
+  const handleSubscribe = (trial: boolean) => {
+    if (!user?.id) {
+      toast({
+        title: "Please log in first",
+        description: "You need to be logged in to subscribe.",
+        variant: "destructive",
+      });
+      setLocation("/login");
+      return;
+    }
+    checkoutMutation.mutate(trial);
+  };
 
   const price = priceInfo?.unit_amount ? (priceInfo.unit_amount / 100).toFixed(0) : "10";
   
@@ -152,7 +180,7 @@ export default function Subscribe() {
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={() => checkoutMutation.mutate(false)}
+                  onClick={() => handleSubscribe(false)}
                   disabled={checkoutMutation.isPending || priceLoading}
                   data-testid="button-subscribe-now"
                 >
@@ -163,7 +191,7 @@ export default function Subscribe() {
                   variant="outline"
                   className="w-full"
                   size="lg"
-                  onClick={() => checkoutMutation.mutate(true)}
+                  onClick={() => handleSubscribe(true)}
                   disabled={checkoutMutation.isPending || priceLoading}
                   data-testid="button-start-trial"
                 >
