@@ -196,7 +196,7 @@ export default function LandingPage() {
                     </Button>
                   </Link>
                 ) : (
-                  <Link href="/signup">
+                  <Link href="/onboarding">
                     <Button size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-get-started">
                       <Play className="w-5 h-5" />
                       Get Started Free
@@ -520,7 +520,7 @@ export default function LandingPage() {
                 {isIOS ? "Add to Home Screen" : "Install Free App"}
               </Button>
             )}
-            <Link href="/calendar">
+            <Link href="/onboarding">
               <Button variant={showInstallButton ? "outline" : "default"} size="lg" className="text-lg px-8 py-6 gap-2" data-testid="button-final-get-started">
                 Get Started Free
                 <ChevronRight className="w-5 h-5" />
