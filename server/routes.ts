@@ -1308,8 +1308,8 @@ Respond in JSON format with these fields:
         customerId = customer.id;
       }
 
-      // Get price based on interval (month or year)
-      const validInterval = interval === 'year' ? 'year' : 'month';
+      // Get price based on interval (month, quarter, or year)
+      const validInterval = interval === 'year' ? 'year' : interval === 'quarter' ? 'quarter' : 'month';
       let priceInfo = await stripeService.getSubscriptionPriceByInterval(validInterval);
       if (!priceInfo?.price_id) {
         // Fallback to any active price

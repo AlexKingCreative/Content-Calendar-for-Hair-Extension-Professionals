@@ -4,7 +4,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { 
   Calendar, 
@@ -43,9 +42,43 @@ const features = [
   { icon: Crown, text: "Posting streaks with badges" },
 ];
 
+const pricingPlans = [
+  {
+    id: 'month',
+    name: '30 Days',
+    commitment: 'Commit to posting for 30 days',
+    price: 10,
+    billingText: '$10/month',
+    interval: 'month' as const,
+    hasTrial: true,
+    popular: false,
+  },
+  {
+    id: 'quarter',
+    name: '90 Days',
+    commitment: 'Commit to posting for 90 days',
+    price: 25,
+    billingText: '$25 every 3 months',
+    interval: 'quarter' as const,
+    hasTrial: false,
+    popular: true,
+  },
+  {
+    id: 'year',
+    name: '1 Year',
+    commitment: 'Commit to posting for a full year',
+    price: 50,
+    billingText: '$50/year',
+    interval: 'year' as const,
+    hasTrial: false,
+    popular: false,
+  },
+];
+
 export default function Subscribe() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [selectedPlan, setSelectedPlan] = useState<string>('quarter');
 
   const { data: user, isLoading: userLoading } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
@@ -58,28 +91,6 @@ export default function Subscribe() {
     enabled: !!user,
   });
 
-  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
-
-  const { data: allPrices } = useQuery<Array<{
-    price_id: string;
-    unit_amount: number;
-    currency: string;
-    interval: string;
-  }>>({
-    queryKey: ["/api/billing/subscription-prices"],
-  });
-
-  const { data: priceInfo, isLoading: priceLoading } = useQuery<{
-    unit_amount?: number;
-    price_id?: string;
-  } | null>({
-    queryKey: ["/api/billing/subscription-price"],
-  });
-
-  const monthlyPrice = allPrices?.find(p => p.interval === 'month');
-  const yearlyPrice = allPrices?.find(p => p.interval === 'year');
-  const hasYearlyOption = !!yearlyPrice;
-
   const { data: accessStatus } = useQuery<{
     hasAccess?: boolean;
     accessibleMonths?: number[];
@@ -90,7 +101,7 @@ export default function Subscribe() {
   });
 
   const checkoutMutation = useMutation({
-    mutationFn: async ({ trial, interval }: { trial: boolean; interval: 'month' | 'year' }) => {
+    mutationFn: async ({ trial, interval }: { trial: boolean; interval: 'month' | 'quarter' | 'year' }) => {
       const res = await apiRequest("POST", "/api/billing/checkout", { withTrial: trial, interval });
       if (!res.ok) {
         const error = await res.json();
@@ -137,30 +148,7 @@ export default function Subscribe() {
     },
   });
 
-  const checkoutWithRewardMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/billing/checkout-with-reward");
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || "Failed to start checkout");
-      }
-      return res.json();
-    },
-    onSuccess: (data) => {
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Checkout Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSubscribe = (trial: boolean) => {
+  const handleSubscribe = (plan: typeof pricingPlans[0]) => {
     if (!user?.id) {
       toast({
         title: "Please log in first",
@@ -170,15 +158,8 @@ export default function Subscribe() {
       setLocation("/login");
       return;
     }
-    checkoutMutation.mutate({ trial, interval: billingInterval });
+    checkoutMutation.mutate({ trial: plan.hasTrial, interval: plan.interval });
   };
-
-  const price = priceInfo?.unit_amount ? (priceInfo.unit_amount / 100).toFixed(0) : "10";
-  const monthlyPriceDisplay = monthlyPrice ? (monthlyPrice.unit_amount / 100).toFixed(0) : "10";
-  const yearlyPriceDisplay = yearlyPrice ? (yearlyPrice.unit_amount / 100).toFixed(0) : "60";
-  const yearlySavings = monthlyPrice && yearlyPrice 
-    ? Math.round((1 - yearlyPrice.unit_amount / (monthlyPrice.unit_amount * 12)) * 100) 
-    : 50;
   
   const daysRemaining = accessStatus?.freeAccessEndsAt 
     ? Math.max(0, Math.ceil((new Date(accessStatus.freeAccessEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
@@ -190,32 +171,29 @@ export default function Subscribe() {
   const streakProgress = Math.min(bestStreak / 7 * 100, 100);
   const hasEarnedReward = bestStreak >= 7;
   const hasClaimedReward = profile?.firstStreakRewardClaimed ?? false;
-  const hasCoupon = !!profile?.firstStreakRewardCoupon;
 
-  const isLoading = checkoutMutation.isPending || claimRewardMutation.isPending || checkoutWithRewardMutation.isPending;
+  const isLoading = checkoutMutation.isPending || claimRewardMutation.isPending;
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto space-y-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="max-w-5xl mx-auto space-y-8"
       >
         <div className="text-center space-y-4">
-          <Badge variant="outline" className="text-primary border-primary">
-            <Clock className="w-3 h-3 mr-1" />
-            {daysRemaining > 0 
-              ? `${daysRemaining} days left in free trial`
-              : "Free trial ended"
-            }
-          </Badge>
+          {daysRemaining > 0 && (
+            <Badge variant="outline" className="text-primary border-primary">
+              <Clock className="w-3 h-3 mr-1" />
+              {daysRemaining} days left in free trial
+            </Badge>
+          )}
           
           <h1 className="text-3xl md:text-4xl font-heading font-bold">
-            Try Free for 7 Days
+            Choose Your Commitment
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Get full access to monthly content ideas, AI-powered captions,
-            and streak tracking to keep you consistent.
+            The longer you commit, the more you save. Pick the plan that matches your posting goals.
           </p>
         </div>
 
@@ -265,103 +243,88 @@ export default function Subscribe() {
           </Card>
         )}
 
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="relative overflow-visible">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span className="text-2xl font-heading">Pro Access</span>
-                <Badge className="bg-primary/10 text-primary">
-                  7 Days Free
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-baseline gap-1">
-                {hasCoupon ? (
-                  <>
-                    <span className="text-3xl line-through text-muted-foreground">${monthlyPriceDisplay}</span>
-                    <span className="text-5xl font-bold text-green-600">${(parseInt(monthlyPriceDisplay) / 2).toFixed(0)}</span>
-                    <span className="text-muted-foreground">/first month</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-5xl font-bold">${monthlyPriceDisplay}</span>
-                    <span className="text-muted-foreground">/month after trial</span>
-                  </>
-                )}
-              </div>
-
-              {hasCoupon && (
-                <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                  <Percent className="w-3 h-3 mr-1" />
-                  Streak reward applied
-                </Badge>
+        <div className="grid md:grid-cols-3 gap-6">
+          {pricingPlans.map((plan) => (
+            <Card 
+              key={plan.id}
+              className={`relative overflow-visible cursor-pointer transition-all ${
+                selectedPlan === plan.id 
+                  ? 'border-primary ring-2 ring-primary/20' 
+                  : 'hover-elevate'
+              } ${plan.popular ? 'md:-mt-4 md:mb-4' : ''}`}
+              onClick={() => setSelectedPlan(plan.id)}
+              data-testid={`pricing-card-${plan.id}`}
+            >
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-primary text-primary-foreground shadow-lg px-4">
+                    <Star className="w-3 h-3 mr-1" />
+                    Most Popular
+                  </Badge>
+                </div>
               )}
-
-              <ul className="space-y-3">
-                {features.map((feature, i) => (
-                  <li key={i} className="flex items-center gap-3">
-                    <div className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Check className="w-3 h-3 text-primary" />
-                    </div>
-                    <span className="text-sm">{feature.text}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Separator />
-
-              <div className="space-y-3">
-                {hasCoupon ? (
-                  <Button
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    size="lg"
-                    onClick={() => checkoutWithRewardMutation.mutate()}
-                    disabled={isLoading || priceLoading || userLoading}
-                    data-testid="button-subscribe-with-reward"
-                  >
-                    <Percent className="w-4 h-4 mr-2" />
-                    {checkoutWithRewardMutation.isPending ? "Redirecting..." : `Start Trial - $${(parseInt(monthlyPriceDisplay) / 2).toFixed(0)} First Month After`}
-                  </Button>
-                ) : (
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    onClick={() => handleSubscribe(true)}
-                    disabled={isLoading || priceLoading || userLoading}
-                    data-testid="button-start-trial"
-                  >
-                    {checkoutMutation.isPending ? "Redirecting..." : userLoading ? "Loading..." : "Start 7-Day Free Trial"}
-                  </Button>
-                )}
-                <p className="text-xs text-center text-muted-foreground">
-                  7 days free, then ${monthlyPriceDisplay}/month. Cancel anytime.
+              <CardHeader className={plan.popular ? 'pt-8' : ''}>
+                <CardTitle className="text-center">
+                  <span className="text-lg text-muted-foreground block mb-1">{plan.name}</span>
+                  <span className="text-4xl font-bold">${plan.price}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-center text-sm font-medium text-primary">
+                  {plan.commitment}
                 </p>
-              </div>
-            </CardContent>
-          </Card>
+                <p className="text-center text-xs text-muted-foreground">
+                  {plan.billingText}
+                  {plan.hasTrial && ' after 7-day free trial'}
+                </p>
+                
+                <ul className="space-y-2 pt-2">
+                  {features.slice(0, 4).map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span className="text-muted-foreground">{feature.text}</span>
+                    </li>
+                  ))}
+                </ul>
 
-          <Card className="bg-muted/30">
-            <CardHeader>
-              <CardTitle className="text-lg">What You Get</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {features.map((feature, i) => (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="flex items-start gap-3 p-3 rounded-md bg-background"
+                <Button
+                  className={`w-full ${plan.popular ? '' : 'mt-2'}`}
+                  variant={selectedPlan === plan.id ? 'default' : 'outline'}
+                  size="lg"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSubscribe(plan);
+                  }}
+                  disabled={isLoading || userLoading}
+                  data-testid={`button-subscribe-${plan.id}`}
                 >
-                  <feature.icon className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">{feature.text}</span>
-                </motion.div>
-              ))}
-            </CardContent>
-          </Card>
+                  {checkoutMutation.isPending ? "Redirecting..." : 
+                    plan.hasTrial ? "Start 7-Day Free Trial" : `Get Started - $${plan.price}`
+                  }
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
+
+        <Card className="bg-muted/30">
+          <CardHeader>
+            <CardTitle className="text-lg text-center">Everything Included in All Plans</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {features.map((feature, i) => (
+                <div 
+                  key={i}
+                  className="flex items-center gap-3 p-3 rounded-md bg-background"
+                >
+                  <feature.icon className="w-5 h-5 text-primary flex-shrink-0" />
+                  <span className="text-sm">{feature.text}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="text-center space-y-4 pt-4">
           <p className="text-sm text-muted-foreground">

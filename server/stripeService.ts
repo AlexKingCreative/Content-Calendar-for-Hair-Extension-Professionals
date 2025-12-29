@@ -71,7 +71,23 @@ export class StripeService {
     return result.rows || [];
   }
 
-  async getSubscriptionPriceByInterval(interval: 'month' | 'year') {
+  async getSubscriptionPriceByInterval(interval: 'month' | 'quarter' | 'year') {
+    // Stripe uses month with interval_count for quarterly billing
+    if (interval === 'quarter') {
+      const result = await db.execute(
+        sql`SELECT p.*, pr.id as price_id, pr.unit_amount, pr.currency, pr.recurring
+            FROM stripe.products p
+            JOIN stripe.prices pr ON pr.product = p.id
+            WHERE p.active = true AND pr.active = true
+            AND p.metadata->>'type' = 'subscription'
+            AND pr.recurring->>'interval' = 'month'
+            AND (pr.recurring->>'interval_count')::int = 3
+            ORDER BY pr.unit_amount ASC
+            LIMIT 1`
+      );
+      return result.rows[0] || null;
+    }
+    
     const result = await db.execute(
       sql`SELECT p.*, pr.id as price_id, pr.unit_amount, pr.currency, pr.recurring
           FROM stripe.products p
@@ -79,6 +95,7 @@ export class StripeService {
           WHERE p.active = true AND pr.active = true
           AND p.metadata->>'type' = 'subscription'
           AND pr.recurring->>'interval' = ${interval}
+          AND (pr.recurring->>'interval_count' IS NULL OR (pr.recurring->>'interval_count')::int = 1)
           ORDER BY pr.unit_amount ASC
           LIMIT 1`
     );
