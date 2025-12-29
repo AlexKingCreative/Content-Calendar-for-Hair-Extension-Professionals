@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { TrialOfferModal } from "@/components/trial-offer-modal";
+import { BuildingScheduleAnimation } from "@/components/building-schedule-animation";
 import { experienceLevelDescriptions, contentGoalOptions } from "@shared/schema";
 
 interface User {
@@ -79,6 +80,7 @@ export default function OnboardingPage() {
   const [experience, setExperience] = useState("");
   const [goals, setGoals] = useState<string[]>([]);
   const [showTrialModal, setShowTrialModal] = useState(false);
+  const [showBuildingAnimation, setShowBuildingAnimation] = useState(false);
 
   const { data: user } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
@@ -137,7 +139,7 @@ export default function OnboardingPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
-      setShowTrialModal(true);
+      setShowBuildingAnimation(true);
     },
   });
 
@@ -174,7 +176,7 @@ export default function OnboardingPage() {
           ? "Your account is ready! Check your email for your login credentials." 
           : "Welcome back! You're now signed in.",
       });
-      setShowTrialModal(true);
+      setShowBuildingAnimation(true);
     },
     onError: (error: any) => {
       if (error?.existingUser) {
@@ -528,6 +530,16 @@ export default function OnboardingPage() {
         </CardContent>
       </Card>
       
+      {showBuildingAnimation && (
+        <BuildingScheduleAnimation
+          duration={3000}
+          onComplete={() => {
+            setShowBuildingAnimation(false);
+            setShowTrialModal(true);
+          }}
+        />
+      )}
+
       <TrialOfferModal
         open={showTrialModal}
         onClose={() => setShowTrialModal(false)}
