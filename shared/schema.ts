@@ -478,3 +478,92 @@ export const insertStylistChallengeSchema = createInsertSchema(stylistChallenges
 
 export type StylistChallenge = typeof stylistChallenges.$inferSelect;
 export type InsertStylistChallenge = z.infer<typeof insertStylistChallengeSchema>;
+
+// Instagram Integration - Connected Accounts
+export const instagramAccounts = pgTable("instagram_accounts", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().unique(),
+  instagramUserId: varchar("instagram_user_id").notNull(),
+  instagramUsername: text("instagram_username").notNull(),
+  accessToken: text("access_token").notNull(),
+  tokenExpiresAt: timestamp("token_expires_at"),
+  pageId: varchar("page_id"),
+  pageName: text("page_name"),
+  profilePictureUrl: text("profile_picture_url"),
+  followersCount: integer("followers_count").default(0),
+  followingCount: integer("following_count").default(0),
+  mediaCount: integer("media_count").default(0),
+  lastSyncAt: timestamp("last_sync_at"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertInstagramAccountSchema = createInsertSchema(instagramAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InstagramAccount = typeof instagramAccounts.$inferSelect;
+export type InsertInstagramAccount = z.infer<typeof insertInstagramAccountSchema>;
+
+// Instagram Media - Synced posts from Instagram
+export const instagramMedia = pgTable("instagram_media", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  instagramMediaId: varchar("instagram_media_id").notNull().unique(),
+  mediaType: text("media_type").notNull(),
+  mediaUrl: text("media_url"),
+  thumbnailUrl: text("thumbnail_url"),
+  permalink: text("permalink"),
+  caption: text("caption"),
+  timestamp: timestamp("timestamp").notNull(),
+  likeCount: integer("like_count").default(0),
+  commentsCount: integer("comments_count").default(0),
+  reach: integer("reach").default(0),
+  impressions: integer("impressions").default(0),
+  saved: integer("saved").default(0),
+  shares: integer("shares").default(0),
+  engagement: integer("engagement").default(0),
+  postDate: text("post_date").notNull(),
+  syncedAt: timestamp("synced_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertInstagramMediaSchema = createInsertSchema(instagramMedia).omit({
+  id: true,
+  syncedAt: true,
+  createdAt: true,
+});
+
+export type InstagramMedia = typeof instagramMedia.$inferSelect;
+export type InsertInstagramMedia = z.infer<typeof insertInstagramMediaSchema>;
+
+// Instagram Daily Insights - Aggregated daily analytics
+export const instagramDailyInsights = pgTable("instagram_daily_insights", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  date: text("date").notNull(),
+  reach: integer("reach").default(0),
+  impressions: integer("impressions").default(0),
+  profileViews: integer("profile_views").default(0),
+  websiteClicks: integer("website_clicks").default(0),
+  followersGained: integer("followers_gained").default(0),
+  followersLost: integer("followers_lost").default(0),
+  postsPublished: integer("posts_published").default(0),
+  storiesPublished: integer("stories_published").default(0),
+  reelsPublished: integer("reels_published").default(0),
+  totalEngagement: integer("total_engagement").default(0),
+  syncedAt: timestamp("synced_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertInstagramDailyInsightsSchema = createInsertSchema(instagramDailyInsights).omit({
+  id: true,
+  syncedAt: true,
+  createdAt: true,
+});
+
+export type InstagramDailyInsights = typeof instagramDailyInsights.$inferSelect;
+export type InsertInstagramDailyInsights = z.infer<typeof insertInstagramDailyInsightsSchema>;
