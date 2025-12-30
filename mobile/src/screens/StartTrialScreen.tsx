@@ -55,7 +55,7 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
           </View>
           <Text style={styles.heroTitle}>Start Your Free Trial</Text>
           <Text style={styles.heroSubtitle}>
-            7 days free, then just $10/month. Cancel anytime.
+            7-day free trial on all plans. Cancel anytime.
           </Text>
         </View>
 
@@ -117,6 +117,7 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
                   <Text style={styles.priceAmount}>$25</Text>
                   <Text style={styles.pricePeriod}>/3 months</Text>
                 </Text>
+                <Text style={styles.planTrial}>7-day free trial included</Text>
                 <Text style={styles.planSavings}>~$8.33/month</Text>
                 <Text style={styles.planCommitment}>Commit to posting more for 90 days to see results</Text>
               </View>
@@ -149,6 +150,7 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
                   <Text style={styles.priceAmount}>$50</Text>
                   <Text style={styles.pricePeriod}>/year</Text>
                 </Text>
+                <Text style={styles.planTrial}>7-day free trial included</Text>
                 <Text style={styles.planSavings}>~$4.17/month - Save 58%</Text>
               </View>
             </View>
@@ -183,7 +185,7 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
           ) : (
             <>
               <Text style={styles.ctaButtonText}>
-                {selectedPlan === 'monthly' ? 'Start 7-Day Free Trial' : 'Subscribe Now'}
+                Start 7-Day Free Trial
               </Text>
               <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
             </>
@@ -191,9 +193,7 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
         </TouchableOpacity>
         
         <Text style={styles.ctaDisclaimer}>
-          {selectedPlan === 'monthly' 
-            ? 'Credit card required. Cancel anytime during trial.'
-            : 'Subscription starts immediately. Cancel anytime.'}
+          Credit card required. Cancel anytime during trial.
         </Text>
       </View>
     </SafeAreaView>
