@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   Dimensions,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
@@ -143,12 +144,13 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
             "This app has completely changed how I approach social media. I used to stress about what to post, now I have ideas ready every day!"
           </Text>
           <View style={styles.testimonialAuthor}>
-            <View style={styles.testimonialAvatar}>
-              <Text style={styles.testimonialAvatarText}>JM</Text>
-            </View>
+            <Image 
+              source={require('../../assets/ashley_nusrala.png')} 
+              style={styles.testimonialAvatar}
+            />
             <View>
-              <Text style={styles.testimonialName}>Jessica M.</Text>
-              <Text style={styles.testimonialRole}>Extension Specialist, LA</Text>
+              <Text style={styles.testimonialName}>Ashley Nusrala</Text>
+              <Text style={styles.testimonialRole}>Extension Specialist, Los Angeles</Text>
             </View>
           </View>
         </View>
@@ -357,14 +359,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  testimonialAvatarText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
   },
   testimonialName: {
     fontSize: 13,
