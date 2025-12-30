@@ -20,7 +20,13 @@ import { AuthStackParamList } from '../navigation';
 
 const { width, height } = Dimensions.get('window');
 
-const serviceIconsImage = require('../../assets/icons/service-icons-combined.jpeg');
+const serviceIcons = {
+  extensions: require('../../assets/icon_hair_extensions.png'),
+  toppers: require('../../assets/icon_toppers.png'),
+  wigs: require('../../assets/icon_wigs.png'),
+  coloring: require('../../assets/icon_color_services.png'),
+  cutting: require('../../assets/icon_cut_and_style.png'),
+};
 
 const CONFETTI_COLORS = ['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#f59e0b', '#10b981', '#D4A574', '#E8B4A0'];
 
@@ -389,48 +395,37 @@ const SERVICE_CATEGORIES = [
   { 
     id: 'extensions', 
     label: 'Hair Extensions', 
-    iconIndex: 0,
     description: 'Tape-ins, sew-ins, fusion, etc.',
     color: '#E8B4A0',
   },
   { 
     id: 'toppers', 
     label: 'Hair Toppers', 
-    iconIndex: 1,
     description: 'Coverage for thinning hair',
     color: '#D4A574',
   },
   { 
     id: 'wigs', 
     label: 'Wigs & Units', 
-    iconIndex: 2,
     description: 'Full coverage solutions',
     color: '#C9A67A',
   },
   { 
     id: 'coloring', 
     label: 'Color Services', 
-    iconIndex: 3,
     description: 'Balayage, highlights, color',
     color: '#B8A090',
   },
   { 
     id: 'cutting', 
     label: 'Cut & Style', 
-    iconIndex: 4,
     description: 'Haircuts and styling',
     color: '#A89580',
   },
 ];
 
-const ServiceIcon = ({ iconIndex, size = 48, selected }: { iconIndex: number; size?: number; selected?: boolean }) => {
-  const iconWidth = 180;
-  const iconHeight = 180;
-  const imageWidth = 1024;
-  const spacing = 24;
-  const startX = 32;
-  
-  const xOffset = startX + (iconIndex * (iconWidth + spacing));
+const ServiceIcon = ({ serviceId, size = 48, selected }: { serviceId: string; size?: number; selected?: boolean }) => {
+  const iconSource = serviceIcons[serviceId as keyof typeof serviceIcons];
   
   return (
     <View style={{ 
@@ -441,12 +436,10 @@ const ServiceIcon = ({ iconIndex, size = 48, selected }: { iconIndex: number; si
       backgroundColor: selected ? '#FDF5F0' : '#FAF7F5',
     }}>
       <Image
-        source={serviceIconsImage}
+        source={iconSource}
         style={{
-          width: imageWidth * (size / iconHeight),
+          width: size,
           height: size,
-          marginLeft: -xOffset * (size / iconHeight),
-          marginTop: -40 * (size / iconHeight),
         }}
         resizeMode="cover"
       />
@@ -651,7 +644,7 @@ export default function OnboardingScreen() {
                   onPress={() => toggleService(service.id)}
                 >
                   <ServiceIcon 
-                    iconIndex={service.iconIndex} 
+                    serviceId={service.id} 
                     size={52} 
                     selected={data.services.includes(service.id)}
                   />
@@ -695,7 +688,7 @@ export default function OnboardingScreen() {
                   onPress={() => togglePostingService(service.id)}
                 >
                   <ServiceIcon 
-                    iconIndex={service.iconIndex} 
+                    serviceId={service.id} 
                     size={52} 
                     selected={data.postingServices.includes(service.id)}
                   />
