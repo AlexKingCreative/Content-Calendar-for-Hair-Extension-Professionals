@@ -66,7 +66,7 @@ export async function sendMagicLinkEmail(email: string, magicLinkUrl: string, ve
           <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
             <div style="text-align: center; margin-bottom: 32px;">
               <h1 style="color: #5D4E3C; font-size: 24px; margin: 0 0 8px;">Content Calendar</h1>
-              <p style="color: #8B7355; font-size: 14px; margin: 0;">for Hair Extension Professionals</p>
+              <p style="color: #8B7355; font-size: 14px; margin: 0;">for Hair Pros</p>
             </div>
             
             <h2 style="color: #5D4E3C; font-size: 20px; text-align: center; margin-bottom: 16px;">
@@ -115,9 +115,11 @@ export async function sendMagicLinkEmail(email: string, magicLinkUrl: string, ve
 export async function sendWelcomeEmail(email: string, password: string): Promise<boolean> {
   try {
     const { client, fromEmail } = await getResendClient();
-    const loginUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}/login`
-      : 'https://contentcalendarforhairpros.com/login';
+    const loginUrl = process.env.REPLIT_DEPLOYMENT === '1'
+      ? 'https://contentcalendarforhairpros.com/login'
+      : (process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}/login`
+        : 'https://contentcalendarforhairpros.com/login');
     
     await client.emails.send({
       from: fromEmail || 'Content Calendar <hello@contentcalendarforhairpros.com>',
@@ -134,7 +136,7 @@ export async function sendWelcomeEmail(email: string, password: string): Promise
           <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
             <div style="text-align: center; margin-bottom: 32px;">
               <h1 style="color: #5D4E3C; font-size: 24px; margin: 0 0 8px;">Content Calendar</h1>
-              <p style="color: #8B7355; font-size: 14px; margin: 0;">for Hair Extension Professionals</p>
+              <p style="color: #8B7355; font-size: 14px; margin: 0;">for Hair Pros</p>
             </div>
             
             <h2 style="color: #5D4E3C; font-size: 20px; text-align: center; margin-bottom: 16px;">

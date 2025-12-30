@@ -33,9 +33,11 @@ router.post('/request-magic-link', async (req, res) => {
       onboardingData: onboardingData ? JSON.stringify(onboardingData) : null,
     });
 
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-      : 'https://content-calendar-hair-pro.replit.app';
+    const baseUrl = process.env.REPLIT_DEPLOYMENT === '1'
+      ? 'https://contentcalendarforhairpros.com'
+      : (process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+        : 'https://contentcalendarforhairpros.com');
     
     const magicLinkUrl = `${baseUrl}/api/auth/verify-magic-link?token=${token}`;
     
