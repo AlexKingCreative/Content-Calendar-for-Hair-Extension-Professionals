@@ -40,6 +40,7 @@ import { CalendarDemo, AICaptionDemo, StreakDemo, InstagramDemo, HashtagDemo } f
 import denaePhoto from "@assets/Denae_Tafoya_1767024771840.jpg";
 import danniPhoto from "@assets/Dannielle_Vizzini_1767024800600.jpg";
 import maryPhoto from "@assets/mary_james_square_1767024880276.png";
+import ashleyPhoto from "@assets/IMG_5578_1767101743608.JPG";
 
 function AnimatedCounter({ value, duration = 2000 }: { value: number; duration?: number }) {
   const [count, setCount] = useState(0);
@@ -551,7 +552,7 @@ export default function LandingPage() {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-rose-500/20 rounded-3xl blur-2xl scale-95" />
                 <img 
-                  src="/attached_assets/IMG_5578_1767101743608.JPG" 
+                  src={ashleyPhoto} 
                   alt="Ashley Diana" 
                   className="relative w-80 h-96 object-cover object-top rounded-3xl border-4 border-background shadow-2xl"
                 />
