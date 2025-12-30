@@ -828,7 +828,7 @@ export async function registerRoutes(
   });
 
   // Generate caption for a post using AI
-  app.post("/api/posts/:id/generate-caption", async (req, res) => {
+  app.post("/api/posts/:id/generate-caption", async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -841,8 +841,23 @@ export async function registerRoutes(
       }
 
       // Get user's account type for personalized voice
+      // Support both session-based auth (web) and JWT auth (mobile)
       let accountType = "solo";
-      const userId = req.session?.userId;
+      let userId = req.session?.userId;
+      
+      // Check for mobile JWT auth if no session
+      if (!userId) {
+        const authHeader = req.headers.authorization;
+        if (authHeader?.startsWith('Bearer ')) {
+          const token = authHeader.substring(7);
+          const { verifyToken } = await import('./mobileAuth');
+          const payload = verifyToken(token);
+          if (payload?.userId) {
+            userId = payload.userId;
+          }
+        }
+      }
+      
       if (userId) {
         const profile = await storage.getUserProfile(userId);
         if (profile?.accountType) {
