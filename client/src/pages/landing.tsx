@@ -524,7 +524,7 @@ export default function LandingPage() {
                 Built by a Stylist, for Stylists
               </h2>
               <p className="text-muted-foreground mb-4">
-                Hi, I'm Ashley Diana! I'm the founder of Rich Stylist Academy and I've spent years helping hairstylists grow on social media to attract premium clients and create their dream business.
+                Hi, I'm Ashley Diana! I've spent years helping hairstylists grow on social media to attract premium clients and create their dream business.
               </p>
               <p className="text-muted-foreground mb-6">
                 I saw the same problem over and over: incredibly talented stylists who couldn't stay consistent on social media because they didn't know what to post.
@@ -551,14 +551,14 @@ export default function LandingPage() {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-rose-500/20 rounded-3xl blur-2xl scale-95" />
                 <img 
-                  src="/attached_assets/IMG_5580_1767050115161.JPG" 
-                  alt="Ashley Diana - Founder of Rich Stylist Academy" 
+                  src="/attached_assets/IMG_5578_1767101743608.JPG" 
+                  alt="Ashley Diana" 
                   className="relative w-80 h-96 object-cover object-top rounded-3xl border-4 border-background shadow-2xl"
                 />
                 <div className="absolute -bottom-4 left-1/2 -translate-x-1/2">
                   <Badge className="px-4 py-2 shadow-lg bg-background text-foreground border">
                     <Star className="w-3.5 h-3.5 mr-1.5 fill-amber-400 text-amber-400" />
-                    Rich Stylist Academy
+                    Ashley Diana
                   </Badge>
                 </div>
               </div>
