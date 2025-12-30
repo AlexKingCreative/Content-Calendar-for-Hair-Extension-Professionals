@@ -134,8 +134,10 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
         </View>
 
         <View style={styles.testimonialCard}>
-          <View style={styles.testimonialQuote}>
-            <Ionicons name="chatbubble-outline" size={20} color={colors.primary} />
+          <View style={styles.starsRow}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Ionicons key={star} name="star" size={16} color="#FFD700" />
+            ))}
           </View>
           <Text style={styles.testimonialText}>
             "This app has completely changed how I approach social media. I used to stress about what to post, now I have ideas ready every day!"
@@ -202,6 +204,8 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: spacing.md,
     paddingBottom: spacing.md,
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   heroSection: {
     alignItems: 'center',
@@ -329,8 +333,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    alignItems: 'center',
   },
-  testimonialQuote: {
+  starsRow: {
+    flexDirection: 'row',
+    gap: 4,
     marginBottom: spacing.sm,
   },
   testimonialText: {
@@ -339,6 +346,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontStyle: 'italic',
     marginBottom: spacing.sm,
+    textAlign: 'center',
   },
   testimonialAuthor: {
     flexDirection: 'row',
