@@ -207,7 +207,7 @@ export default function WelcomeScreen() {
           </TouchableOpacity>
 
           <Text style={styles.trialText}>
-            7-day free trial, then $9.99/month
+            7-day free trial, then $10/month
           </Text>
         </Animated.View>
       </View>

@@ -856,7 +856,7 @@ export default function LandingPage() {
               Less Than a Coffee a Week
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Try free for 7 days. Then just $9.99/month for unlimited access.
+              Try free for 7 days. Then just $10/month for unlimited access.
             </p>
           </motion.div>
           
@@ -875,7 +875,7 @@ export default function LandingPage() {
               </div>
               <div className="text-center mb-8 pt-4">
                 <div className="text-6xl font-bold mb-2 bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent">
-                  $9.99<span className="text-2xl font-normal text-muted-foreground">/mo</span>
+                  $10<span className="text-2xl font-normal text-muted-foreground">/mo</span>
                 </div>
                 <p className="text-muted-foreground">After your free trial</p>
               </div>

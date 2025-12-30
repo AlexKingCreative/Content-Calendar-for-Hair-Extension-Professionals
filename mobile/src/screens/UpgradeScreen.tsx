@@ -164,7 +164,7 @@ export default function UpgradeScreen() {
               <View style={styles.planInfo}>
                 <Text style={styles.planName}>Monthly</Text>
                 <Text style={styles.planPrice}>
-                  <Text style={styles.priceAmount}>$9.99</Text>
+                  <Text style={styles.priceAmount}>$10</Text>
                   <Text style={styles.pricePeriod}>/month</Text>
                 </Text>
                 <Text style={styles.planTrial}>7-day free trial included</Text>
@@ -213,7 +213,7 @@ export default function UpgradeScreen() {
         </TouchableOpacity>
         <Text style={styles.footerNote}>
           {selectedPlan === 'monthly' 
-            ? 'After 7 days, you will be charged $9.99/month'
+            ? 'After 7 days, you will be charged $10/month'
             : 'You will be charged $60/year'
           }
         </Text>
