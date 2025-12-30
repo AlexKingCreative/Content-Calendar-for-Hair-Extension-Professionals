@@ -645,6 +645,9 @@ router.post('/stripe/complete-checkout', async (req, res) => {
       
       userId = newUser.id;
       
+      const subscription = session.subscription as any;
+      const subscriptionStatus = subscription?.status === 'trialing' ? 'trialing' : 'active';
+      
       await db.insert(userProfiles).values({
         userId,
         city: pending.city || null,
@@ -652,13 +655,22 @@ router.post('/stripe/complete-checkout', async (req, res) => {
         extensionMethods: pending.extensionMethods || [],
         businessType: pending.businessType || 'solo',
         onboardingComplete: true,
+        subscriptionStatus,
+        stripeCustomerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
       });
     }
     
     const profile = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId));
-    if (profile.length > 0 && !profile[0].onboardingComplete) {
+    if (profile.length > 0) {
+      const subscription = session.subscription as any;
+      const subscriptionStatus = subscription?.status === 'trialing' ? 'trialing' : 'active';
+      
       await db.update(userProfiles)
-        .set({ onboardingComplete: true })
+        .set({ 
+          onboardingComplete: true,
+          subscriptionStatus,
+          stripeCustomerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
+        })
         .where(eq(userProfiles.userId, userId));
     }
     
