@@ -30,6 +30,7 @@ import JoinSalonPage from "@/pages/join-salon";
 import PricingPage from "@/pages/pricing";
 import LoginPage from "@/pages/login";
 import RegisterPage from "@/pages/register";
+import ForgotPasswordPage from "@/pages/forgot-password";
 import InstagramPage from "@/pages/instagram";
 import AboutPage from "@/pages/about";
 import SubscriptionSuccessPage from "@/pages/subscription-success";
@@ -158,6 +159,7 @@ function Router() {
       <Route path="/" component={HomePage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/welcome" component={WelcomePage} />
       <Route path="/signup" component={SignupPage} />
       <Route path="/calendar" component={CalendarPage} />

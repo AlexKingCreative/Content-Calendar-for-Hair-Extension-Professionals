@@ -22,6 +22,7 @@ import AccountScreen from '../screens/AccountScreen';
 import UpgradeScreen from '../screens/UpgradeScreen';
 import StartTrialScreen from '../screens/StartTrialScreen';
 import GuestCheckoutScreen from '../screens/GuestCheckoutScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -38,6 +39,7 @@ export type AuthStackParamList = {
   Welcome: undefined;
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
   Onboarding: undefined;
   GuestCheckout: {
     city?: string;
@@ -66,6 +68,7 @@ function AuthNavigator() {
       <AuthStack.Screen name="Onboarding" component={OnboardingScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Register" component={RegisterScreen} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <AuthStack.Screen name="GuestCheckout" component={GuestCheckoutScreen} />
     </AuthStack.Navigator>
   );

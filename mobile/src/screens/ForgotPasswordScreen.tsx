@@ -12,17 +12,17 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useAuth } from '../hooks/useAuth';
 import { authApi } from '../services/api';
 import { AuthStackParamList } from '../navigation';
+import { useAuth } from '../hooks/useAuth';
 
 type Props = {
-  navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
+  navigation: NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>;
 };
 
 type Step = 'email' | 'code';
 
-export default function LoginScreen({ navigation }: Props) {
+export default function ForgotPasswordScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [step, setStep] = useState<Step>('email');
@@ -32,7 +32,7 @@ export default function LoginScreen({ navigation }: Props) {
   
   const codeInputRefs = useRef<(TextInput | null)[]>([]);
 
-  const handleRequestMagicLink = async () => {
+  const handleRequestResetLink = async () => {
     if (!email || !email.includes('@')) {
       Alert.alert('Error', 'Please enter a valid email address');
       return;
@@ -45,11 +45,11 @@ export default function LoginScreen({ navigation }: Props) {
       setStep('code');
       Alert.alert(
         'Check Your Email',
-        'We sent you a 6-digit code. Enter it below to sign in.',
+        'We sent you a 6-digit code. Enter it below to reset your password.',
         [{ text: 'OK' }]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to send magic link. Please try again.');
+      Alert.alert('Error', error.response?.data?.message || 'Failed to send reset link. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -97,6 +97,11 @@ export default function LoginScreen({ navigation }: Props) {
     try {
       const response = await authApi.verifyMagicLink(magicLinkToken, verificationCode);
       await loginWithToken(response.token, response.user);
+      Alert.alert(
+        'Success',
+        'You are now signed in. You can update your password in Account Settings.',
+        [{ text: 'OK' }]
+      );
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.message || 'Invalid or expired code. Please try again.');
       setCode(['', '', '', '', '', '']);
@@ -108,7 +113,7 @@ export default function LoginScreen({ navigation }: Props) {
 
   const handleResendCode = async () => {
     setCode(['', '', '', '', '', '']);
-    await handleRequestMagicLink();
+    await handleRequestResetLink();
   };
 
   const handleBackToEmail = () => {
@@ -201,9 +206,9 @@ export default function LoginScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.welcomeText}>Welcome back</Text>
+          <Text style={styles.welcomeText}>Reset Password</Text>
           <Text style={styles.instructionText}>
-            Enter your email and we'll send you a magic link to sign in instantly.
+            Enter your email and we'll send you a code to sign in. Once signed in, you can update your password.
           </Text>
 
           <Text style={styles.label}>Email</Text>
@@ -220,31 +225,22 @@ export default function LoginScreen({ navigation }: Props) {
 
           <TouchableOpacity
             style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleRequestMagicLink}
+            onPress={handleRequestResetLink}
             disabled={isLoading}
           >
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.buttonText}>Send Magic Link</Text>
+              <Text style={styles.buttonText}>Send Reset Code</Text>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.linkButton}
-            onPress={() => navigation.navigate('ForgotPassword')}
+            onPress={() => navigation.goBack()}
           >
             <Text style={styles.linkText}>
-              <Text style={styles.linkTextBold}>Forgot password?</Text>
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => navigation.navigate('Register')}
-          >
-            <Text style={styles.linkText}>
-              Don't have an account? <Text style={styles.linkTextBold}>Sign Up</Text>
+              <Text style={styles.linkTextBold}>Back to Login</Text>
             </Text>
           </TouchableOpacity>
         </View>

@@ -199,6 +199,14 @@ export default function LoginPage() {
                       )}
                     />
 
+                    <div className="text-right">
+                      <Link href="/forgot-password">
+                        <span className="text-sm text-primary hover:underline cursor-pointer" data-testid="link-forgot-password">
+                          Forgot password?
+                        </span>
+                      </Link>
+                    </div>
+
                     <Button 
                       type="submit" 
                       className="w-full" 
