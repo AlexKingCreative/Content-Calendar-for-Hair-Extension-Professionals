@@ -84,7 +84,7 @@ export default function LoginPage() {
   const onMagicLinkSubmit = async (data: MagicLinkForm) => {
     setIsMagicLinkLoading(true);
     try {
-      const response = await fetch("/api/auth/magic-link", {
+      const response = await fetch("/api/auth/request-magic-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
