@@ -15,7 +15,12 @@ import { AuthStackParamList } from '../navigation';
 
 const { width } = Dimensions.get('window');
 
-export default function WelcomeScreen() {
+interface WelcomeScreenProps {
+  onContinue?: () => void;
+  isAuthenticated?: boolean;
+}
+
+export default function WelcomeScreen({ onContinue, isAuthenticated }: WelcomeScreenProps) {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   
   const logoScale = useRef(new Animated.Value(0)).current;
@@ -91,7 +96,11 @@ export default function WelcomeScreen() {
   }, []);
 
   const handleGetStarted = () => {
-    navigation.navigate('Onboarding');
+    if (onContinue) {
+      onContinue();
+    } else {
+      navigation.navigate('Onboarding');
+    }
   };
 
   const handleSignIn = () => {
@@ -198,17 +207,21 @@ export default function WelcomeScreen() {
           ]}
         >
           <TouchableOpacity style={styles.primaryButton} onPress={handleGetStarted}>
-            <Text style={styles.primaryButtonText}>Get Started Free</Text>
+            <Text style={styles.primaryButtonText}>{isAuthenticated ? "Let's Go" : "Get Started Free"}</Text>
             <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.secondaryButton} onPress={handleSignIn}>
-            <Text style={styles.secondaryButtonText}>Already have an account? Sign In</Text>
-          </TouchableOpacity>
+          {!isAuthenticated && (
+            <TouchableOpacity style={styles.secondaryButton} onPress={handleSignIn}>
+              <Text style={styles.secondaryButtonText}>Already have an account? Sign In</Text>
+            </TouchableOpacity>
+          )}
 
-          <Text style={styles.trialText}>
-            7-day free trial, then $10/month
-          </Text>
+          {!isAuthenticated && (
+            <Text style={styles.trialText}>
+              7-day free trial, then $10/month
+            </Text>
+          )}
         </Animated.View>
       </View>
 

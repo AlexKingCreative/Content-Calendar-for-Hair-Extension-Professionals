@@ -15,12 +15,14 @@ interface AuthContextType {
   hasActiveSubscription: boolean;
   subscriptionStatus: string | null;
   onboardingComplete: boolean;
+  hasSeenWelcome: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithToken: (token: string, userData: User) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshSubscriptionStatus: () => Promise<void>;
   setOnboardingComplete: (complete: boolean) => void;
+  setHasSeenWelcome: (seen: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [hasSeenWelcome, setHasSeenWelcome] = useState(false);
 
   const checkSubscription = useCallback(async () => {
     try {
@@ -86,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSubscriptionStatus(null);
     setOnboardingComplete(false);
+    setHasSeenWelcome(false);
   };
 
   const refreshSubscriptionStatus = async () => {
@@ -103,12 +107,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         hasActiveSubscription,
         subscriptionStatus,
         onboardingComplete,
+        hasSeenWelcome,
         login,
         loginWithToken,
         register,
         logout,
         refreshSubscriptionStatus,
         setOnboardingComplete,
+        setHasSeenWelcome,
       }}
     >
       {children}

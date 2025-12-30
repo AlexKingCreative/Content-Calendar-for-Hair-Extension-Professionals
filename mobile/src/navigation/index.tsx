@@ -150,8 +150,13 @@ function StartTrialWrapper() {
   return <StartTrialScreen onTrialStarted={refreshSubscriptionStatus} />;
 }
 
+function AuthenticatedWelcomeScreen() {
+  const { setHasSeenWelcome } = useAuth();
+  return <WelcomeScreen onContinue={() => setHasSeenWelcome(true)} isAuthenticated={true} />;
+}
+
 export default function Navigation() {
-  const { isLoading, isAuthenticated, hasActiveSubscription } = useAuth();
+  const { isLoading, isAuthenticated, hasActiveSubscription, hasSeenWelcome } = useAuth();
 
   if (isLoading) {
     return (
@@ -190,6 +195,8 @@ export default function Navigation() {
                 options={{ headerShown: false }}
               />
             </>
+          ) : !hasSeenWelcome ? (
+            <Stack.Screen name="Auth" component={AuthenticatedWelcomeScreen} />
           ) : (
             <>
               <Stack.Screen name="Onboarding" component={OnboardingScreen} />
