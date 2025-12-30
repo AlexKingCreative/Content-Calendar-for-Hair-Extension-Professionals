@@ -258,7 +258,7 @@ router.get('/user', authenticateMobile, async (req: any, res) => {
 router.get('/profile', authenticateMobile, async (req: any, res) => {
   try {
     const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, req.mobileUserId));
-    res.json(profile || { userId: req.mobileUserId, subscriptionTier: 'free' });
+    res.json(profile || { userId: req.mobileUserId, subscriptionTier: 'free', onboardingComplete: false });
   } catch (error) {
     console.error('Get profile error:', error);
     res.status(500).json({ message: 'Failed to get profile' });
@@ -315,6 +315,12 @@ router.put('/profile', authenticateMobile, async (req: any, res) => {
     }
     if (tone !== undefined && typeof tone === 'string') {
       updateData.tone = tone;
+    }
+    if (req.body.onboardingComplete !== undefined) {
+      updateData.onboardingComplete = !!req.body.onboardingComplete;
+    }
+    if (req.body.offeredServices !== undefined && Array.isArray(req.body.offeredServices)) {
+      updateData.offeredServices = req.body.offeredServices;
     }
 
     if (Object.keys(updateData).length === 0) {
