@@ -484,9 +484,7 @@ router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
     const { getUncachableStripeClient } = await import('./stripeClient');
     const stripe = await getUncachableStripeClient();
     
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-      : 'https://contentcalendarforhairpros.com';
+    const baseUrl = 'https://contentcalendarforhairpros.com';
     
     const sessionParams: any = {
       mode: 'subscription',
@@ -529,9 +527,7 @@ router.post('/stripe/guest-checkout', async (req, res) => {
     const { getUncachableStripeClient } = await import('./stripeClient');
     const stripe = await getUncachableStripeClient();
     
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-      : 'https://contentcalendarforhairpros.com';
+    const baseUrl = 'https://contentcalendarforhairpros.com';
     
     const checkoutToken = crypto.randomBytes(32).toString('hex');
     
