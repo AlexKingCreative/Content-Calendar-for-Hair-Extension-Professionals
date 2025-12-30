@@ -151,8 +151,8 @@ function StartTrialWrapper() {
 }
 
 function AuthenticatedWelcomeScreen() {
-  const { setHasSeenWelcome } = useAuth();
-  return <WelcomeScreen onContinue={() => setHasSeenWelcome(true)} isAuthenticated={true} />;
+  const { setHasSeenWelcome, logout } = useAuth();
+  return <WelcomeScreen onContinue={() => setHasSeenWelcome(true)} isAuthenticated={true} onSignOut={logout} />;
 }
 
 export default function Navigation() {

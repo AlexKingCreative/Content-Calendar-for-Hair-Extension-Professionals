@@ -85,7 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await authApi.logout();
+    try {
+      await authApi.logout();
+    } catch (error) {
+      // Ignore logout API errors
+    }
+    await SecureStore.deleteItemAsync('authToken');
     setUser(null);
     setSubscriptionStatus(null);
     setOnboardingComplete(false);

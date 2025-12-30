@@ -7,6 +7,7 @@ import {
   Animated,
   Dimensions,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -18,9 +19,10 @@ const { width } = Dimensions.get('window');
 interface WelcomeScreenProps {
   onContinue?: () => void;
   isAuthenticated?: boolean;
+  onSignOut?: () => void;
 }
 
-export default function WelcomeScreen({ onContinue, isAuthenticated }: WelcomeScreenProps) {
+export default function WelcomeScreen({ onContinue, isAuthenticated, onSignOut }: WelcomeScreenProps) {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   
   const logoScale = useRef(new Animated.Value(0)).current;
@@ -105,6 +107,19 @@ export default function WelcomeScreen({ onContinue, isAuthenticated }: WelcomeSc
 
   const handleSignIn = () => {
     navigation.navigate('Login');
+  };
+
+  const handleSignOut = () => {
+    if (onSignOut) {
+      Alert.alert(
+        'Sign Out',
+        'Are you sure you want to sign out?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Sign Out', style: 'destructive', onPress: onSignOut },
+        ]
+      );
+    }
   };
 
   const spin = logoRotate.interpolate({
@@ -214,6 +229,12 @@ export default function WelcomeScreen({ onContinue, isAuthenticated }: WelcomeSc
           {!isAuthenticated && (
             <TouchableOpacity style={styles.secondaryButton} onPress={handleSignIn}>
               <Text style={styles.secondaryButtonText}>Already have an account? Sign In</Text>
+            </TouchableOpacity>
+          )}
+
+          {isAuthenticated && onSignOut && (
+            <TouchableOpacity style={styles.secondaryButton} onPress={handleSignOut}>
+              <Text style={styles.secondaryButtonText}>Use a different account? Sign Out</Text>
             </TouchableOpacity>
           )}
 
