@@ -220,7 +220,7 @@ export default function Subscribe() {
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                <span className="text-muted-foreground">Custom hashtags</span>
+                <span className="text-muted-foreground">Optimized hashtags</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary flex-shrink-0" />

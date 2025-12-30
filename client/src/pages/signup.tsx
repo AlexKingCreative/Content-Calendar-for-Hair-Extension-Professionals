@@ -28,7 +28,7 @@ const proFeatures = [
   "365 days of pre-planned content",
   "AI-powered caption generation",
   "Personalized to your voice and brand",
-  "Custom hashtags (max 5)",
+  "Optimized hashtags",
   "Posting streaks with badges",
   "Push notification reminders",
   "Never miss important dates in your industry",
