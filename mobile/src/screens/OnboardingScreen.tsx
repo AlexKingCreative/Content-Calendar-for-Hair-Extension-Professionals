@@ -487,7 +487,7 @@ type OnboardingData = {
   location: string;
   goals: string[];
   instagram: string;
-  selectedBrand: string;
+  selectedBrands: string[];
   customBrand: string;
   methods: string[];
 };
@@ -503,7 +503,7 @@ export default function OnboardingScreen() {
     location: '',
     goals: [],
     instagram: '',
-    selectedBrand: '',
+    selectedBrands: [],
     customBrand: '',
     methods: [],
   });
@@ -557,13 +557,29 @@ export default function OnboardingScreen() {
   };
 
   const selectBrand = (brand: string) => {
-    setData(prev => ({
-      ...prev,
-      selectedBrand: brand,
-      customBrand: brand === 'Other' ? prev.customBrand : '',
-    }));
+    if (brand === 'Other') {
+      setData(prev => ({
+        ...prev,
+        selectedBrands: prev.selectedBrands.includes('Other') 
+          ? prev.selectedBrands 
+          : [...prev.selectedBrands, 'Other'],
+      }));
+    } else if (!data.selectedBrands.includes(brand)) {
+      setData(prev => ({
+        ...prev,
+        selectedBrands: [...prev.selectedBrands, brand],
+      }));
+    }
     setBrandSearch('');
     setShowBrandPicker(false);
+  };
+
+  const removeBrand = (brand: string) => {
+    setData(prev => ({
+      ...prev,
+      selectedBrands: prev.selectedBrands.filter(b => b !== brand),
+      customBrand: brand === 'Other' ? '' : prev.customBrand,
+    }));
   };
 
   const toggleMethod = (method: string) => {
@@ -599,8 +615,9 @@ export default function OnboardingScreen() {
   };
   
   const handleCelebrationComplete = () => {
-    const brand = data.selectedBrand === 'Other' ? data.customBrand : data.selectedBrand;
-    const certifiedBrands = brand ? [brand] : [];
+    const certifiedBrands = data.selectedBrands.map(brand => 
+      brand === 'Other' ? data.customBrand : brand
+    ).filter(b => b.trim().length > 0);
     const businessType = data.services.includes('salon') || data.services.includes('suite') ? 'salon' : 'solo';
     
     navigation.navigate('GuestCheckout', {
@@ -629,8 +646,9 @@ export default function OnboardingScreen() {
       case 'postingServices':
         return data.postingServices.length > 0;
       case 'brands':
-        const hasBrand = data.selectedBrand !== '' && (data.selectedBrand !== 'Other' || data.customBrand.trim().length > 0);
-        return hasBrand && data.methods.length > 0;
+        const hasValidBrands = data.selectedBrands.length > 0 && 
+          (!data.selectedBrands.includes('Other') || data.customBrand.trim().length > 0);
+        return hasValidBrands && data.methods.length > 0;
       case 2:
         return data.location.trim().length > 0;
       case 3:
@@ -751,32 +769,26 @@ export default function OnboardingScreen() {
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>Extension Expertise</Text>
             <Text style={styles.stepSubtitle}>
-              Select your certified brand and methods
+              Select your certified brands and methods
             </Text>
             
-            <Text style={styles.sectionLabel}>Certified Brand</Text>
+            <Text style={styles.sectionLabel}>Certified Brands</Text>
             <View style={styles.autocompleteContainer}>
               <View style={styles.autocompleteInputContainer}>
                 <Ionicons name="search" size={20} color="#A89580" style={{ marginRight: 8 }} />
                 <TextInput
                   style={styles.autocompleteInput}
-                  placeholder="Search or select your certified brand"
+                  placeholder="Search or select brands"
                   placeholderTextColor="#A89580"
-                  value={data.selectedBrand && !showBrandPicker ? data.selectedBrand : brandSearch}
+                  value={brandSearch}
                   onChangeText={(text) => {
                     setBrandSearch(text);
                     setShowBrandPicker(true);
-                    if (data.selectedBrand) {
-                      setData(prev => ({ ...prev, selectedBrand: '' }));
-                    }
                   }}
                   onFocus={() => setShowBrandPicker(true)}
                 />
-                {(data.selectedBrand || brandSearch) && (
-                  <TouchableOpacity onPress={() => {
-                    setBrandSearch('');
-                    setData(prev => ({ ...prev, selectedBrand: '' }));
-                  }}>
+                {brandSearch.length > 0 && (
+                  <TouchableOpacity onPress={() => setBrandSearch('')}>
                     <Ionicons name="close-circle" size={20} color="#A89580" />
                   </TouchableOpacity>
                 )}
@@ -785,55 +797,53 @@ export default function OnboardingScreen() {
               {showBrandPicker && (
                 <View style={styles.autocompleteDropdown}>
                   <ScrollView style={styles.autocompleteList} keyboardShouldPersistTaps="handled">
-                    {filteredBrands.map((brand) => (
+                    {filteredBrands.filter(b => !data.selectedBrands.includes(b)).map((brand) => (
                       <TouchableOpacity
                         key={brand}
-                        style={[
-                          styles.autocompleteItem,
-                          data.selectedBrand === brand && styles.autocompleteItemSelected,
-                        ]}
+                        style={styles.autocompleteItem}
                         onPress={() => selectBrand(brand)}
                       >
-                        <Text style={[
-                          styles.autocompleteItemText,
-                          data.selectedBrand === brand && styles.autocompleteItemTextSelected,
-                        ]}>
+                        <Text style={styles.autocompleteItemText}>
                           {brand}
                         </Text>
-                        {data.selectedBrand === brand && (
-                          <Ionicons name="checkmark" size={18} color="#D4A574" />
-                        )}
                       </TouchableOpacity>
                     ))}
-                    {filteredBrands.length === 0 && brandSearch.length > 0 && (
+                    {filteredBrands.filter(b => !data.selectedBrands.includes(b)).length === 0 && brandSearch.length > 0 && (
                       <View style={styles.autocompleteEmpty}>
-                        <Text style={styles.autocompleteEmptyText}>No brands found</Text>
+                        <Text style={styles.autocompleteEmptyText}>No more brands found</Text>
                       </View>
                     )}
-                    <TouchableOpacity
-                      style={[
-                        styles.autocompleteItem,
-                        styles.autocompleteItemOther,
-                        data.selectedBrand === 'Other' && styles.autocompleteItemSelected,
-                      ]}
-                      onPress={() => selectBrand('Other')}
-                    >
-                      <Text style={[
-                        styles.autocompleteItemText,
-                        data.selectedBrand === 'Other' && styles.autocompleteItemTextSelected,
-                      ]}>
-                        Other (enter custom)
-                      </Text>
-                      {data.selectedBrand === 'Other' && (
-                        <Ionicons name="checkmark" size={18} color="#D4A574" />
-                      )}
-                    </TouchableOpacity>
+                    {!data.selectedBrands.includes('Other') && (
+                      <TouchableOpacity
+                        style={[styles.autocompleteItem, styles.autocompleteItemOther]}
+                        onPress={() => selectBrand('Other')}
+                      >
+                        <Text style={styles.autocompleteItemText}>
+                          Other (enter custom)
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </ScrollView>
                 </View>
               )}
             </View>
             
-            {data.selectedBrand === 'Other' && (
+            {data.selectedBrands.length > 0 && (
+              <View style={styles.selectedBrandsContainer}>
+                {data.selectedBrands.map((brand) => (
+                  <View key={brand} style={styles.selectedBrandChip}>
+                    <Text style={styles.selectedBrandText}>
+                      {brand === 'Other' ? (data.customBrand || 'Other') : brand}
+                    </Text>
+                    <TouchableOpacity onPress={() => removeBrand(brand)} style={styles.selectedBrandRemove}>
+                      <Ionicons name="close" size={14} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+            
+            {data.selectedBrands.includes('Other') && (
               <View style={styles.customBrandContainer}>
                 <Text style={styles.customBrandLabel}>Enter your brand name</Text>
                 <TextInput
@@ -843,7 +853,6 @@ export default function OnboardingScreen() {
                   value={data.customBrand}
                   onChangeText={(text) => setData(prev => ({ ...prev, customBrand: text }))}
                 />
-                <Text style={styles.customBrandHint}>This will be saved to your profile only</Text>
               </View>
             )}
 
@@ -1494,5 +1503,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#A89580',
     fontStyle: 'italic',
+  },
+  selectedBrandsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  selectedBrandChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D4A574',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingLeft: 14,
+    paddingRight: 8,
+    gap: 6,
+  },
+  selectedBrandText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+  selectedBrandRemove: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
