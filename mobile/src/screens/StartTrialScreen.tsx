@@ -43,7 +43,7 @@ const SOCIAL_PROOF_MESSAGES = [
 
 export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenProps) {
   const navigation = useNavigation();
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly' | 'yearly'>('quarterly');
   const [isLoading, setIsLoading] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -118,6 +118,17 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
     navigation.goBack();
   };
 
+  const getPlanDisclaimer = () => {
+    switch (selectedPlan) {
+      case 'monthly':
+        return 'Then $10/month after trial ends';
+      case 'quarterly':
+        return 'Then $25/quarter (~$8.33/mo) after trial';
+      case 'yearly':
+        return 'Then $50/year (~$4.17/mo) after trial';
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -162,12 +173,43 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
           <TouchableOpacity
             style={[
               styles.planCard,
+              selectedPlan === 'quarterly' && styles.planCardSelected,
+            ]}
+            onPress={() => setSelectedPlan('quarterly')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.planBadge}>
+              <Text style={styles.planBadgeText}>POPULAR</Text>
+            </View>
+            <View style={styles.planHeader}>
+              <View style={[
+                styles.radioButton,
+                selectedPlan === 'quarterly' && styles.radioButtonSelected,
+              ]}>
+                {selectedPlan === 'quarterly' && (
+                  <View style={styles.radioButtonInner} />
+                )}
+              </View>
+              <View style={styles.planInfo}>
+                <Text style={styles.planName}>Quarterly</Text>
+                <Text style={styles.planPrice}>
+                  <Text style={styles.priceAmount}>$25</Text>
+                  <Text style={styles.pricePeriod}>/3 months</Text>
+                </Text>
+                <Text style={styles.planSavings}>Just $8.33/month - Save 17%</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.planCard,
               selectedPlan === 'yearly' && styles.planCardSelected,
             ]}
             onPress={() => setSelectedPlan('yearly')}
             activeOpacity={0.8}
           >
-            <View style={styles.planBadge}>
+            <View style={[styles.planBadge, styles.bestBadge]}>
               <Text style={styles.planBadgeText}>BEST VALUE</Text>
             </View>
             <View style={styles.planHeader}>
@@ -280,10 +322,7 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
         </TouchableOpacity>
         
         <Text style={styles.ctaDisclaimer}>
-          {selectedPlan === 'monthly' 
-            ? 'Credit card required. Cancel anytime during trial.'
-            : 'Credit card required. Cancel anytime during trial.'
-          }
+          {getPlanDisclaimer()}
         </Text>
       </View>
     </SafeAreaView>
@@ -395,6 +434,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+  },
+  bestBadge: {
+    backgroundColor: '#FFD700',
   },
   planBadgeText: {
     fontSize: 11,
