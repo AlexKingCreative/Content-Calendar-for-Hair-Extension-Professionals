@@ -23,7 +23,7 @@ export function LandingAnimation({ size = "large" }: LandingAnimationProps) {
   if (isSmall) {
     return (
       <div className="relative w-full max-w-xs mx-auto h-[280px]">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-amber-500/20 rounded-3xl blur-3xl animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-amber-500/20 rounded-3xl blur-3xl" />
 
         <div className="relative flex items-center justify-center h-full">
           <div className="relative w-[200px] h-[280px] bg-background border-4 border-foreground/10 rounded-[2rem] shadow-2xl overflow-hidden animate-fade-in">
@@ -90,7 +90,7 @@ export function LandingAnimation({ size = "large" }: LandingAnimationProps) {
   // Large version for desktop
   return (
     <div className="relative w-full max-w-lg mx-auto h-[500px] sm:h-[600px]">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-amber-500/20 rounded-3xl blur-3xl animate-pulse" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-amber-500/20 rounded-3xl blur-3xl" />
 
       <div className="relative flex items-center justify-center h-full">
         <div className="relative w-[280px] sm:w-[320px] h-[500px] sm:h-[580px] bg-background border-4 border-foreground/10 rounded-[3rem] shadow-2xl overflow-hidden animate-fade-in">

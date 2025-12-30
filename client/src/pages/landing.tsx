@@ -215,7 +215,7 @@ export default function LandingPage() {
       {/* Hero Section - Clear One-Liner */}
       <section className="relative overflow-x-clip">
         <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-background to-amber-50/30 dark:from-rose-950/20 dark:via-background dark:to-amber-950/10" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-500/15 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         <div className="absolute top-1/2 left-1/2 w-[600px] h-[600px] bg-rose-300/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         
@@ -332,7 +332,7 @@ export default function LandingPage() {
           </div>
           
           <div className="flex justify-center mt-8">
-            <ArrowDown className="w-6 h-6 text-muted-foreground animate-bounce" />
+            <ArrowDown className="w-6 h-6 text-muted-foreground opacity-50" />
           </div>
         </div>
       </section>
