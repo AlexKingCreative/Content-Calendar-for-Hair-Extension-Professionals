@@ -496,7 +496,7 @@ type OnboardingData = {
 
 export default function OnboardingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
-  const { isAuthenticated, setOnboardingComplete } = useAuth();
+  const { isAuthenticated, setOnboardingComplete, setHasSeenWelcome, hasActiveSubscription } = useAuth();
   const [step, setStep] = useState(0);
   const [showBuildingSchedule, setShowBuildingSchedule] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -674,7 +674,11 @@ export default function OnboardingScreen() {
       setStep(prevStep);
       animateProgress(prevStep);
     } else {
-      navigation.goBack();
+      if (isAuthenticated && !hasActiveSubscription) {
+        setHasSeenWelcome(false);
+      } else {
+        navigation.goBack();
+      }
     }
   };
 
