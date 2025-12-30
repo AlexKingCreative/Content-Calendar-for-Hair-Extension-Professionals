@@ -14,16 +14,6 @@ import * as WebBrowser from 'expo-web-browser';
 import { colors, spacing, borderRadius } from '../theme';
 import { stripeApi } from '../services/api';
 
-const FEATURES = [
-  { icon: 'calendar-outline', text: '365 days of pre-planned content ideas' },
-  { icon: 'sparkles-outline', text: 'AI-powered caption generation' },
-  { icon: 'layers-outline', text: 'Multiple service categories' },
-  { icon: 'flame-outline', text: 'Posting streak tracker with rewards' },
-  { icon: 'person-outline', text: 'Personalized voice (solo or salon)' },
-  { icon: 'trending-up-outline', text: 'Real-time trend alerts' },
-  { icon: 'download-outline', text: 'Download PDF calendars' },
-];
-
 interface StartTrialScreenProps {
   onTrialStarted?: () => void;
 }
@@ -61,29 +51,15 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
       >
         <View style={styles.heroSection}>
           <View style={styles.iconContainer}>
-            <Ionicons name="sparkles" size={48} color="#FFFFFF" />
+            <Ionicons name="sparkles" size={32} color="#FFFFFF" />
           </View>
           <Text style={styles.heroTitle}>Start Your Free Trial</Text>
           <Text style={styles.heroSubtitle}>
-            7 days free, then just $10/month.{'\n'}Cancel anytime.
+            7 days free, then just $10/month. Cancel anytime.
           </Text>
         </View>
 
-        <View style={styles.featuresContainer}>
-          <Text style={styles.featuresTitle}>Everything you need to grow your business:</Text>
-          {FEATURES.map((feature, index) => (
-            <View key={index} style={styles.featureRow}>
-              <View style={styles.featureIcon}>
-                <Ionicons name={feature.icon as any} size={20} color={colors.primary} />
-              </View>
-              <Text style={styles.featureText}>{feature.text}</Text>
-            </View>
-          ))}
-        </View>
-
         <View style={styles.plansContainer}>
-          <Text style={styles.plansTitle}>Choose your plan:</Text>
-          
           <TouchableOpacity
             style={[
               styles.planCard,
@@ -142,6 +118,7 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
                   <Text style={styles.pricePeriod}>/3 months</Text>
                 </Text>
                 <Text style={styles.planSavings}>~$8.33/month</Text>
+                <Text style={styles.planCommitment}>Commit to posting more for 90 days to see results</Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -178,42 +155,47 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
           </TouchableOpacity>
         </View>
 
-        <View style={styles.ctaSection}>
-          <TouchableOpacity
-            style={[styles.ctaButton, isLoading && styles.ctaButtonDisabled]}
-            onPress={handleStartTrial}
-            disabled={isLoading}
-            activeOpacity={0.8}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <>
-                <Text style={styles.ctaButtonText}>
-                  {selectedPlan === 'monthly' ? 'Start 7-Day Free Trial' : 'Subscribe Now'}
-                </Text>
-                <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-              </>
-            )}
-          </TouchableOpacity>
-          
-          <Text style={styles.ctaDisclaimer}>
-            {selectedPlan === 'monthly' 
-              ? 'Credit card required. Cancel anytime during trial.'
-              : 'Subscription starts immediately. Cancel anytime.'}
-          </Text>
-        </View>
-
-        <View style={styles.testimonialSection}>
-          <View style={styles.quoteIcon}>
-            <Ionicons name="chatbubble-ellipses" size={24} color={colors.primary} />
+        <View style={styles.featuresRow}>
+          <View style={styles.featureItem}>
+            <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+            <Text style={styles.featureItemText}>365 days of content</Text>
           </View>
-          <Text style={styles.testimonialText}>
-            "This app has completely transformed how I plan my content. I went from posting once a week to 5 times a week!"
-          </Text>
-          <Text style={styles.testimonialAuthor}>- Sarah M., Hair Extension Specialist</Text>
+          <View style={styles.featureItem}>
+            <Ionicons name="sparkles-outline" size={18} color={colors.primary} />
+            <Text style={styles.featureItemText}>AI captions</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Ionicons name="flame-outline" size={18} color={colors.primary} />
+            <Text style={styles.featureItemText}>Streak rewards</Text>
+          </View>
         </View>
       </ScrollView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[styles.ctaButton, isLoading && styles.ctaButtonDisabled]}
+          onPress={handleStartTrial}
+          disabled={isLoading}
+          activeOpacity={0.8}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <>
+              <Text style={styles.ctaButtonText}>
+                {selectedPlan === 'monthly' ? 'Start 7-Day Free Trial' : 'Subscribe Now'}
+              </Text>
+              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+            </>
+          )}
+        </TouchableOpacity>
+        
+        <Text style={styles.ctaDisclaimer}>
+          {selectedPlan === 'monthly' 
+            ? 'Credit card required. Cancel anytime during trial.'
+            : 'Subscription starts immediately. Cancel anytime.'}
+        </Text>
+      </View>
     </SafeAreaView>
   );
 }
@@ -227,21 +209,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: spacing.lg,
-    paddingBottom: 40,
+    padding: spacing.md,
+    paddingBottom: spacing.md,
   },
   heroSection: {
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -249,64 +231,24 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   heroTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
     textAlign: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: 4,
   },
   heroSubtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  featuresContainer: {
-    backgroundColor: colors.cardBackground,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  featuresTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  featureIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: `${colors.primary}15`,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.sm,
-  },
-  featureText: {
-    flex: 1,
     fontSize: 14,
     color: colors.textSecondary,
+    textAlign: 'center',
   },
   plansContainer: {
-    marginBottom: spacing.xl,
-  },
-  plansTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
     marginBottom: spacing.md,
   },
   planCard: {
     backgroundColor: colors.cardBackground,
     borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+    padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 2,
     borderColor: colors.border,
@@ -339,32 +281,33 @@ const styles = StyleSheet.create({
   },
   planHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   radioButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
     borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.md,
+    marginRight: spacing.sm,
+    marginTop: 2,
   },
   radioButtonSelected: {
     borderColor: colors.primary,
   },
   radioButtonInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: colors.primary,
   },
   planInfo: {
     flex: 1,
   },
   planName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
     marginBottom: 2,
@@ -373,7 +316,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   priceAmount: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: colors.text,
   },
@@ -391,13 +334,37 @@ const styles = StyleSheet.create({
     color: '#6B8E23',
     fontWeight: '500',
   },
-  ctaSection: {
-    marginBottom: spacing.xl,
+  planCommitment: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+  featuresRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: spacing.sm,
+  },
+  featureItem: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  featureItemText: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  footer: {
+    padding: spacing.md,
+    paddingBottom: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.background,
   },
   ctaButton: {
     backgroundColor: colors.primary,
     borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+    padding: spacing.md,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -413,43 +380,13 @@ const styles = StyleSheet.create({
   },
   ctaButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: 'bold',
   },
   ctaDisclaimer: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textTertiary,
     textAlign: 'center',
     marginTop: spacing.sm,
-  },
-  testimonialSection: {
-    backgroundColor: colors.cardBackground,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  quoteIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: `${colors.primary}15`,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  testimonialText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    lineHeight: 22,
-    marginBottom: spacing.sm,
-  },
-  testimonialAuthor: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    fontWeight: '500',
   },
 });
