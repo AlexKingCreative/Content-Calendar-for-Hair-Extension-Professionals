@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Dimensions,
   Image,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
@@ -32,9 +33,68 @@ const FEATURES = [
   { icon: 'person-outline', text: 'Personalized voice' },
 ];
 
+const SOCIAL_PROOF_MESSAGES = [
+  { icon: 'heart', color: '#E74C3C', text: 'Marie the hairstylist liked your post' },
+  { icon: 'person-add', color: '#9B59B6', text: 'Jaclyn Hair Extensions followed you' },
+  { icon: 'chatbubble', color: '#3498DB', text: 'New booking request from Sarah!' },
+  { icon: 'heart', color: '#E74C3C', text: 'BeautyPro Salon liked your reel' },
+  { icon: 'person-add', color: '#9B59B6', text: 'LA Hair Studio started following you' },
+  { icon: 'calendar', color: '#27AE60', text: 'Client booked: Tape-in extensions' },
+  { icon: 'chatbubble', color: '#3498DB', text: '"Love your work! Are you available?"' },
+  { icon: 'heart', color: '#E74C3C', text: 'Your post reached 2,500 people' },
+];
+
 export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenProps) {
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly' | 'yearly'>('quarterly');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    const animateMessage = () => {
+      fadeAnim.setValue(0);
+      slideAnim.setValue(20);
+      
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(slideAnim, {
+            toValue: -20,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }, 2600);
+    };
+
+    animateMessage();
+    const interval = setInterval(() => {
+      setCurrentMessageIndex((prev) => (prev + 1) % SOCIAL_PROOF_MESSAGES.length);
+      animateMessage();
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const currentMessage = SOCIAL_PROOF_MESSAGES[currentMessageIndex];
 
   const handleStartTrial = async () => {
     setIsLoading(true);
@@ -63,6 +123,23 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        <Animated.View 
+          style={[
+            styles.socialProofBanner,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <View style={[styles.socialProofIcon, { backgroundColor: `${currentMessage.color}15` }]}>
+            <Ionicons name={currentMessage.icon as any} size={14} color={currentMessage.color} />
+          </View>
+          <Text style={styles.socialProofText} numberOfLines={1}>
+            {currentMessage.text}
+          </Text>
+        </Animated.View>
+
         <View style={styles.heroSection}>
           <View style={styles.iconContainer}>
             <Ionicons name="sparkles" size={28} color="#FFFFFF" />
@@ -208,6 +285,32 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
     flexGrow: 1,
     justifyContent: 'center',
+  },
+  socialProofBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: colors.cardBackground,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: spacing.md,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    maxWidth: '90%',
+  },
+  socialProofIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  socialProofText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    flex: 1,
   },
   heroSection: {
     alignItems: 'center',
