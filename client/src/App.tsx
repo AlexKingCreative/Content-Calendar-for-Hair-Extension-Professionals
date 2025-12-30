@@ -32,6 +32,7 @@ import LoginPage from "@/pages/login";
 import RegisterPage from "@/pages/register";
 import InstagramPage from "@/pages/instagram";
 import AboutPage from "@/pages/about";
+import SubscriptionSuccessPage from "@/pages/subscription-success";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
@@ -191,6 +192,8 @@ function Router() {
       <Route path="/contact" component={ContactPage} />
       <Route path="/pricing" component={PricingPage} />
       <Route path="/about" component={AboutPage} />
+      <Route path="/subscription/success" component={SubscriptionSuccessPage} />
+      <Route path="/subscription/cancel" component={PricingPage} />
       <Route path="/salon-pricing" component={SalonPricingPage} />
       <Route path="/salon-setup">
         <ProtectedRoute>
