@@ -1082,11 +1082,15 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-4">Product</h4>
               <div className="space-y-2 text-sm">
-                <Link href="/pricing" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-pricing">
-                  Pricing
+                <Link href="/pricing">
+                  <span className="block text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-pricing">
+                    Pricing
+                  </span>
                 </Link>
-                <Link href="/salon-pricing" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-salon">
-                  Salon Plans
+                <Link href="/salon-pricing">
+                  <span className="block text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-salon">
+                    Salon Plans
+                  </span>
                 </Link>
               </div>
             </div>
@@ -1094,11 +1098,15 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-4">Legal</h4>
               <div className="space-y-2 text-sm">
-                <Link href="/terms" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-terms">
-                  Terms & Conditions
+                <Link href="/terms">
+                  <span className="block text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-terms">
+                    Terms & Conditions
+                  </span>
                 </Link>
-                <Link href="/privacy" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-privacy">
-                  Privacy Policy
+                <Link href="/privacy">
+                  <span className="block text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-privacy">
+                    Privacy Policy
+                  </span>
                 </Link>
               </div>
             </div>
@@ -1106,11 +1114,15 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
               <div className="space-y-2 text-sm">
-                <Link href="/about" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-about">
-                  About
+                <Link href="/about">
+                  <span className="block text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-about">
+                    About
+                  </span>
                 </Link>
-                <Link href="/contact" className="block text-muted-foreground hover:text-foreground transition-colors" data-testid="link-footer-contact">
-                  Contact Us
+                <Link href="/contact">
+                  <span className="block text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-contact">
+                    Contact Us
+                  </span>
                 </Link>
               </div>
             </div>
@@ -1121,9 +1133,9 @@ export default function LandingPage() {
               2025 Content Calendar for Hair Pros. All rights reserved.
             </div>
             <div className="flex gap-4 text-sm text-muted-foreground">
-              <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-              <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+              <Link href="/terms"><span className="hover:text-foreground transition-colors cursor-pointer">Terms</span></Link>
+              <Link href="/privacy"><span className="hover:text-foreground transition-colors cursor-pointer">Privacy</span></Link>
+              <Link href="/contact"><span className="hover:text-foreground transition-colors cursor-pointer">Contact</span></Link>
             </div>
           </div>
         </div>
