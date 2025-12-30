@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../navigation';
+import { optionsApi } from '../services/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -456,7 +457,7 @@ const CONTENT_GOALS = [
   { id: 'engagement', label: 'Increase Engagement', icon: 'heart' as const },
 ];
 
-const CERTIFIED_BRANDS = [
+const DEFAULT_BRANDS = [
   "Great Lengths",
   "Bellami",
   "Hairdreams",
@@ -470,7 +471,7 @@ const CERTIFIED_BRANDS = [
   "Locks & Bonds",
 ];
 
-const EXTENSION_METHODS = [
+const DEFAULT_METHODS = [
   "Tape-In",
   "Hand-Tied Weft",
   "Machine Weft",
@@ -497,6 +498,8 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState(0);
   const [showBuildingSchedule, setShowBuildingSchedule] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [certifiedBrands, setCertifiedBrands] = useState<string[]>(DEFAULT_BRANDS);
+  const [extensionMethods, setExtensionMethods] = useState<string[]>(DEFAULT_METHODS);
   const [data, setData] = useState<OnboardingData>({
     services: [],
     postingServices: [],
@@ -510,12 +513,29 @@ export default function OnboardingScreen() {
   const [showBrandPicker, setShowBrandPicker] = useState(false);
   const [brandSearch, setBrandSearch] = useState('');
   const progressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const options = await optionsApi.getOptions();
+        if (options?.certifiedBrands?.length) {
+          setCertifiedBrands(options.certifiedBrands);
+        }
+        if (options?.extensionMethods?.length) {
+          setExtensionMethods(options.extensionMethods);
+        }
+      } catch (error) {
+        console.log('Using default brands and methods');
+      }
+    };
+    fetchOptions();
+  }, []);
   
   const filteredBrands = brandSearch.length > 0 
-    ? CERTIFIED_BRANDS.filter(brand => 
+    ? certifiedBrands.filter(brand => 
         brand.toLowerCase().includes(brandSearch.toLowerCase())
       )
-    : CERTIFIED_BRANDS;
+    : certifiedBrands;
 
   const hasExtensions = data.services.includes('extensions');
   const baseSteps = 4;
@@ -858,7 +878,7 @@ export default function OnboardingScreen() {
 
             <Text style={[styles.sectionLabel, { marginTop: 20 }]}>Extension Methods</Text>
             <View style={styles.brandGrid}>
-              {EXTENSION_METHODS.map((method) => (
+              {extensionMethods.map((method) => (
                 <TouchableOpacity
                   key={method}
                   style={[

@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { posts, challenges, type InsertPost, type InsertChallenge, categories, contentTypes } from "@shared/schema";
+import { posts, challenges, brands, methods, type InsertPost, type InsertChallenge, type InsertBrand, type InsertMethod, categories, contentTypes, certifiedBrands, extensionMethods } from "@shared/schema";
 
 type Category = typeof categories[number];
 type ContentType = typeof contentTypes[number];
@@ -224,4 +224,32 @@ export async function seedChallenges() {
   
   await db.insert(challenges).values(defaultChallenges);
   console.log(`Seeded ${defaultChallenges.length} challenges`);
+}
+
+export async function seedBrandsAndMethods() {
+  const existingBrands = await db.select().from(brands).limit(1);
+  if (existingBrands.length === 0) {
+    const brandsToInsert: InsertBrand[] = certifiedBrands.map((name, index) => ({
+      name,
+      displayOrder: index,
+      isActive: true,
+    }));
+    await db.insert(brands).values(brandsToInsert);
+    console.log(`Seeded ${brandsToInsert.length} brands`);
+  } else {
+    console.log("Brands already seeded, skipping...");
+  }
+
+  const existingMethods = await db.select().from(methods).limit(1);
+  if (existingMethods.length === 0) {
+    const methodsToInsert: InsertMethod[] = extensionMethods.map((name, index) => ({
+      name,
+      displayOrder: index,
+      isActive: true,
+    }));
+    await db.insert(methods).values(methodsToInsert);
+    console.log(`Seeded ${methodsToInsert.length} methods`);
+  } else {
+    console.log("Methods already seeded, skipping...");
+  }
 }

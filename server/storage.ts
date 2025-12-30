@@ -255,11 +255,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllBrands(): Promise<Brand[]> {
-    return db.select().from(brands).orderBy(brands.name);
+    return db.select().from(brands).orderBy(asc(brands.displayOrder), asc(brands.name));
   }
 
   async getActiveBrands(): Promise<Brand[]> {
-    return db.select().from(brands).where(eq(brands.isActive, true)).orderBy(brands.name);
+    return db.select().from(brands).where(eq(brands.isActive, true)).orderBy(asc(brands.displayOrder), asc(brands.name));
   }
 
   async createBrand(brand: InsertBrand): Promise<Brand> {
@@ -282,11 +282,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllMethods(): Promise<Method[]> {
-    return db.select().from(methods).orderBy(methods.name);
+    return db.select().from(methods).orderBy(asc(methods.displayOrder), asc(methods.name));
   }
 
   async getActiveMethods(): Promise<Method[]> {
-    return db.select().from(methods).where(eq(methods.isActive, true)).orderBy(methods.name);
+    return db.select().from(methods).where(eq(methods.isActive, true)).orderBy(asc(methods.displayOrder), asc(methods.name));
   }
 
   async createMethod(method: InsertMethod): Promise<Method> {

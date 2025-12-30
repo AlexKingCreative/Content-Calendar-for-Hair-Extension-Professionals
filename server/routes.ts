@@ -2,7 +2,7 @@ import type { Express, RequestHandler } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, registerAuthRoutes } from "./replit_integrations/auth";
-import { seedPosts, seedChallenges } from "./seed";
+import { seedPosts, seedChallenges, seedBrandsAndMethods } from "./seed";
 import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads, users, salonMembers } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -318,6 +318,7 @@ export async function registerRoutes(
   
   await seedPosts();
   await seedChallenges();
+  await seedBrandsAndMethods();
 
   app.get("/api/posts", async (req, res) => {
     try {
@@ -374,26 +375,21 @@ export async function registerRoutes(
     try {
       const dbBrands = await storage.getActiveBrands();
       const dbMethods = await storage.getActiveMethods();
-      const brandNames = dbBrands.length > 0 
-        ? dbBrands.map(b => b.name) 
-        : [...certifiedBrands];
-      const methodNames = dbMethods.length > 0 
-        ? dbMethods.map(m => m.name) 
-        : [...extensionMethods];
       
       res.json({
         categories,
         contentTypes,
-        certifiedBrands: brandNames,
-        extensionMethods: methodNames,
+        certifiedBrands: dbBrands.map(b => b.name),
+        extensionMethods: dbMethods.map(m => m.name),
         serviceCategories: [...serviceCategories],
       });
     } catch (error) {
+      console.error("Error fetching options:", error);
       res.json({
         categories,
         contentTypes,
-        certifiedBrands,
-        extensionMethods,
+        certifiedBrands: [],
+        extensionMethods: [],
         serviceCategories: [...serviceCategories],
       });
     }
@@ -410,11 +406,11 @@ export async function registerRoutes(
 
   app.post("/api/brands", isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
-      const { name, isActive = true } = req.body;
+      const { name, isActive = true, displayOrder = 0 } = req.body;
       if (!name || typeof name !== "string" || name.trim().length === 0) {
         return res.status(400).json({ error: "Brand name is required" });
       }
-      const brand = await storage.createBrand({ name: name.trim(), isActive });
+      const brand = await storage.createBrand({ name: name.trim(), isActive, displayOrder });
       res.json(brand);
     } catch (error: any) {
       if (error.code === "23505") {
@@ -430,10 +426,11 @@ export async function registerRoutes(
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid brand ID" });
       }
-      const { name, isActive } = req.body;
+      const { name, isActive, displayOrder } = req.body;
       const brand = await storage.updateBrand(id, { 
         ...(name && { name: name.trim() }),
         ...(typeof isActive === "boolean" && { isActive }),
+        ...(typeof displayOrder === "number" && { displayOrder }),
       });
       if (!brand) {
         return res.status(404).json({ error: "Brand not found" });
@@ -471,11 +468,11 @@ export async function registerRoutes(
 
   app.post("/api/methods", isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
-      const { name, isActive = true } = req.body;
+      const { name, isActive = true, displayOrder = 0 } = req.body;
       if (!name || typeof name !== "string" || name.trim().length === 0) {
         return res.status(400).json({ error: "Method name is required" });
       }
-      const method = await storage.createMethod({ name: name.trim(), isActive });
+      const method = await storage.createMethod({ name: name.trim(), isActive, displayOrder });
       res.json(method);
     } catch (error: any) {
       if (error.code === "23505") {
@@ -491,10 +488,11 @@ export async function registerRoutes(
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid method ID" });
       }
-      const { name, isActive } = req.body;
+      const { name, isActive, displayOrder } = req.body;
       const method = await storage.updateMethod(id, { 
         ...(name && { name: name.trim() }),
         ...(typeof isActive === "boolean" && { isActive }),
+        ...(typeof displayOrder === "number" && { displayOrder }),
       });
       if (!method) {
         return res.status(404).json({ error: "Method not found" });

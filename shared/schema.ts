@@ -252,6 +252,7 @@ export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema
 export const brands = pgTable("brands", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
+  displayOrder: integer("display_order").default(0),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
@@ -267,6 +268,7 @@ export type InsertBrand = z.infer<typeof insertBrandSchema>;
 export const methods = pgTable("methods", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
+  displayOrder: integer("display_order").default(0),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });

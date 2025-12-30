@@ -18,11 +18,16 @@ import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { TrialOfferModal } from "@/components/trial-offer-modal";
 import { BuildingScheduleAnimation } from "@/components/building-schedule-animation";
-import { contentGoalOptions, certifiedBrands, extensionMethods, accountTypes } from "@shared/schema";
+import { contentGoalOptions, accountTypes } from "@shared/schema";
 
 interface User {
   id: string;
   email: string;
+}
+
+interface OptionsData {
+  certifiedBrands: string[];
+  extensionMethods: string[];
 }
 
 const SERVICE_CATEGORIES = [
@@ -93,6 +98,13 @@ export default function OnboardingPage() {
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
+
+  const { data: options } = useQuery<OptionsData>({
+    queryKey: ["/api/options"],
+  });
+
+  const certifiedBrands = options?.certifiedBrands ?? [];
+  const extensionMethods = options?.extensionMethods ?? [];
 
   const isLoggedIn = !!user;
   const baseSteps = isLoggedIn ? 6 : 7;
