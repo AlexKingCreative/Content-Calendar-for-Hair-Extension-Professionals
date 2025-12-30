@@ -81,6 +81,35 @@ export async function registerRoutes(
   app.use('/api/mobile', mobileAuthRoutes);
   app.use('/api/auth', magicLinkAuthRoutes);
   
+  // Test email endpoint (admin only in production)
+  app.post("/api/test-email", async (req: any, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: "Email required" });
+      }
+      const success = await sendEmail(
+        email,
+        "Test Email - Content Calendar for Hair Pros",
+        `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+          <h1 style="color: #D4A574;">Email Test Successful!</h1>
+          <p>This confirms your Resend email integration is working correctly.</p>
+          <p style="color: #8B7355; font-size: 14px;">Sent at: ${new Date().toISOString()}</p>
+        </div>
+        `
+      );
+      if (success) {
+        res.json({ success: true, message: "Test email sent" });
+      } else {
+        res.status(500).json({ error: "Failed to send email" });
+      }
+    } catch (error: any) {
+      console.error("Test email error:", error);
+      res.status(500).json({ error: error.message || "Failed to send test email" });
+    }
+  });
+  
   // Web email/password authentication routes
   app.post("/api/auth/register", async (req: any, res) => {
     try {
