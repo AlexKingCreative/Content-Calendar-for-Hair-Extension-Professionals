@@ -18,7 +18,7 @@ import { stripeApi, profileApi } from '../services/api';
 import { RootStackParamList } from '../navigation';
 
 const FEATURES = [
-  { icon: 'calendar-outline', text: '365 days of pre-planned content' },
+  { icon: 'calendar-outline', text: 'Monthly pre-planned content' },
   { icon: 'sparkles-outline', text: 'AI-powered captions' },
   { icon: 'layers-outline', text: 'Multiple service categories' },
   { icon: 'flame-outline', text: 'Posting streak tracker' },

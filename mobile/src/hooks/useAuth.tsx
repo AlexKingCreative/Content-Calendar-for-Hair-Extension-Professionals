@@ -14,11 +14,13 @@ interface AuthContextType {
   isAuthenticated: boolean;
   hasActiveSubscription: boolean;
   subscriptionStatus: string | null;
+  onboardingComplete: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithToken: (token: string, userData: User) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshSubscriptionStatus: () => Promise<void>;
+  setOnboardingComplete: (complete: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,13 +29,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
 
   const checkSubscription = useCallback(async () => {
     try {
       const profile = await profileApi.get();
       setSubscriptionStatus(profile.subscriptionStatus || null);
+      setOnboardingComplete(profile.onboardingComplete || false);
     } catch (error) {
       setSubscriptionStatus(null);
+      setOnboardingComplete(false);
     }
   }, []);
 
@@ -80,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authApi.logout();
     setUser(null);
     setSubscriptionStatus(null);
+    setOnboardingComplete(false);
   };
 
   const refreshSubscriptionStatus = async () => {
@@ -96,11 +102,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         hasActiveSubscription,
         subscriptionStatus,
+        onboardingComplete,
         login,
         loginWithToken,
         register,
         logout,
         refreshSubscriptionStatus,
+        setOnboardingComplete,
       }}
     >
       {children}

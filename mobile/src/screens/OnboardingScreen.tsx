@@ -16,8 +16,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AuthStackParamList } from '../navigation';
-import { optionsApi } from '../services/api';
+import { AuthStackParamList, RootStackParamList } from '../navigation';
+import { optionsApi, profileApi } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 const { width, height } = Dimensions.get('window');
 
@@ -495,6 +496,7 @@ type OnboardingData = {
 
 export default function OnboardingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+  const { isAuthenticated, setOnboardingComplete } = useAuth();
   const [step, setStep] = useState(0);
   const [showBuildingSchedule, setShowBuildingSchedule] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -634,18 +636,36 @@ export default function OnboardingScreen() {
     setShowCelebration(true);
   };
   
-  const handleCelebrationComplete = () => {
+  const handleCelebrationComplete = async () => {
     const certifiedBrands = data.selectedBrands.map(brand => 
       brand === 'Other' ? data.customBrand : brand
     ).filter(b => b.trim().length > 0);
     const businessType = data.services.includes('salon') || data.services.includes('suite') ? 'salon' : 'solo';
     
-    navigation.navigate('GuestCheckout', {
-      city: data.location || undefined,
-      certifiedBrands: certifiedBrands.length > 0 ? certifiedBrands : undefined,
-      extensionMethods: data.methods.length > 0 ? data.methods : undefined,
-      businessType,
-    });
+    if (isAuthenticated) {
+      try {
+        await profileApi.update({
+          city: data.location || undefined,
+          certifiedBrands: certifiedBrands.length > 0 ? certifiedBrands : [],
+          extensionMethods: data.methods.length > 0 ? data.methods : [],
+          offeredServices: data.services,
+          postingServices: data.postingServices,
+          onboardingComplete: true,
+        });
+        setOnboardingComplete(true);
+        (navigation as NativeStackNavigationProp<RootStackParamList>).navigate('StartTrial');
+      } catch (error) {
+        console.error('Failed to save onboarding data:', error);
+        (navigation as NativeStackNavigationProp<RootStackParamList>).navigate('StartTrial');
+      }
+    } else {
+      navigation.navigate('GuestCheckout', {
+        city: data.location || undefined,
+        certifiedBrands: certifiedBrands.length > 0 ? certifiedBrands : undefined,
+        extensionMethods: data.methods.length > 0 ? data.methods : undefined,
+        businessType,
+      });
+    }
   };
 
   const handleBack = () => {
