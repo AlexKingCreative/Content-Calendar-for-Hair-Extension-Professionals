@@ -449,22 +449,25 @@
     to { opacity: 1; }
   }
 
+  /* Card flow animation - opacity only to prevent layout shift */
   @keyframes card-flow {
-    0% { opacity: 0; transform: translateX(50px) scale(0.9); }
-    15% { opacity: 1; transform: translateX(0) scale(1); }
-    85% { opacity: 1; transform: translateX(0) scale(1); }
-    100% { opacity: 0; transform: translateX(-50px) scale(0.9); }
+    0% { opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { opacity: 0; }
   }
 
+  /* Float animation - opacity only to prevent layout shift */
   @keyframes float {
-    0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
-    10% { opacity: 1; transform: translateY(-10px) scale(1); }
-    90% { opacity: 1; transform: translateY(10px) scale(1); }
+    0%, 100% { opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
   }
 
+  /* Pop-in animation - opacity only to prevent layout shift on mobile */
   @keyframes pop-in {
-    from { opacity: 0; transform: scale(0.8); }
-    to { opacity: 1; transform: scale(1); }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   .animate-fade-in {
@@ -521,15 +524,13 @@
     opacity: 0;
   }
 
-  /* Subtle scale fade */
+  /* Subtle scale fade - opacity only to prevent layout shift */
   @keyframes scale-fade-in {
     from { 
       opacity: 0; 
-      transform: scale(0.96); 
     }
     to { 
       opacity: 1; 
-      transform: scale(1); 
     }
   }
 
