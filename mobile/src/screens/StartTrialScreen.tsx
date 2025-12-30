@@ -238,6 +238,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
+    marginBottom: spacing.sm,
   },
   plansRow: {
     flexDirection: 'row',
