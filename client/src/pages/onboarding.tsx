@@ -3,7 +3,12 @@ import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Sparkles, MapPin, ChevronRight, ChevronLeft, Check, Users, Diamond, Calendar, Star, GraduationCap, Heart, Scissors, Award, Palette, Mail, User, Building2 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
-import ashleyDianaImg from "@assets/IMG_8599_3_1766974570149.JPG";
+import ashleyDianaImg from "@assets/ashley_diana.jpg";
+import iconHairExtensions from "@assets/icon_hair_extensions.png";
+import iconToppers from "@assets/icon_toppers.png";
+import iconWigs from "@assets/icon_wigs.png";
+import iconColorServices from "@assets/icon_color_services.png";
+import iconCutAndStyle from "@assets/icon_cut_and_style.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,31 +30,31 @@ const SERVICE_CATEGORIES = [
     id: "extensions", 
     label: "Hair Extensions", 
     description: "Tape-ins, sew-ins, fusion, etc.",
-    icon: Sparkles,
+    iconImage: iconHairExtensions,
   },
   { 
     id: "toppers", 
     label: "Hair Toppers", 
     description: "Coverage for thinning hair",
-    icon: Award,
+    iconImage: iconToppers,
   },
   { 
     id: "wigs", 
     label: "Wigs & Units", 
     description: "Full coverage solutions",
-    icon: Heart,
+    iconImage: iconWigs,
   },
   { 
     id: "coloring", 
     label: "Color Services", 
     description: "Balayage, highlights, color",
-    icon: Palette,
+    iconImage: iconColorServices,
   },
   { 
     id: "cutting", 
     label: "Cut & Style", 
     description: "Haircuts and styling",
-    icon: Scissors,
+    iconImage: iconCutAndStyle,
   },
 ];
 
@@ -349,7 +354,6 @@ export default function OnboardingPage() {
           <div className="space-y-4" data-testid="step-services">
             <div className="grid gap-3">
               {SERVICE_CATEGORIES.map((service) => {
-                const Icon = service.icon;
                 const isSelected = services.includes(service.id);
                 return (
                   <button
@@ -362,10 +366,10 @@ export default function OnboardingPage() {
                     }`}
                     data-testid={`button-service-${service.id}`}
                   >
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
-                      isSelected ? 'bg-primary/20' : 'bg-muted'
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-md overflow-hidden ${
+                      isSelected ? 'ring-2 ring-primary' : ''
                     }`}>
-                      <Icon className={`w-6 h-6 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <img src={service.iconImage} alt={service.label} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={`font-medium ${isSelected ? 'text-primary' : ''}`}>
@@ -392,7 +396,6 @@ export default function OnboardingPage() {
           <div className="space-y-4" data-testid="step-posting-services">
             <div className="grid gap-3">
               {SERVICE_CATEGORIES.filter(s => services.includes(s.id)).map((service) => {
-                const Icon = service.icon;
                 const isSelected = postingServices.includes(service.id);
                 return (
                   <button
@@ -405,10 +408,10 @@ export default function OnboardingPage() {
                     }`}
                     data-testid={`button-posting-${service.id}`}
                   >
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
-                      isSelected ? 'bg-primary/20' : 'bg-muted'
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-md overflow-hidden ${
+                      isSelected ? 'ring-2 ring-primary' : ''
                     }`}>
-                      <Icon className={`w-6 h-6 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <img src={service.iconImage} alt={service.label} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={`font-medium ${isSelected ? 'text-primary' : ''}`}>

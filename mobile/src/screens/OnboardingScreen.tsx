@@ -508,7 +508,14 @@ export default function OnboardingScreen() {
     methods: [],
   });
   const [showBrandPicker, setShowBrandPicker] = useState(false);
+  const [brandSearch, setBrandSearch] = useState('');
   const progressAnim = useRef(new Animated.Value(0)).current;
+  
+  const filteredBrands = brandSearch.length > 0 
+    ? CERTIFIED_BRANDS.filter(brand => 
+        brand.toLowerCase().includes(brandSearch.toLowerCase())
+      )
+    : CERTIFIED_BRANDS;
 
   const hasExtensions = data.services.includes('extensions');
   const baseSteps = 4;
@@ -555,6 +562,7 @@ export default function OnboardingScreen() {
       selectedBrand: brand,
       customBrand: brand === 'Other' ? prev.customBrand : '',
     }));
+    setBrandSearch('');
     setShowBrandPicker(false);
   };
 
@@ -714,7 +722,7 @@ export default function OnboardingScreen() {
             
             <View style={styles.quoteContainer}>
               <Image 
-                source={{ uri: 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=100' }}
+                source={require('../../assets/ashley_diana.jpg')}
                 style={styles.quoteAvatar}
               />
               <View style={styles.quoteTextContainer}>
@@ -738,67 +746,83 @@ export default function OnboardingScreen() {
             </Text>
             
             <Text style={styles.sectionLabel}>Certified Brand</Text>
-            <TouchableOpacity
-              style={styles.dropdownButton}
-              onPress={() => setShowBrandPicker(true)}
-            >
-              <Text style={data.selectedBrand ? styles.dropdownButtonText : styles.dropdownPlaceholder}>
-                {data.selectedBrand || 'Select your certified brand'}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color="#A89580" />
-            </TouchableOpacity>
-            
-            {showBrandPicker && (
-              <View style={styles.pickerOverlay}>
-                <View style={styles.pickerContainer}>
-                  <View style={styles.pickerHeader}>
-                    <Text style={styles.pickerTitle}>Select Brand</Text>
-                    <TouchableOpacity onPress={() => setShowBrandPicker(false)}>
-                      <Ionicons name="close" size={24} color="#1A1A1A" />
-                    </TouchableOpacity>
-                  </View>
-                  <ScrollView style={styles.pickerList}>
-                    {CERTIFIED_BRANDS.map((brand) => (
+            <View style={styles.autocompleteContainer}>
+              <View style={styles.autocompleteInputContainer}>
+                <Ionicons name="search" size={20} color="#A89580" style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.autocompleteInput}
+                  placeholder="Search or select your certified brand"
+                  placeholderTextColor="#A89580"
+                  value={data.selectedBrand && !showBrandPicker ? data.selectedBrand : brandSearch}
+                  onChangeText={(text) => {
+                    setBrandSearch(text);
+                    setShowBrandPicker(true);
+                    if (data.selectedBrand) {
+                      setData(prev => ({ ...prev, selectedBrand: '' }));
+                    }
+                  }}
+                  onFocus={() => setShowBrandPicker(true)}
+                />
+                {(data.selectedBrand || brandSearch) && (
+                  <TouchableOpacity onPress={() => {
+                    setBrandSearch('');
+                    setData(prev => ({ ...prev, selectedBrand: '' }));
+                  }}>
+                    <Ionicons name="close-circle" size={20} color="#A89580" />
+                  </TouchableOpacity>
+                )}
+              </View>
+              
+              {showBrandPicker && (
+                <View style={styles.autocompleteDropdown}>
+                  <ScrollView style={styles.autocompleteList} keyboardShouldPersistTaps="handled">
+                    {filteredBrands.map((brand) => (
                       <TouchableOpacity
                         key={brand}
                         style={[
-                          styles.pickerItem,
-                          data.selectedBrand === brand && styles.pickerItemSelected,
+                          styles.autocompleteItem,
+                          data.selectedBrand === brand && styles.autocompleteItemSelected,
                         ]}
                         onPress={() => selectBrand(brand)}
                       >
                         <Text style={[
-                          styles.pickerItemText,
-                          data.selectedBrand === brand && styles.pickerItemTextSelected,
+                          styles.autocompleteItemText,
+                          data.selectedBrand === brand && styles.autocompleteItemTextSelected,
                         ]}>
                           {brand}
                         </Text>
                         {data.selectedBrand === brand && (
-                          <Ionicons name="checkmark" size={20} color="#D4A574" />
+                          <Ionicons name="checkmark" size={18} color="#D4A574" />
                         )}
                       </TouchableOpacity>
                     ))}
+                    {filteredBrands.length === 0 && brandSearch.length > 0 && (
+                      <View style={styles.autocompleteEmpty}>
+                        <Text style={styles.autocompleteEmptyText}>No brands found</Text>
+                      </View>
+                    )}
                     <TouchableOpacity
                       style={[
-                        styles.pickerItem,
-                        data.selectedBrand === 'Other' && styles.pickerItemSelected,
+                        styles.autocompleteItem,
+                        styles.autocompleteItemOther,
+                        data.selectedBrand === 'Other' && styles.autocompleteItemSelected,
                       ]}
                       onPress={() => selectBrand('Other')}
                     >
                       <Text style={[
-                        styles.pickerItemText,
-                        data.selectedBrand === 'Other' && styles.pickerItemTextSelected,
+                        styles.autocompleteItemText,
+                        data.selectedBrand === 'Other' && styles.autocompleteItemTextSelected,
                       ]}>
-                        Other
+                        Other (enter custom)
                       </Text>
                       {data.selectedBrand === 'Other' && (
-                        <Ionicons name="checkmark" size={20} color="#D4A574" />
+                        <Ionicons name="checkmark" size={18} color="#D4A574" />
                       )}
                     </TouchableOpacity>
                   </ScrollView>
                 </View>
-              </View>
-            )}
+              )}
+            </View>
             
             {data.selectedBrand === 'Other' && (
               <View style={styles.customBrandContainer}>
@@ -1396,6 +1420,70 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#A89580',
     marginTop: 6,
+    fontStyle: 'italic',
+  },
+  autocompleteContainer: {
+    marginBottom: 12,
+    zIndex: 100,
+  },
+  autocompleteInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#E5D5C5',
+  },
+  autocompleteInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#5D4E3C',
+  },
+  autocompleteDropdown: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#E5D5C5',
+    maxHeight: 200,
+    overflow: 'hidden',
+  },
+  autocompleteList: {
+    maxHeight: 200,
+  },
+  autocompleteItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F0EB',
+  },
+  autocompleteItemSelected: {
+    backgroundColor: '#FFF8F0',
+  },
+  autocompleteItemOther: {
+    borderBottomWidth: 0,
+    backgroundColor: '#FAF7F5',
+  },
+  autocompleteItemText: {
+    fontSize: 15,
+    color: '#5D4E3C',
+  },
+  autocompleteItemTextSelected: {
+    color: '#D4A574',
+    fontWeight: '600',
+  },
+  autocompleteEmpty: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  autocompleteEmptyText: {
+    fontSize: 14,
+    color: '#A89580',
     fontStyle: 'italic',
   },
 });
