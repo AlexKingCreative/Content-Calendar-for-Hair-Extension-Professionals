@@ -151,7 +151,7 @@ function StartTrialWrapper() {
 }
 
 export default function Navigation() {
-  const { isLoading, isAuthenticated, hasActiveSubscription, onboardingComplete } = useAuth();
+  const { isLoading, isAuthenticated, hasActiveSubscription } = useAuth();
 
   if (isLoading) {
     return (
@@ -190,15 +190,10 @@ export default function Navigation() {
                 options={{ headerShown: false }}
               />
             </>
-          ) : !onboardingComplete ? (
-            <>
-              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-              <Stack.Screen name="StartTrial" component={StartTrialWrapper} />
-            </>
           ) : (
             <>
-              <Stack.Screen name="StartTrial" component={StartTrialWrapper} />
               <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+              <Stack.Screen name="StartTrial" component={StartTrialWrapper} />
             </>
           )
         ) : (
