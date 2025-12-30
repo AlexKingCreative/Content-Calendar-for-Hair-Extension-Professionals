@@ -21,6 +21,7 @@ import HelpScreen from '../screens/HelpScreen';
 import AccountScreen from '../screens/AccountScreen';
 import UpgradeScreen from '../screens/UpgradeScreen';
 import StartTrialScreen from '../screens/StartTrialScreen';
+import GuestCheckoutScreen from '../screens/GuestCheckoutScreen';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -38,6 +39,12 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   Onboarding: undefined;
+  GuestCheckout: {
+    city?: string;
+    certifiedBrands?: string[];
+    extensionMethods?: string[];
+    businessType?: string;
+  };
 };
 
 export type MainTabParamList = {
@@ -59,6 +66,7 @@ function AuthNavigator() {
       <AuthStack.Screen name="Onboarding" component={OnboardingScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Register" component={RegisterScreen} />
+      <AuthStack.Screen name="GuestCheckout" component={GuestCheckoutScreen} />
     </AuthStack.Navigator>
   );
 }

@@ -604,3 +604,26 @@ export const insertInstagramDailyInsightsSchema = createInsertSchema(instagramDa
 
 export type InstagramDailyInsights = typeof instagramDailyInsights.$inferSelect;
 export type InsertInstagramDailyInsights = z.infer<typeof insertInstagramDailyInsightsSchema>;
+
+// Pending Guest Checkouts - Stores checkout tokens for mobile guest checkout flow
+export const pendingGuestCheckouts = pgTable("pending_guest_checkouts", {
+  id: serial("id").primaryKey(),
+  checkoutToken: varchar("checkout_token", { length: 64 }).notNull().unique(),
+  stripeSessionId: varchar("stripe_session_id", { length: 255 }).notNull(),
+  city: text("city"),
+  certifiedBrands: text("certified_brands").array(),
+  extensionMethods: text("extension_methods").array(),
+  businessType: varchar("business_type", { length: 20 }).default("solo"),
+  expiresAt: timestamp("expires_at").notNull(),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertPendingGuestCheckoutSchema = createInsertSchema(pendingGuestCheckouts).omit({
+  id: true,
+  completedAt: true,
+  createdAt: true,
+});
+
+export type PendingGuestCheckout = typeof pendingGuestCheckouts.$inferSelect;
+export type InsertPendingGuestCheckout = z.infer<typeof insertPendingGuestCheckoutSchema>;

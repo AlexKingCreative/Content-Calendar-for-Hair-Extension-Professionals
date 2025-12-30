@@ -599,7 +599,16 @@ export default function OnboardingScreen() {
   };
   
   const handleCelebrationComplete = () => {
-    navigation.navigate('Register');
+    const brand = data.selectedBrand === 'Other' ? data.customBrand : data.selectedBrand;
+    const certifiedBrands = brand ? [brand] : [];
+    const businessType = data.services.includes('salon') || data.services.includes('suite') ? 'salon' : 'solo';
+    
+    navigation.navigate('GuestCheckout', {
+      city: data.location || undefined,
+      certifiedBrands: certifiedBrands.length > 0 ? certifiedBrands : undefined,
+      extensionMethods: data.methods.length > 0 ? data.methods : undefined,
+      businessType,
+    });
   };
 
   const handleBack = () => {

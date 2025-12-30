@@ -112,6 +112,20 @@ export const stripeApi = {
     const response = await api.post('/api/mobile/stripe/checkout', { plan });
     return response.data;
   },
+  guestCheckout: async (data: {
+    plan: 'monthly' | 'quarterly' | 'yearly';
+    city?: string;
+    certifiedBrands?: string[];
+    extensionMethods?: string[];
+    businessType?: string;
+  }) => {
+    const response = await api.post('/api/mobile/stripe/guest-checkout', data);
+    return response.data;
+  },
+  completeCheckout: async (checkoutToken: string) => {
+    const response = await api.post('/api/mobile/stripe/complete-checkout', { checkoutToken });
+    return response.data;
+  },
 };
 
 export const webApi = {

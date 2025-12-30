@@ -474,7 +474,6 @@ router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
     };
     
     const priceId = priceMap[plan] || priceMap.monthly;
-    const withTrial = plan === 'monthly';
     
     const { getUncachableStripeClient } = await import('./stripeClient');
     const stripe = await getUncachableStripeClient();
@@ -494,13 +493,10 @@ router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
       success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/subscription/cancel`,
       client_reference_id: req.mobileUserId,
-    };
-    
-    if (withTrial) {
-      sessionParams.subscription_data = {
+      subscription_data: {
         trial_period_days: 7,
-      };
-    }
+      },
+    };
     
     const session = await stripe.checkout.sessions.create(sessionParams);
 
@@ -508,6 +504,176 @@ router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
   } catch (error: any) {
     console.error('Stripe checkout error:', error);
     res.status(500).json({ message: error.message || 'Failed to create checkout session' });
+  }
+});
+
+router.post('/stripe/guest-checkout', async (req, res) => {
+  try {
+    const { plan, city, certifiedBrands, extensionMethods, businessType } = req.body;
+    
+    const priceMap: Record<string, string> = {
+      monthly: 'price_1SjghaEwHywpBlpyibBPVyKa',
+      quarterly: 'price_1SjqZXEwHywpBlpyFqlLz09T',
+      annual: 'price_1SjqanEwHywpBlpyCZfBdp5v',
+      yearly: 'price_1SjqanEwHywpBlpyCZfBdp5v',
+    };
+    
+    const priceId = priceMap[plan] || priceMap.monthly;
+    
+    const { getUncachableStripeClient } = await import('./stripeClient');
+    const stripe = await getUncachableStripeClient();
+    
+    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+      : 'https://contentcalendarforhairpros.com';
+    
+    const checkoutToken = crypto.randomBytes(32).toString('hex');
+    
+    const sessionParams: any = {
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{
+        price: priceId,
+        quantity: 1,
+      }],
+      allow_promotion_codes: true,
+      success_url: `${baseUrl}/subscription/success?token=${checkoutToken}`,
+      cancel_url: `${baseUrl}/subscription/cancel`,
+      metadata: {
+        source: 'mobile_guest',
+        checkoutToken,
+      },
+      subscription_data: {
+        trial_period_days: 7,
+      },
+    };
+    
+    const session = await stripe.checkout.sessions.create(sessionParams);
+    
+    const { pendingGuestCheckouts } = await import('@shared/schema');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    
+    await db.insert(pendingGuestCheckouts).values({
+      checkoutToken,
+      stripeSessionId: session.id,
+      city: city || null,
+      certifiedBrands: certifiedBrands || [],
+      extensionMethods: extensionMethods || [],
+      businessType: businessType || 'solo',
+      expiresAt,
+    });
+
+    res.json({ url: session.url, checkoutToken });
+  } catch (error: any) {
+    console.error('Guest checkout error:', error);
+    res.status(500).json({ message: error.message || 'Failed to create checkout session' });
+  }
+});
+
+router.post('/stripe/complete-checkout', async (req, res) => {
+  try {
+    const { checkoutToken } = req.body;
+    
+    if (!checkoutToken) {
+      return res.status(400).json({ message: 'Checkout token is required' });
+    }
+    
+    const { pendingGuestCheckouts } = await import('@shared/schema');
+    
+    const [pending] = await db.select()
+      .from(pendingGuestCheckouts)
+      .where(eq(pendingGuestCheckouts.checkoutToken, checkoutToken));
+    
+    if (!pending) {
+      return res.status(400).json({ message: 'Invalid or expired checkout token' });
+    }
+    
+    if (pending.completedAt) {
+      return res.status(400).json({ message: 'This checkout has already been completed' });
+    }
+    
+    if (new Date() > pending.expiresAt) {
+      return res.status(400).json({ message: 'Checkout session expired' });
+    }
+    
+    const { getUncachableStripeClient } = await import('./stripeClient');
+    const stripe = await getUncachableStripeClient();
+    
+    const session = await stripe.checkout.sessions.retrieve(pending.stripeSessionId, {
+      expand: ['customer', 'subscription'],
+    });
+    
+    if (session.metadata?.checkoutToken !== checkoutToken) {
+      return res.status(400).json({ message: 'Token mismatch' });
+    }
+    
+    if (session.payment_status !== 'paid' && session.status !== 'complete') {
+      return res.status(400).json({ message: 'Payment not completed yet. Please complete checkout first.' });
+    }
+    
+    await db.update(pendingGuestCheckouts)
+      .set({ completedAt: new Date() })
+      .where(eq(pendingGuestCheckouts.checkoutToken, checkoutToken));
+    
+    const customerEmail = session.customer_details?.email;
+    if (!customerEmail) {
+      return res.status(400).json({ message: 'No email found in checkout session' });
+    }
+    
+    let user = await db.select().from(users).where(eq(users.email, customerEmail));
+    let userId: string;
+    
+    if (user.length > 0) {
+      userId = user[0].id;
+    } else {
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+      const passwordHash = await bcrypt.hash(randomPassword, 10);
+      
+      const customerName = session.customer_details?.name || 'Hair Pro';
+      const nameParts = customerName.split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ') || null;
+      
+      const [newUser] = await db.insert(users).values({
+        email: customerEmail,
+        passwordHash,
+        firstName,
+        lastName,
+      }).returning();
+      
+      userId = newUser.id;
+      
+      await db.insert(userProfiles).values({
+        userId,
+        city: pending.city || null,
+        certifiedBrands: pending.certifiedBrands || [],
+        extensionMethods: pending.extensionMethods || [],
+        businessType: pending.businessType || 'solo',
+        onboardingComplete: true,
+      });
+    }
+    
+    const profile = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId));
+    if (profile.length > 0 && !profile[0].onboardingComplete) {
+      await db.update(userProfiles)
+        .set({ onboardingComplete: true })
+        .where(eq(userProfiles.userId, userId));
+    }
+    
+    const token = generateToken(userId);
+    const userData = user.length > 0 ? user[0] : (await db.select().from(users).where(eq(users.id, userId)))[0];
+    
+    res.json({
+      token,
+      user: {
+        id: userId,
+        email: userData.email,
+        name: `${userData.firstName}${userData.lastName ? ' ' + userData.lastName : ''}`,
+      },
+    });
+  } catch (error: any) {
+    console.error('Complete checkout error:', error);
+    res.status(500).json({ message: error.message || 'Failed to complete checkout' });
   }
 });
 
