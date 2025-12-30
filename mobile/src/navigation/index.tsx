@@ -20,11 +20,13 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import HelpScreen from '../screens/HelpScreen';
 import AccountScreen from '../screens/AccountScreen';
 import UpgradeScreen from '../screens/UpgradeScreen';
+import StartTrialScreen from '../screens/StartTrialScreen';
 
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
   Onboarding: undefined;
+  StartTrial: undefined;
   PostDetail: { postId: number };
   Help: undefined;
   Account: undefined;
@@ -132,8 +134,13 @@ function MainTabs() {
 }
 
 
+function StartTrialWrapper() {
+  const { refreshSubscriptionStatus } = useAuth();
+  return <StartTrialScreen onTrialStarted={refreshSubscriptionStatus} />;
+}
+
 export default function Navigation() {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated, hasActiveSubscription } = useAuth();
 
   if (isLoading) {
     return (
@@ -147,30 +154,37 @@ export default function Navigation() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
-          <>
-            <Stack.Screen name="Main" component={MainTabs} />
-            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-            <Stack.Screen 
-              name="PostDetail" 
-              component={PostDetailScreen}
-              options={{ headerShown: true, title: 'Post Details' }}
-            />
-            <Stack.Screen 
-              name="Help" 
-              component={HelpScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="Account" 
-              component={AccountScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="Upgrade" 
-              component={UpgradeScreen}
-              options={{ headerShown: false }}
-            />
-          </>
+          hasActiveSubscription ? (
+            <>
+              <Stack.Screen name="Main" component={MainTabs} />
+              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+              <Stack.Screen 
+                name="PostDetail" 
+                component={PostDetailScreen}
+                options={{ headerShown: true, title: 'Post Details' }}
+              />
+              <Stack.Screen 
+                name="Help" 
+                component={HelpScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Account" 
+                component={AccountScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Upgrade" 
+                component={UpgradeScreen}
+                options={{ headerShown: false }}
+              />
+            </>
+          ) : (
+            <>
+              <Stack.Screen name="StartTrial" component={StartTrialWrapper} />
+              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+            </>
+          )
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigator} />
         )}
