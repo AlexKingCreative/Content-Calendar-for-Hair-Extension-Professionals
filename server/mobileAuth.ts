@@ -486,6 +486,7 @@ router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
         price: priceId,
         quantity: 1,
       }],
+      allow_promotion_codes: true,
       success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/subscription/cancel`,
       client_reference_id: req.mobileUserId,

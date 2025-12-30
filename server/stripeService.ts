@@ -26,6 +26,7 @@ export class StripeService {
       line_items: [{ price: priceId, quantity: 1 }],
       mode: 'subscription',
       subscription_data: withTrial ? { trial_period_days: 7 } : undefined,
+      allow_promotion_codes: true,
       success_url: successUrl,
       cancel_url: cancelUrl,
     });
