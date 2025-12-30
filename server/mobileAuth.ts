@@ -463,17 +463,21 @@ router.post('/user/challenges/:id/progress', authenticateMobile, async (req: any
 
 router.post('/stripe/checkout', authenticateMobile, async (req: any, res) => {
   try {
-    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-    if (!stripeSecretKey) {
-      return res.status(503).json({ message: 'Payment service not configured' });
-    }
-    
     const { plan } = req.body;
-    const priceId = plan === 'annual' ? 'price_pro_annual' : 'price_pro_monthly';
+    
+    // Map plan to correct Live mode price ID
+    const priceMap: Record<string, string> = {
+      monthly: 'price_1SjghaEwHywpBlpyibBPVyKa',   // $10/month
+      quarterly: 'price_1SjqZXEwHywpBlpyFqlLz09T', // $25/3 months
+      annual: 'price_1SjqanEwHywpBlpyCZfBdp5v',    // $50/year
+      yearly: 'price_1SjqanEwHywpBlpyCZfBdp5v',    // $50/year (alias)
+    };
+    
+    const priceId = priceMap[plan] || priceMap.monthly;
     const withTrial = plan === 'monthly';
     
-    const Stripe = (await import('stripe')).default;
-    const stripe = new Stripe(stripeSecretKey, { apiVersion: '2025-11-17.clover' });
+    const { getUncachableStripeClient } = await import('./stripeClient');
+    const stripe = await getUncachableStripeClient();
     
     const baseUrl = process.env.REPLIT_DEV_DOMAIN 
       ? `https://${process.env.REPLIT_DEV_DOMAIN}` 

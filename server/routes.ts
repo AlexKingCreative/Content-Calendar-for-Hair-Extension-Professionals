@@ -1310,13 +1310,9 @@ Respond in JSON format with these fields:
 
       // Get price based on interval (month, quarter, or year)
       const validInterval = interval === 'year' ? 'year' : interval === 'quarter' ? 'quarter' : 'month';
-      let priceInfo = await stripeService.getSubscriptionPriceByInterval(validInterval);
+      const priceInfo = stripeService.getSubscriptionPriceByInterval(validInterval);
       if (!priceInfo?.price_id) {
-        // Fallback to any active price
-        priceInfo = await stripeService.getActiveSubscriptionPrice();
-        if (!priceInfo?.price_id) {
-          return res.status(500).json({ error: "No subscription product available" });
-        }
+        return res.status(500).json({ error: "No subscription product available" });
       }
 
       const baseUrl = `${req.protocol}://${req.get("host")}`;

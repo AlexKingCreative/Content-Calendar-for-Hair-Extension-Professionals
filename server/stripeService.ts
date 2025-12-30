@@ -2,6 +2,18 @@ import { getUncachableStripeClient } from './stripeClient';
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 
+// Live mode Stripe price IDs
+export const STRIPE_PRICES = {
+  // Individual plans
+  PRO_MONTHLY: 'price_1SjghaEwHywpBlpyibBPVyKa',    // $10/month
+  PRO_QUARTERLY: 'price_1SjqZXEwHywpBlpyFqlLz09T',  // $25/3 months
+  PRO_YEARLY: 'price_1SjqanEwHywpBlpyCZfBdp5v',     // $50/year
+  // Salon plans
+  SALON_START: 'price_1Sjqe5EwHywpBlpyio1zf6eq',    // $49/month (5 seats)
+  SALON_GROW: 'price_1SjqexEwHywpBlpykPBAgahl',     // $79/month (10 seats)
+  EXTRA_SEAT: 'price_1SjqhOEwHywpBlpyfoNrtB2i',     // $8/month per extra seat
+} as const;
+
 export class StripeService {
   async createCustomer(email: string, userId: string, name?: string) {
     const stripe = await getUncachableStripeClient();
@@ -72,35 +84,26 @@ export class StripeService {
     return result.rows || [];
   }
 
-  async getSubscriptionPriceByInterval(interval: 'month' | 'quarter' | 'year') {
-    // Stripe uses month with interval_count for quarterly billing
-    if (interval === 'quarter') {
-      const result = await db.execute(
-        sql`SELECT p.*, pr.id as price_id, pr.unit_amount, pr.currency, pr.recurring
-            FROM stripe.products p
-            JOIN stripe.prices pr ON pr.product = p.id
-            WHERE p.active = true AND pr.active = true
-            AND p.metadata->>'type' = 'subscription'
-            AND pr.recurring->>'interval' = 'month'
-            AND (pr.recurring->>'interval_count')::int = 3
-            ORDER BY pr.unit_amount ASC
-            LIMIT 1`
-      );
-      return result.rows[0] || null;
-    }
-    
-    const result = await db.execute(
-      sql`SELECT p.*, pr.id as price_id, pr.unit_amount, pr.currency, pr.recurring
-          FROM stripe.products p
-          JOIN stripe.prices pr ON pr.product = p.id
-          WHERE p.active = true AND pr.active = true
-          AND p.metadata->>'type' = 'subscription'
-          AND pr.recurring->>'interval' = ${interval}
-          AND (pr.recurring->>'interval_count' IS NULL OR (pr.recurring->>'interval_count')::int = 1)
-          ORDER BY pr.unit_amount ASC
-          LIMIT 1`
-    );
-    return result.rows[0] || null;
+  getSubscriptionPriceByInterval(interval: 'month' | 'quarter' | 'year') {
+    // Use hardcoded Live mode price IDs
+    const priceMap = {
+      month: { price_id: STRIPE_PRICES.PRO_MONTHLY, unit_amount: 1000, currency: 'usd', interval: 'month' },
+      quarter: { price_id: STRIPE_PRICES.PRO_QUARTERLY, unit_amount: 2500, currency: 'usd', interval: 'month', interval_count: 3 },
+      year: { price_id: STRIPE_PRICES.PRO_YEARLY, unit_amount: 5000, currency: 'usd', interval: 'year' },
+    };
+    return priceMap[interval] || null;
+  }
+  
+  getSalonPriceByTier(tier: 'start' | 'grow') {
+    const priceMap = {
+      start: { price_id: STRIPE_PRICES.SALON_START, unit_amount: 4900, currency: 'usd', seats: 5 },
+      grow: { price_id: STRIPE_PRICES.SALON_GROW, unit_amount: 7900, currency: 'usd', seats: 10 },
+    };
+    return priceMap[tier] || null;
+  }
+  
+  getExtraSeatPrice() {
+    return { price_id: STRIPE_PRICES.EXTRA_SEAT, unit_amount: 800, currency: 'usd' };
   }
 
   async getSubscription(subscriptionId: string) {
