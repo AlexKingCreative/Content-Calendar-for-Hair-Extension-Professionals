@@ -8,29 +8,26 @@ import {
   SafeAreaView,
   Alert,
   ActivityIndicator,
-  Dimensions,
-  Image,
   Animated,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import * as WebBrowser from 'expo-web-browser';
 import { colors, spacing, borderRadius } from '../theme';
 import { stripeApi } from '../services/api';
-
-const { width } = Dimensions.get('window');
-const PLAN_WIDTH = (width - spacing.md * 2 - spacing.sm * 2) / 3;
 
 interface StartTrialScreenProps {
   onTrialStarted?: () => void;
 }
 
 const FEATURES = [
-  { icon: 'calendar-outline', text: 'Monthly content ideas' },
-  { icon: 'sparkles-outline', text: 'AI captions' },
-  { icon: 'flame-outline', text: 'Streak rewards' },
+  { icon: 'calendar-outline', text: 'Monthly pre-planned content' },
+  { icon: 'sparkles-outline', text: 'AI-powered captions' },
+  { icon: 'layers-outline', text: 'Multiple service categories' },
+  { icon: 'flame-outline', text: 'Posting streak tracker' },
+  { icon: 'person-outline', text: 'Personalized voice settings' },
   { icon: 'trending-up-outline', text: 'Trend alerts' },
-  { icon: 'layers-outline', text: 'Multiple services' },
-  { icon: 'person-outline', text: 'Personalized voice' },
 ];
 
 const SOCIAL_PROOF_MESSAGES = [
@@ -45,7 +42,8 @@ const SOCIAL_PROOF_MESSAGES = [
 ];
 
 export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenProps) {
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly' | 'yearly'>('quarterly');
+  const navigation = useNavigation();
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const [isLoading, setIsLoading] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -116,8 +114,18 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
     }
   };
 
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView 
         style={styles.content} 
         contentContainerStyle={styles.contentContainer}
@@ -142,46 +150,15 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
 
         <View style={styles.heroSection}>
           <View style={styles.iconContainer}>
-            <Ionicons name="sparkles" size={28} color="#FFFFFF" />
+            <Ionicons name="diamond" size={40} color="#FFFFFF" />
           </View>
           <Text style={styles.heroTitle}>Choose Your Plan</Text>
           <Text style={styles.heroSubtitle}>
-            7-day free trial on all plans
+            7-day free trial on all plans. Cancel anytime.
           </Text>
         </View>
 
-        <View style={styles.plansRow}>
-          <TouchableOpacity
-            style={[
-              styles.planCard,
-              selectedPlan === 'monthly' && styles.planCardSelected,
-            ]}
-            onPress={() => setSelectedPlan('monthly')}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.planName}>Monthly</Text>
-            <Text style={styles.priceAmount}>$10</Text>
-            <Text style={styles.pricePeriod}>/month</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.planCard,
-              styles.planCardMiddle,
-              selectedPlan === 'quarterly' && styles.planCardSelected,
-            ]}
-            onPress={() => setSelectedPlan('quarterly')}
-            activeOpacity={0.8}
-          >
-            <View style={styles.popularBadge}>
-              <Text style={styles.popularBadgeText}>POPULAR</Text>
-            </View>
-            <Text style={styles.planName}>Quarterly</Text>
-            <Text style={styles.priceAmount}>$25</Text>
-            <Text style={styles.pricePeriod}>/3 months</Text>
-            <Text style={styles.planSavings}>Save 17%</Text>
-          </TouchableOpacity>
-
+        <View style={styles.plansContainer}>
           <TouchableOpacity
             style={[
               styles.planCard,
@@ -190,21 +167,64 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
             onPress={() => setSelectedPlan('yearly')}
             activeOpacity={0.8}
           >
-            <View style={[styles.popularBadge, styles.bestBadge]}>
-              <Text style={styles.popularBadgeText}>BEST</Text>
+            <View style={styles.planBadge}>
+              <Text style={styles.planBadgeText}>BEST VALUE</Text>
             </View>
-            <Text style={styles.planName}>Yearly</Text>
-            <Text style={styles.priceAmount}>$50</Text>
-            <Text style={styles.pricePeriod}>/year</Text>
-            <Text style={styles.planSavings}>Save 58%</Text>
+            <View style={styles.planHeader}>
+              <View style={[
+                styles.radioButton,
+                selectedPlan === 'yearly' && styles.radioButtonSelected,
+              ]}>
+                {selectedPlan === 'yearly' && (
+                  <View style={styles.radioButtonInner} />
+                )}
+              </View>
+              <View style={styles.planInfo}>
+                <Text style={styles.planName}>Yearly</Text>
+                <Text style={styles.planPrice}>
+                  <Text style={styles.priceAmount}>$50</Text>
+                  <Text style={styles.pricePeriod}>/year</Text>
+                </Text>
+                <Text style={styles.planSavings}>Just $4.17/month - Save 58%</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.planCard,
+              selectedPlan === 'monthly' && styles.planCardSelected,
+            ]}
+            onPress={() => setSelectedPlan('monthly')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.planHeader}>
+              <View style={[
+                styles.radioButton,
+                selectedPlan === 'monthly' && styles.radioButtonSelected,
+              ]}>
+                {selectedPlan === 'monthly' && (
+                  <View style={styles.radioButtonInner} />
+                )}
+              </View>
+              <View style={styles.planInfo}>
+                <Text style={styles.planName}>Monthly</Text>
+                <Text style={styles.planPrice}>
+                  <Text style={styles.priceAmount}>$10</Text>
+                  <Text style={styles.pricePeriod}>/month</Text>
+                </Text>
+                <Text style={styles.planTrial}>7-day free trial included</Text>
+              </View>
+            </View>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.featuresGrid}>
+        <View style={styles.featuresSection}>
+          <Text style={styles.featuresTitle}>Everything you get:</Text>
           {FEATURES.map((feature, index) => (
-            <View key={index} style={styles.featureItem}>
-              <View style={styles.featureIconContainer}>
-                <Ionicons name={feature.icon as any} size={18} color={colors.primary} />
+            <View key={index} style={styles.featureRow}>
+              <View style={styles.featureIcon}>
+                <Ionicons name={feature.icon as any} size={20} color={colors.primary} />
               </View>
               <Text style={styles.featureText}>{feature.text}</Text>
             </View>
@@ -233,9 +253,9 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
         </View>
 
         <View style={styles.guaranteeSection}>
-          <Ionicons name="shield-checkmark" size={20} color={colors.primary} />
+          <Ionicons name="shield-checkmark" size={24} color={colors.primary} />
           <Text style={styles.guaranteeText}>
-            Cancel anytime during your trial
+            Cancel anytime. No questions asked.
           </Text>
         </View>
       </ScrollView>
@@ -261,10 +281,8 @@ export default function StartTrialScreen({ onTrialStarted }: StartTrialScreenPro
         
         <Text style={styles.ctaDisclaimer}>
           {selectedPlan === 'monthly' 
-            ? 'Then $10/month after trial ends'
-            : selectedPlan === 'quarterly'
-            ? 'Then $25/quarter (~$8.33/mo) after trial'
-            : 'Then $50/year (~$4.17/mo) after trial'
+            ? 'Credit card required. Cancel anytime during trial.'
+            : 'Credit card required. Cancel anytime during trial.'
           }
         </Text>
       </View>
@@ -277,14 +295,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: spacing.md,
-    paddingBottom: spacing.md,
-    flexGrow: 1,
-    justifyContent: 'center',
+    padding: 20,
+    paddingBottom: 40,
   },
   socialProofBanner: {
     flexDirection: 'row',
@@ -314,122 +340,147 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: 28,
   },
   iconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: 16,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: 16,
     elevation: 8,
   },
   heroTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '700',
     color: colors.text,
-    textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   heroSubtitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: spacing.sm,
   },
-  plansRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.lg,
-    gap: spacing.sm,
+  plansContainer: {
+    gap: 12,
+    marginBottom: 28,
   },
   planCard: {
-    flex: 1,
-    backgroundColor: colors.cardBackground,
-    borderRadius: borderRadius.lg,
-    padding: spacing.sm,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
     borderWidth: 2,
-    borderColor: colors.border,
-    position: 'relative',
-  },
-  planCardMiddle: {
-    marginTop: -8,
-    paddingTop: spacing.md + 8,
+    borderColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   planCardSelected: {
     borderColor: colors.primary,
-    backgroundColor: `${colors.primary}08`,
+    backgroundColor: '#FFF8F5',
   },
-  popularBadge: {
+  planBadge: {
     position: 'absolute',
     top: -10,
+    right: 16,
     backgroundColor: colors.primary,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  bestBadge: {
-    backgroundColor: '#FFD700',
-  },
-  popularBadgeText: {
+  planBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
     color: '#FFFFFF',
-    fontSize: 9,
-    fontWeight: 'bold',
     letterSpacing: 0.5,
   },
+  planHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  radioButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioButtonSelected: {
+    borderColor: colors.primary,
+  },
+  radioButtonInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
+  },
+  planInfo: {
+    flex: 1,
+  },
   planName: {
-    fontSize: 13,
+    fontSize: 18,
     fontWeight: '600',
     color: colors.text,
+    marginBottom: 4,
+  },
+  planPrice: {
     marginBottom: 4,
   },
   priceAmount: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '700',
     color: colors.text,
   },
   pricePeriod: {
-    fontSize: 11,
+    fontSize: 16,
     color: colors.textSecondary,
-    marginBottom: 4,
   },
   planSavings: {
-    fontSize: 10,
-    color: '#6B8E23',
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  planTrial: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  featuresSection: {
+    marginBottom: 20,
+  },
+  featuresTitle: {
+    fontSize: 16,
     fontWeight: '600',
+    color: colors.text,
+    marginBottom: 16,
   },
-  featuresGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: spacing.lg,
-  },
-  featureItem: {
-    width: '48%',
+  featureRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.sm,
-    gap: spacing.xs,
+    gap: 12,
+    marginBottom: 14,
   },
-  featureIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: `${colors.primary}12`,
+  featureIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: `${colors.primary}15`,
     justifyContent: 'center',
     alignItems: 'center',
   },
   featureText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 15,
     color: colors.text,
   },
   testimonialCard: {
@@ -477,28 +528,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
+    gap: 8,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   guaranteeText: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
   },
   footer: {
-    padding: spacing.md,
-    paddingBottom: spacing.lg,
+    padding: 20,
+    paddingBottom: 32,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.background,
   },
   ctaButton: {
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginBottom: 12,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -509,14 +563,13 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   ctaButtonText: {
-    color: '#FFFFFF',
     fontSize: 17,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   ctaDisclaimer: {
-    fontSize: 11,
-    color: colors.textTertiary,
     textAlign: 'center',
-    marginTop: spacing.sm,
+    fontSize: 12,
+    color: colors.textTertiary,
   },
 });
