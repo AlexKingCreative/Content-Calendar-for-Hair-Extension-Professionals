@@ -16,7 +16,7 @@ interface FAQItem {
 const faqData: FAQItem[] = [
   {
     question: "How do I use the content calendar?",
-    answer: "Navigate to the Calendar tab to see all 365 days of pre-planned post ideas. Each day has a unique post suggestion with title, description, category, and hashtags. Tap any day to see the full details and generate a personalized AI caption."
+    answer: "Navigate to the Calendar tab to see monthly pre-planned post ideas. Each day has a unique post suggestion with title, description, category, and hashtags. Tap any day to see the full details and generate a personalized AI caption."
   },
   {
     question: "How does streak tracking work?",

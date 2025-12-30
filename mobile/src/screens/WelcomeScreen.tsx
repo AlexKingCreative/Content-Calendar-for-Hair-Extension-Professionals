@@ -193,7 +193,7 @@ export default function WelcomeScreen({ onContinue, isAuthenticated }: WelcomeSc
             for Hair Pros
           </Animated.Text>
           <Animated.Text style={[styles.subtitle, { opacity: subtitleOpacity }]}>
-            365 days of ready-to-post content ideas designed specifically for hair extension professionals
+            Monthly ready-to-post content ideas designed specifically for hair extension professionals
           </Animated.Text>
         </View>
 

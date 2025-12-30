@@ -25,7 +25,7 @@ const freeFeatures = [
 
 const proFeatures = [
   "Full 12-month calendar access",
-  "365 days of pre-planned content",
+  "Monthly pre-planned content",
   "AI-powered caption generation",
   "Personalized to your voice and brand",
   "Optimized hashtags",

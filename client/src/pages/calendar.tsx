@@ -296,7 +296,7 @@ export default function CalendarPage() {
                   Hair Calendar
                 </h1>
                 <p className="text-xs text-muted-foreground hidden sm:block">
-                  365 days of content ideas
+                  Monthly content ideas
                 </p>
               </div>
             </div>

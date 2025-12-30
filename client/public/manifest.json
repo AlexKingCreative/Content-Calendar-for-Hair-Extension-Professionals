@@ -1,7 +1,7 @@
 {
   "name": "Content Calendar for Hair Pros",
   "short_name": "Content Calendar",
-  "description": "365 days of social media content ideas for hair professionals",
+  "description": "Monthly social media content ideas for hair professionals",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fef7f4",

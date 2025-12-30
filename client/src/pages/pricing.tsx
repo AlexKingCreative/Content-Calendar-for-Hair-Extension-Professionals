@@ -17,7 +17,7 @@ interface AccessStatus {
 }
 
 const individualFeatures = [
-  "365 days of pre-planned content",
+  "Monthly pre-planned content",
   "AI-powered captions",
   "Multiple service categories",
   "Posting streak tracker",

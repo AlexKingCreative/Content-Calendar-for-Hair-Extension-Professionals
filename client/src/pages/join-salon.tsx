@@ -122,7 +122,7 @@ export default function JoinSalonPage() {
             </p>
             <ul className="space-y-2">
               {[
-                "365 days of post ideas",
+                "Monthly post ideas",
                 "AI-powered caption generator",
                 "Daily posting reminders",
                 "Streak tracking with your team",

@@ -329,7 +329,7 @@ export default function SettingsPage() {
             <ul className="space-y-2 text-sm">
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                Browse 365 days of pre-planned content ideas
+                Browse monthly pre-planned content ideas
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
@@ -356,7 +356,7 @@ export default function SettingsPage() {
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">
               Hair Calendar is the ultimate content planning tool for hair pros. 
-              Get 365 days of social media post ideas tailored specifically for the hair industry.
+              Get monthly social media post ideas tailored specifically for the hair industry.
             </p>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">

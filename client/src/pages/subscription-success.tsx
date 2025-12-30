@@ -24,7 +24,7 @@ export default function SubscriptionSuccessPage() {
               <span className="font-semibold">Pro Access Unlocked</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Enjoy 365 days of content ideas, AI captions, streak rewards, and more!
+              Enjoy monthly content ideas, AI captions, streak rewards, and more!
             </p>
           </div>
         </CardContent>

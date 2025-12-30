@@ -21,7 +21,7 @@ const STEPS = [
   "Curating content ideas...",
   "Building your custom schedule...",
   "Adding hashtags & captions...",
-  "Finalizing 365 days of content...",
+  "Finalizing your content calendar...",
 ];
 
 export function BuildingScheduleAnimation({ onComplete, duration = 3000 }: BuildingScheduleAnimationProps) {
@@ -188,7 +188,7 @@ export function BuildingScheduleAnimation({ onComplete, duration = 3000 }: Build
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
             >
-              {showComplete ? "365 days of personalized content" : STEPS[currentStep]}
+              {showComplete ? "Your personalized content is ready" : STEPS[currentStep]}
             </motion.p>
           </AnimatePresence>
         </motion.div>

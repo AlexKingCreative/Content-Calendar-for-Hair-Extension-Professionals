@@ -36,7 +36,7 @@ export default function TermsPage() {
             application designed for hair professionals. The App provides:
           </p>
           <ul>
-            <li>365 days of pre-planned social media post ideas</li>
+            <li>Monthly pre-planned social media post ideas</li>
             <li>AI-powered caption generation</li>
             <li>Personalized hashtag recommendations</li>
             <li>Content filtering and organization tools</li>

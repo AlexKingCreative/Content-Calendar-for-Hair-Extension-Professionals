@@ -169,7 +169,7 @@ export async function sendWelcomeEmail(email: string, password: string): Promise
             <hr style="border: none; border-top: 1px solid #F5EDE4; margin: 32px 0;">
             
             <p style="color: #8B7355; font-size: 12px; text-align: center;">
-              365 days of content ideas, AI-powered captions, and trend alerts await you!
+              Monthly content ideas, AI-powered captions, and trend alerts await you!
             </p>
           </div>
         </body>

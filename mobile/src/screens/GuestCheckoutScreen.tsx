@@ -259,7 +259,7 @@ export default function GuestCheckoutScreen() {
         <View style={styles.featuresRow}>
           <View style={styles.featureItem}>
             <Ionicons name="calendar-outline" size={18} color={colors.primary} />
-            <Text style={styles.featureItemText}>365 days of content</Text>
+            <Text style={styles.featureItemText}>Monthly content</Text>
           </View>
           <View style={styles.featureItem}>
             <Ionicons name="sparkles-outline" size={18} color={colors.primary} />

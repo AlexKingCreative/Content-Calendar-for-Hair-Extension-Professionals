@@ -21,7 +21,7 @@ async function createSubscriptionProduct() {
 
   const product = await stripe.products.create({
     name: 'Hair Pro Content Calendar Pro',
-    description: 'Full access to 365 days of professional hair content ideas, AI caption generation, personalized hashtags, and special day reminders',
+    description: 'Full access to monthly professional hair content ideas, AI caption generation, personalized hashtags, and special day reminders',
     metadata: {
       type: 'subscription',
       features: 'full_calendar,ai_captions,hashtags,notifications,streaks',
