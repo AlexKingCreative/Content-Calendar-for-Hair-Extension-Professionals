@@ -31,6 +31,7 @@ interface StreakData {
   longestStreak: number;
   totalPosts: number;
   postingGoal: string;
+  hasPostedToday: boolean;
 }
 
 interface UserProfile {
@@ -71,6 +72,13 @@ export default function TodayScreen() {
     queryFn: profileApi.get,
   });
 
+  const { data: streak } = useQuery<StreakData>({
+    queryKey: ['streak'],
+    queryFn: streakApi.get,
+  });
+
+  const hasPostedToday = streak?.hasPostedToday || markedToday;
+
   const getPersonalizedHashtags = () => {
     const personalizedTags: string[] = [];
     const userCity = profile?.city?.toLowerCase().replace(/[^a-z]/g, '') || '';
@@ -90,6 +98,7 @@ export default function TodayScreen() {
     onSuccess: () => {
       setMarkedToday(true);
       queryClient.invalidateQueries({ queryKey: ['streak'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
       Alert.alert('Great job!', 'Your post has been logged. Keep up the streak!');
     },
     onError: () => {
@@ -187,21 +196,21 @@ export default function TodayScreen() {
       </View>
 
       <TouchableOpacity
-        style={[styles.markPostedButton, markedToday && styles.markPostedButtonDone]}
+        style={[styles.markPostedButton, hasPostedToday && styles.markPostedButtonDone]}
         onPress={() => markCompleteMutation.mutate(todayPost.id)}
-        disabled={markedToday || markCompleteMutation.isPending}
+        disabled={hasPostedToday || markCompleteMutation.isPending}
       >
         {markCompleteMutation.isPending ? (
-          <ActivityIndicator size="small" color={markedToday ? "#FFFFFF" : colors.primary} />
+          <ActivityIndicator size="small" color={hasPostedToday ? "#FFFFFF" : colors.primary} />
         ) : (
           <>
             <Ionicons 
-              name={markedToday ? "checkmark-circle" : "checkmark-circle-outline"} 
+              name={hasPostedToday ? "checkmark-circle" : "checkmark-circle-outline"} 
               size={24} 
-              color={markedToday ? "#FFFFFF" : colors.primary} 
+              color={hasPostedToday ? "#FFFFFF" : colors.primary} 
             />
-            <Text style={[styles.markPostedText, markedToday && styles.markPostedTextDone]}>
-              {markedToday ? "Posted!" : "Mark as Posted"}
+            <Text style={[styles.markPostedText, hasPostedToday && styles.markPostedTextDone]}>
+              {hasPostedToday ? "Posted!" : "Mark as Posted"}
             </Text>
           </>
         )}
