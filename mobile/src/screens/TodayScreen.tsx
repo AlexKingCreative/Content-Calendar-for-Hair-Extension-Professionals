@@ -9,10 +9,11 @@ import {
   ActivityIndicator,
   Animated,
   Alert,
+  Image,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
-import { postsApi, streakApi, profileApi } from '../services/api';
+import { postsApi, streakApi, profileApi, adviceApi } from '../services/api';
 import { colors, borderRadius, spacing } from '../theme';
 
 interface Post {
@@ -79,6 +80,11 @@ export default function TodayScreen() {
   const { data: streak } = useQuery<StreakData>({
     queryKey: ['streak'],
     queryFn: streakApi.get,
+  });
+
+  const { data: ashleysAdvice } = useQuery<{ id: number; advice: string } | null>({
+    queryKey: ['ashleys-advice'],
+    queryFn: adviceApi.getRandom,
   });
 
   const hasPostedToday = streak?.hasPostedToday || markedToday;
@@ -281,15 +287,21 @@ export default function TodayScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.tipCard}>
-        <Ionicons name="bulb-outline" size={24} color={colors.primary} />
-        <View style={styles.tipContent}>
-          <Text style={styles.tipTitle}>Pro Tip</Text>
-          <Text style={styles.tipText}>
-            Post during peak engagement hours (9-11 AM or 7-9 PM) for maximum reach!
-          </Text>
+      {ashleysAdvice && (
+        <View style={styles.adviceCard}>
+          <View style={styles.adviceHeader}>
+            <Image 
+              source={require('../../assets/ashley_nusrala.png')} 
+              style={styles.adviceAvatar}
+            />
+            <View>
+              <Text style={styles.adviceTitle}>Ashley's Advice</Text>
+              <Text style={styles.adviceHandle}>@missashleyhair</Text>
+            </View>
+          </View>
+          <Text style={styles.adviceText}>{ashleysAdvice.advice}</Text>
         </View>
-      </View>
+      )}
     </ScrollView>
   );
 }
@@ -496,26 +508,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  tipCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: colors.surfaceSecondary,
+  adviceCard: {
+    backgroundColor: '#FFFFFF',
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  adviceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.md,
+    marginBottom: spacing.md,
   },
-  tipContent: {
-    flex: 1,
+  adviceAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
-  tipTitle: {
-    fontSize: 14,
+  adviceTitle: {
+    fontSize: 15,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: spacing.xs,
   },
-  tipText: {
-    fontSize: 13,
+  adviceHandle: {
+    fontSize: 12,
     color: colors.textSecondary,
-    lineHeight: 18,
+  },
+  adviceText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 20,
+    fontStyle: 'italic',
   },
 });

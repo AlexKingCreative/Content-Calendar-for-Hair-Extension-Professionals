@@ -4,7 +4,7 @@ import {
   Plus, Sparkles, Pencil, Trash2, Calendar, ArrowLeft, Award, 
   Users, CreditCard, BarChart3, DollarSign, Settings, ChevronLeft,
   List, LayoutGrid, Scissors, Send, Check, X, ExternalLink, LogOut,
-  TrendingUp, Video, Play
+  TrendingUp, Video, Play, MessageCircle
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { Link } from "wouter";
@@ -40,7 +40,7 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-type AdminSection = "posts" | "brands" | "methods" | "users" | "billing" | "stats" | "submissions" | "trends";
+type AdminSection = "posts" | "brands" | "methods" | "users" | "billing" | "stats" | "submissions" | "trends" | "advice";
 
 interface PostSubmission {
   id: number;
@@ -57,6 +57,7 @@ interface PostSubmission {
 const navItems = [
   { id: "stats" as AdminSection, title: "Stats & MRR", icon: BarChart3 },
   { id: "trends" as AdminSection, title: "Trend Alerts", icon: TrendingUp },
+  { id: "advice" as AdminSection, title: "Ashley's Advice", icon: MessageCircle },
   { id: "posts" as AdminSection, title: "Posts", icon: Calendar },
   { id: "submissions" as AdminSection, title: "Submissions", icon: Send },
   { id: "brands" as AdminSection, title: "Brands", icon: Award },
@@ -122,6 +123,79 @@ export default function AdminPage() {
   const { data: trends = [], isLoading: trendsLoading } = useQuery<TrendAlert[]>({
     queryKey: ["/api/admin/trends"],
   });
+
+  interface AshleysAdvice {
+    id: number;
+    advice: string;
+    isActive: boolean;
+    createdAt: string;
+  }
+
+  const { data: adviceList = [], isLoading: adviceLoading } = useQuery<AshleysAdvice[]>({
+    queryKey: ["/api/admin/ashleys-advice"],
+  });
+
+  const [isAdviceDialogOpen, setIsAdviceDialogOpen] = useState(false);
+  const [editingAdvice, setEditingAdvice] = useState<AshleysAdvice | null>(null);
+  const [adviceForm, setAdviceForm] = useState({ advice: "", isActive: true });
+
+  const createAdviceMutation = useMutation({
+    mutationFn: async (data: typeof adviceForm) => {
+      return apiRequest("POST", "/api/admin/ashleys-advice", data);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/ashleys-advice"] });
+      setIsAdviceDialogOpen(false);
+      setAdviceForm({ advice: "", isActive: true });
+      toast({ title: "Advice added!" });
+    },
+    onError: () => {
+      toast({ title: "Failed to create advice", variant: "destructive" });
+    },
+  });
+
+  const updateAdviceMutation = useMutation({
+    mutationFn: async ({ id, ...data }: { id: number } & Partial<typeof adviceForm>) => {
+      return apiRequest("PATCH", `/api/admin/ashleys-advice/${id}`, data);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/ashleys-advice"] });
+      setIsAdviceDialogOpen(false);
+      setEditingAdvice(null);
+      setAdviceForm({ advice: "", isActive: true });
+      toast({ title: "Advice updated!" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update advice", variant: "destructive" });
+    },
+  });
+
+  const deleteAdviceMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/admin/ashleys-advice/${id}`);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/ashleys-advice"] });
+      toast({ title: "Advice deleted" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete advice", variant: "destructive" });
+    },
+  });
+
+  const openEditAdvice = (advice: AshleysAdvice) => {
+    setEditingAdvice(advice);
+    setAdviceForm({ advice: advice.advice, isActive: advice.isActive });
+    setIsAdviceDialogOpen(true);
+  };
+
+  const handleAdviceSubmit = () => {
+    if (editingAdvice) {
+      updateAdviceMutation.mutate({ id: editingAdvice.id, ...adviceForm });
+    } else {
+      createAdviceMutation.mutate(adviceForm);
+    }
+  };
 
   const [isTrendDialogOpen, setIsTrendDialogOpen] = useState(false);
   const [editingTrend, setEditingTrend] = useState<TrendAlert | null>(null);
@@ -519,6 +593,133 @@ export default function AdminPage() {
                 onToggleActive={(id, isActive) => updateTrendMutation.mutate({ id, isActive })}
                 isPending={deleteTrendMutation.isPending || updateTrendMutation.isPending}
               />
+            )}
+
+            {activeSection === "advice" && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-advice-title">
+                      Ashley's Advice
+                    </h1>
+                    <p className="text-muted-foreground">Manage tips shown to users on posts (@missashleyhair)</p>
+                  </div>
+                  <Button onClick={() => {
+                    setEditingAdvice(null);
+                    setAdviceForm({ advice: "", isActive: true });
+                    setIsAdviceDialogOpen(true);
+                  }} data-testid="button-add-advice">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Advice
+                  </Button>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-heading flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5" />
+                      All Advice ({adviceList.length})
+                    </CardTitle>
+                    <CardDescription>
+                      Tips are randomly shown to users on each post
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {adviceLoading ? (
+                      <div className="space-y-3">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <Skeleton key={i} className="h-16 rounded-md" />
+                        ))}
+                      </div>
+                    ) : adviceList.length === 0 ? (
+                      <p className="text-muted-foreground text-center py-8">
+                        No advice yet. Add some tips for users!
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {adviceList.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-start justify-between gap-3 p-4 rounded-md border bg-background"
+                            data-testid={`advice-row-${item.id}`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm">{item.advice}</p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <Badge variant={item.isActive ? "default" : "secondary"}>
+                                  {item.isActive ? "Active" : "Inactive"}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  Added {new Date(item.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => openEditAdvice(item)}
+                                data-testid={`button-edit-advice-${item.id}`}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => deleteAdviceMutation.mutate(item.id)}
+                                disabled={deleteAdviceMutation.isPending}
+                                data-testid={`button-delete-advice-${item.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Dialog open={isAdviceDialogOpen} onOpenChange={setIsAdviceDialogOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>{editingAdvice ? "Edit Advice" : "Add Advice"}</DialogTitle>
+                      <DialogDescription>
+                        Enter a helpful tip that will randomly appear on posts
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Textarea
+                        placeholder="e.g., Post during peak engagement hours (9-11 AM or 7-9 PM) for maximum reach!"
+                        value={adviceForm.advice}
+                        onChange={(e) => setAdviceForm({ ...adviceForm, advice: e.target.value })}
+                        className="min-h-24"
+                        data-testid="input-advice-text"
+                      />
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={adviceForm.isActive}
+                          onCheckedChange={(checked) => setAdviceForm({ ...adviceForm, isActive: checked })}
+                          data-testid="switch-advice-active"
+                        />
+                        <span className="text-sm">Active</span>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsAdviceDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleAdviceSubmit}
+                        disabled={!adviceForm.advice.trim() || createAdviceMutation.isPending || updateAdviceMutation.isPending}
+                        data-testid="button-save-advice"
+                      >
+                        {editingAdvice ? "Update" : "Add"} Advice
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             )}
             
             {activeSection === "users" && (

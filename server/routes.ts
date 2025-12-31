@@ -2817,5 +2817,70 @@ Respond in JSON format with these fields:
     }
   });
 
+  // Ashley's Advice - Public endpoint for random advice
+  app.get("/api/ashleys-advice/random", async (req, res) => {
+    try {
+      const advice = await storage.getRandomAshleysAdvice();
+      res.json(advice || null);
+    } catch (error) {
+      console.error("Error fetching random advice:", error);
+      res.status(500).json({ error: "Failed to fetch advice" });
+    }
+  });
+
+  // Ashley's Advice - Admin endpoints
+  app.get("/api/admin/ashleys-advice", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const advice = await storage.getAllAshleysAdvice();
+      res.json(advice);
+    } catch (error) {
+      console.error("Error fetching advice:", error);
+      res.status(500).json({ error: "Failed to fetch advice" });
+    }
+  });
+
+  app.post("/api/admin/ashleys-advice", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const { advice, isActive = true } = req.body;
+      if (!advice) {
+        return res.status(400).json({ error: "Advice text is required" });
+      }
+      const created = await storage.createAshleysAdvice({ advice, isActive });
+      res.json(created);
+    } catch (error) {
+      console.error("Error creating advice:", error);
+      res.status(500).json({ error: "Failed to create advice" });
+    }
+  });
+
+  app.patch("/api/admin/ashleys-advice/:id", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { advice, isActive } = req.body;
+      const updated = await storage.updateAshleysAdvice(id, { advice, isActive });
+      if (!updated) {
+        return res.status(404).json({ error: "Advice not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating advice:", error);
+      res.status(500).json({ error: "Failed to update advice" });
+    }
+  });
+
+  app.delete("/api/admin/ashleys-advice/:id", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteAshleysAdvice(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Advice not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting advice:", error);
+      res.status(500).json({ error: "Failed to delete advice" });
+    }
+  });
+
   return httpServer;
 }

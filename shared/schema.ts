@@ -579,6 +579,24 @@ export const insertInstagramMediaSchema = createInsertSchema(instagramMedia).omi
 export type InstagramMedia = typeof instagramMedia.$inferSelect;
 export type InsertInstagramMedia = z.infer<typeof insertInstagramMediaSchema>;
 
+// Ashley's Advice - Admin-managed tips shown on posts
+export const ashleys_advice = pgTable("ashleys_advice", {
+  id: serial("id").primaryKey(),
+  advice: text("advice").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const insertAshleysAdviceSchema = createInsertSchema(ashleys_advice).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type AshleysAdvice = typeof ashleys_advice.$inferSelect;
+export type InsertAshleysAdvice = z.infer<typeof insertAshleysAdviceSchema>;
+
 // Instagram Daily Insights - Aggregated daily analytics
 export const instagramDailyInsights = pgTable("instagram_daily_insights", {
   id: serial("id").primaryKey(),

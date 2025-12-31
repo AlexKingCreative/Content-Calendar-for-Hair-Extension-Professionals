@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, postSubmissions, salons, salonMembers, challenges, userChallenges, trendAlerts, salonChallenges, stylistChallenges, instagramAccounts, instagramMedia, instagramDailyInsights, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog, type PostSubmission, type InsertPostSubmission, type Salon, type InsertSalon, type SalonMember, type InsertSalonMember, type Challenge, type InsertChallenge, type UserChallenge, type InsertUserChallenge, type TrendAlert, type InsertTrendAlert, type SalonChallenge, type InsertSalonChallenge, type StylistChallenge, type InsertStylistChallenge, type InstagramAccount, type InsertInstagramAccount, type InstagramMedia, type InsertInstagramMedia, type InstagramDailyInsights, type InsertInstagramDailyInsights } from "@shared/schema";
+import { posts, userProfiles, pushSubscriptions, brands, methods, postingLogs, postSubmissions, salons, salonMembers, challenges, userChallenges, trendAlerts, salonChallenges, stylistChallenges, instagramAccounts, instagramMedia, instagramDailyInsights, ashleys_advice, type Post, type InsertPost, type UserProfile, type InsertUserProfile, type PushSubscription, type InsertPushSubscription, type Brand, type InsertBrand, type Method, type InsertMethod, type PostingLog, type InsertPostingLog, type PostSubmission, type InsertPostSubmission, type Salon, type InsertSalon, type SalonMember, type InsertSalonMember, type Challenge, type InsertChallenge, type UserChallenge, type InsertUserChallenge, type TrendAlert, type InsertTrendAlert, type SalonChallenge, type InsertSalonChallenge, type StylistChallenge, type InsertStylistChallenge, type InstagramAccount, type InsertInstagramAccount, type InstagramMedia, type InsertInstagramMedia, type InstagramDailyInsights, type InsertInstagramDailyInsights, type AshleysAdvice, type InsertAshleysAdvice } from "@shared/schema";
 import { eq, and, sql, desc, asc, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
@@ -123,6 +123,15 @@ export interface IStorage {
   // Instagram Insights
   getInstagramDailyInsights(userId: string, startDate: string, endDate: string): Promise<InstagramDailyInsights[]>;
   upsertInstagramDailyInsights(insights: InsertInstagramDailyInsights): Promise<InstagramDailyInsights>;
+  
+  // Ashley's Advice
+  getAllAshleysAdvice(): Promise<AshleysAdvice[]>;
+  getActiveAshleysAdvice(): Promise<AshleysAdvice[]>;
+  getRandomAshleysAdvice(): Promise<AshleysAdvice | undefined>;
+  getAshleysAdviceById(id: number): Promise<AshleysAdvice | undefined>;
+  createAshleysAdvice(advice: InsertAshleysAdvice): Promise<AshleysAdvice>;
+  updateAshleysAdvice(id: number, data: Partial<InsertAshleysAdvice>): Promise<AshleysAdvice | undefined>;
+  deleteAshleysAdvice(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -806,6 +815,47 @@ export class DatabaseStorage implements IStorage {
     
     const [created] = await db.insert(instagramDailyInsights).values(insights).returning();
     return created;
+  }
+  
+  // Ashley's Advice
+  async getAllAshleysAdvice(): Promise<AshleysAdvice[]> {
+    return db.select().from(ashleys_advice).orderBy(desc(ashleys_advice.createdAt));
+  }
+  
+  async getActiveAshleysAdvice(): Promise<AshleysAdvice[]> {
+    return db.select().from(ashleys_advice)
+      .where(eq(ashleys_advice.isActive, true))
+      .orderBy(desc(ashleys_advice.createdAt));
+  }
+  
+  async getRandomAshleysAdvice(): Promise<AshleysAdvice | undefined> {
+    const activeAdvice = await this.getActiveAshleysAdvice();
+    if (activeAdvice.length === 0) return undefined;
+    const randomIndex = Math.floor(Math.random() * activeAdvice.length);
+    return activeAdvice[randomIndex];
+  }
+  
+  async getAshleysAdviceById(id: number): Promise<AshleysAdvice | undefined> {
+    const [advice] = await db.select().from(ashleys_advice).where(eq(ashleys_advice.id, id));
+    return advice;
+  }
+  
+  async createAshleysAdvice(advice: InsertAshleysAdvice): Promise<AshleysAdvice> {
+    const [created] = await db.insert(ashleys_advice).values(advice).returning();
+    return created;
+  }
+  
+  async updateAshleysAdvice(id: number, data: Partial<InsertAshleysAdvice>): Promise<AshleysAdvice | undefined> {
+    const [updated] = await db.update(ashleys_advice)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(ashleys_advice.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async deleteAshleysAdvice(id: number): Promise<boolean> {
+    const result = await db.delete(ashleys_advice).where(eq(ashleys_advice.id, id)).returning();
+    return result.length > 0;
   }
 }
 

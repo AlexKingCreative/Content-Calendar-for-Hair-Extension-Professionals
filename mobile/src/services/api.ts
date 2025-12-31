@@ -107,6 +107,13 @@ export const streakApi = {
   },
 };
 
+export const adviceApi = {
+  getRandom: async () => {
+    const response = await api.get('/api/ashleys-advice/random');
+    return response.data;
+  },
+};
+
 export const stripeApi = {
   createCheckoutSession: async (plan: 'monthly' | 'quarterly' | 'yearly' = 'monthly') => {
     const response = await api.post('/api/mobile/stripe/checkout', { plan });
