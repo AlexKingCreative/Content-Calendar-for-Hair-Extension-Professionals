@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   View,
@@ -7,7 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Share,
+  Animated,
   Alert,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
@@ -61,6 +61,10 @@ export default function TodayScreen() {
   const queryClient = useQueryClient();
   const [markedToday, setMarkedToday] = useState(false);
   const [copiedHashtags, setCopiedHashtags] = useState(false);
+  
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const colorAnim = useRef(new Animated.Value(0)).current;
+  const checkAnim = useRef(new Animated.Value(0)).current;
 
   const { data: posts, isLoading, error } = useQuery({
     queryKey: ['posts', 'today'],
@@ -78,6 +82,13 @@ export default function TodayScreen() {
   });
 
   const hasPostedToday = streak?.hasPostedToday || markedToday;
+
+  useEffect(() => {
+    if (hasPostedToday) {
+      colorAnim.setValue(1);
+      checkAnim.setValue(1);
+    }
+  }, [hasPostedToday]);
 
   const getPersonalizedHashtags = () => {
     const personalizedTags: string[] = [];
@@ -99,12 +110,41 @@ export default function TodayScreen() {
       setMarkedToday(true);
       queryClient.invalidateQueries({ queryKey: ['streak'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      Alert.alert('Great job!', 'Your post has been logged. Keep up the streak!');
+      
+      Animated.sequence([
+        Animated.spring(scaleAnim, {
+          toValue: 1.2,
+          useNativeDriver: true,
+          friction: 3,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          friction: 5,
+        }),
+      ]).start();
+
+      Animated.timing(colorAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+
+      Animated.spring(checkAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        friction: 4,
+      }).start();
     },
     onError: () => {
       Alert.alert('Error', 'Could not log your post. Please try again.');
     },
   });
+
+  const handleMarkPosted = (postId: number) => {
+    if (hasPostedToday || markCompleteMutation.isPending) return;
+    markCompleteMutation.mutate(postId);
+  };
 
   const handleCopyHashtags = async (post: Post) => {
     const personalTags = getPersonalizedHashtags();
@@ -118,6 +158,16 @@ export default function TodayScreen() {
   const handleWriteCaption = async (post: Post) => {
     Alert.alert('Coming Soon', 'AI Caption Generator will be available soon!');
   };
+
+  const backgroundColor = colorAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#FFFFFF', '#22C55E'],
+  });
+
+  const borderColor = colorAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.primary, '#22C55E'],
+  });
 
   if (isLoading) {
     return (
@@ -145,8 +195,44 @@ export default function TodayScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Today's Post</Text>
-        <Text style={styles.headerDate}>{formatDate(todayPost.date)}</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerTitle}>Today's Post</Text>
+          <Text style={styles.headerDate}>{formatDate(todayPost.date)}</Text>
+        </View>
+        
+        <TouchableOpacity
+          onPress={() => handleMarkPosted(todayPost.id)}
+          disabled={hasPostedToday || markCompleteMutation.isPending}
+          activeOpacity={0.8}
+        >
+          <Animated.View
+            style={[
+              styles.postedButton,
+              {
+                backgroundColor,
+                borderColor,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            {markCompleteMutation.isPending ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <>
+                <Animated.View style={{ transform: [{ scale: checkAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] }) }] }}>
+                  <Ionicons 
+                    name={hasPostedToday ? "checkmark" : "checkmark"} 
+                    size={20} 
+                    color={hasPostedToday ? "#FFFFFF" : colors.primary} 
+                  />
+                </Animated.View>
+                <Text style={[styles.postedButtonText, hasPostedToday && styles.postedButtonTextDone]}>
+                  posted
+                </Text>
+              </>
+            )}
+          </Animated.View>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.card}>
@@ -194,27 +280,6 @@ export default function TodayScreen() {
           <Text style={styles.primaryButtonText}>Write My Caption</Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={[styles.markPostedButton, hasPostedToday && styles.markPostedButtonDone]}
-        onPress={() => markCompleteMutation.mutate(todayPost.id)}
-        disabled={hasPostedToday || markCompleteMutation.isPending}
-      >
-        {markCompleteMutation.isPending ? (
-          <ActivityIndicator size="small" color={hasPostedToday ? "#FFFFFF" : colors.primary} />
-        ) : (
-          <>
-            <Ionicons 
-              name={hasPostedToday ? "checkmark-circle" : "checkmark-circle-outline"} 
-              size={24} 
-              color={hasPostedToday ? "#FFFFFF" : colors.primary} 
-            />
-            <Text style={[styles.markPostedText, hasPostedToday && styles.markPostedTextDone]}>
-              {hasPostedToday ? "Posted!" : "Mark as Posted"}
-            </Text>
-          </>
-        )}
-      </TouchableOpacity>
 
       <View style={styles.tipCard}>
         <Ionicons name="bulb-outline" size={24} color={colors.primary} />
@@ -264,7 +329,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: spacing.lg,
+  },
+  headerLeft: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 24,
@@ -275,6 +346,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     marginTop: 4,
+  },
+  postedButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  postedButtonText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.primary,
+    marginTop: 2,
+    textTransform: 'lowercase',
+  },
+  postedButtonTextDone: {
+    color: '#FFFFFF',
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -401,30 +495,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  markPostedButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: spacing.lg,
-    borderRadius: borderRadius.lg,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    marginBottom: spacing.md,
-  },
-  markPostedButtonDone: {
-    backgroundColor: colors.success,
-    borderColor: colors.success,
-  },
-  markPostedText: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  markPostedTextDone: {
-    color: '#FFFFFF',
   },
   tipCard: {
     flexDirection: 'row',
