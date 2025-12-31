@@ -36,13 +36,24 @@ const MONTHS = [
 
 export default function CalendarScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const currentMonth = new Date().getMonth() + 1;
-  const currentDay = new Date().getDate();
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+
+  const isMonthAccessible = (targetMonth: number): boolean => {
+    if (targetMonth <= currentMonth) return true;
+    
+    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+    if (targetMonth === nextMonth) return true;
+    
+    return false;
+  };
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ['posts', 'month', selectedMonth],
     queryFn: () => postsApi.getByMonth(selectedMonth),
+    enabled: isMonthAccessible(selectedMonth),
   });
 
   const filteredPosts = React.useMemo(() => {
@@ -55,7 +66,9 @@ export default function CalendarScreen() {
     });
   }, [posts, selectedMonth, currentMonth, currentDay]);
 
-  const canGoForward = selectedMonth < currentMonth;
+  const canGoForward = isMonthAccessible(selectedMonth + 1 > 12 ? 1 : selectedMonth + 1);
+  const nextMonth = selectedMonth === 12 ? 1 : selectedMonth + 1;
+  const isNextMonthLocked = !isMonthAccessible(nextMonth);
 
   const handlePostPress = (postId: number) => {
     navigation.navigate('PostDetail', { postId });
@@ -115,10 +128,15 @@ export default function CalendarScreen() {
         >
           <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.monthTitle}>{MONTHS[selectedMonth - 1]}</Text>
+        <View style={styles.monthTitleContainer}>
+          <Text style={styles.monthTitle}>{MONTHS[selectedMonth - 1]}</Text>
+          {!isMonthAccessible(selectedMonth) && (
+            <Ionicons name="lock-closed" size={16} color={colors.textTertiary} style={styles.lockIcon} />
+          )}
+        </View>
         <TouchableOpacity
           style={[styles.monthArrow, !canGoForward && styles.monthArrowDisabled]}
-          onPress={() => canGoForward && setSelectedMonth(prev => prev + 1)}
+          onPress={() => canGoForward && setSelectedMonth(prev => prev < 12 ? prev + 1 : 1)}
           disabled={!canGoForward}
         >
           <Ionicons name="chevron-forward" size={24} color={canGoForward ? colors.primary : colors.textTertiary} />
@@ -131,7 +149,15 @@ export default function CalendarScreen() {
         </TouchableOpacity>
       </View>
 
-      {isLoading ? (
+      {!isMonthAccessible(selectedMonth) ? (
+        <View style={styles.lockedContainer}>
+          <Ionicons name="lock-closed" size={48} color={colors.textTertiary} />
+          <Text style={styles.lockedTitle}>Content Locked</Text>
+          <Text style={styles.lockedText}>
+            {MONTHS[selectedMonth - 1]} posts will unlock on {MONTHS[selectedMonth === 1 ? 11 : selectedMonth - 2]} 1st
+          </Text>
+        </View>
+      ) : isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -182,7 +208,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: colors.text,
-    marginHorizontal: spacing.xxl,
   },
   loadingContainer: {
     flex: 1,
@@ -251,5 +276,31 @@ const styles = StyleSheet.create({
   emptyText: {
     color: colors.textSecondary,
     fontSize: 16,
+  },
+  monthTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: spacing.xxl,
+  },
+  lockIcon: {
+    marginLeft: spacing.xs,
+  },
+  lockedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  lockedTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  lockedText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
 });
