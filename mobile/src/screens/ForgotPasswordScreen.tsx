@@ -10,7 +10,9 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { authApi } from '../services/api';
 import { AuthStackParamList } from '../navigation';
@@ -199,6 +201,14 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <SafeAreaView style={styles.safeArea}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#5D4E3C" />
+        </TouchableOpacity>
+      </SafeAreaView>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Hair Pro</Text>
@@ -253,6 +263,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF8F0',
+  },
+  safeArea: {
+    backgroundColor: '#FFF8F0',
+  },
+  backButton: {
+    padding: 16,
+    paddingTop: 8,
   },
   scrollContent: {
     flexGrow: 1,
