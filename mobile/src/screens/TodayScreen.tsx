@@ -62,6 +62,8 @@ export default function TodayScreen() {
   const queryClient = useQueryClient();
   const [markedToday, setMarkedToday] = useState(false);
   const [copiedHashtags, setCopiedHashtags] = useState(false);
+  const [generatedCaption, setGeneratedCaption] = useState<string | null>(null);
+  const [copiedCaption, setCopiedCaption] = useState(false);
   
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const colorAnim = useRef(new Animated.Value(0)).current;
@@ -161,8 +163,26 @@ export default function TodayScreen() {
     setTimeout(() => setCopiedHashtags(false), 2000);
   };
 
-  const handleWriteCaption = async (post: Post) => {
-    Alert.alert('Coming Soon', 'AI Caption Generator will be available soon!');
+  const generateCaptionMutation = useMutation({
+    mutationFn: (postId: number) => postsApi.generateCaption(postId),
+    onSuccess: (data) => {
+      setGeneratedCaption(data.caption);
+    },
+    onError: () => {
+      Alert.alert('Error', 'Failed to generate caption. Please try again.');
+    },
+  });
+
+  const handleWriteCaption = (postId: number) => {
+    generateCaptionMutation.mutate(postId);
+  };
+
+  const handleCopyCaption = async () => {
+    if (generatedCaption) {
+      await Clipboard.setStringAsync(generatedCaption);
+      setCopiedCaption(true);
+      setTimeout(() => setCopiedCaption(false), 2000);
+    }
   };
 
   const backgroundColor = colorAnim.interpolate({
@@ -281,10 +301,46 @@ export default function TodayScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>AI Caption Generator</Text>
-        <TouchableOpacity style={styles.primaryButton} onPress={() => handleWriteCaption(todayPost)}>
-          <Ionicons name="sparkles" size={20} color="#FFFFFF" />
-          <Text style={styles.primaryButtonText}>Write My Caption</Text>
-        </TouchableOpacity>
+        {!generatedCaption ? (
+          <TouchableOpacity 
+            style={styles.primaryButton} 
+            onPress={() => handleWriteCaption(todayPost.id)}
+            disabled={generateCaptionMutation.isPending}
+          >
+            {generateCaptionMutation.isPending ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <Ionicons name="sparkles" size={20} color="#FFFFFF" />
+                <Text style={styles.primaryButtonText}>Write My Caption</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.captionContainer}>
+            <Text style={styles.captionText}>{generatedCaption}</Text>
+            <View style={styles.captionActions}>
+              <TouchableOpacity style={styles.captionActionButton} onPress={handleCopyCaption}>
+                <Ionicons name={copiedCaption ? "checkmark" : "copy-outline"} size={18} color={colors.primary} />
+                <Text style={styles.captionActionText}>{copiedCaption ? "Copied" : "Copy"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.captionActionButton} 
+                onPress={() => handleWriteCaption(todayPost.id)}
+                disabled={generateCaptionMutation.isPending}
+              >
+                {generateCaptionMutation.isPending ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <>
+                    <Ionicons name="refresh" size={18} color={colors.primary} />
+                    <Text style={styles.captionActionText}>Regenerate</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </View>
 
       {ashleysAdvice && (
@@ -507,6 +563,38 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  captionContainer: {
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+  },
+  captionText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 20,
+    marginBottom: spacing.md,
+  },
+  captionActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.md,
+  },
+  captionActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  captionActionText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.primary,
   },
   adviceCard: {
     backgroundColor: '#FFFFFF',
