@@ -205,3 +205,166 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     return false;
   }
 }
+
+export async function sendSalonInvitationEmail(
+  email: string, 
+  salonName: string, 
+  ownerName: string,
+  invitationToken: string
+): Promise<boolean> {
+  try {
+    const { client, fromEmail } = await getResendClient();
+    
+    const baseUrl = process.env.REPLIT_DEPLOYMENT === '1'
+      ? 'https://contentcalendarforhairpros.com'
+      : (process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : 'https://contentcalendarforhairpros.com');
+    
+    const acceptUrl = `${baseUrl}/accept-invitation/${invitationToken}`;
+    
+    await client.emails.send({
+      from: fromEmail || 'Content Calendar <hello@contentcalendarforhairpros.com>',
+      to: email,
+      subject: `You've been invited to join ${salonName} on Content Calendar`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FFF8F0; padding: 40px 20px; margin: 0;">
+          <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <h1 style="color: #5D4E3C; font-size: 24px; margin: 0 0 8px;">Content Calendar</h1>
+              <p style="color: #8B7355; font-size: 14px; margin: 0;">for Hair Pros</p>
+            </div>
+            
+            <h2 style="color: #5D4E3C; font-size: 20px; text-align: center; margin-bottom: 16px;">
+              You're invited to join ${salonName}!
+            </h2>
+            
+            <p style="color: #5D4E3C; font-size: 16px; line-height: 1.6; text-align: center; margin-bottom: 24px;">
+              ${ownerName} has invited you to join their salon team on Content Calendar for Hair Pros.
+            </p>
+            
+            <div style="background: #FFF8F0; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+              <p style="color: #5D4E3C; font-size: 14px; margin: 0; text-align: center;">
+                As a team member, you'll get access to:
+              </p>
+              <ul style="color: #8B7355; font-size: 14px; margin: 12px 0 0; padding-left: 20px;">
+                <li>365 days of social media content ideas</li>
+                <li>AI-powered caption generation</li>
+                <li>Team challenges and streak tracking</li>
+                <li>Trend alerts and more!</li>
+              </ul>
+            </div>
+            
+            <div style="text-align: center; margin-bottom: 32px;">
+              <a href="${acceptUrl}" style="display: inline-block; background-color: #D4A574; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                Accept Invitation
+              </a>
+            </div>
+            
+            <p style="color: #8B7355; font-size: 14px; text-align: center; margin-bottom: 16px;">
+              Or copy and paste this link into your browser:
+            </p>
+            <p style="color: #D4A574; font-size: 12px; word-break: break-all; text-align: center; background: #FFF8F0; padding: 12px; border-radius: 6px;">
+              ${acceptUrl}
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #F5EDE4; margin: 32px 0;">
+            
+            <p style="color: #8B7355; font-size: 12px; text-align: center;">
+              If you weren't expecting this invitation, you can safely ignore this email.
+            </p>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+    
+    console.log('[Email] Salon invitation email sent successfully to:', email);
+    return true;
+  } catch (error: any) {
+    console.error('[Email] Failed to send salon invitation email:', error?.message || error);
+    return false;
+  }
+}
+
+export async function sendAccessRevokedEmail(
+  email: string, 
+  salonName: string
+): Promise<boolean> {
+  try {
+    const { client, fromEmail } = await getResendClient();
+    
+    const baseUrl = process.env.REPLIT_DEPLOYMENT === '1'
+      ? 'https://contentcalendarforhairpros.com'
+      : (process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : 'https://contentcalendarforhairpros.com');
+    
+    const upgradeUrl = `${baseUrl}/pricing`;
+    
+    await client.emails.send({
+      from: fromEmail || 'Content Calendar <hello@contentcalendarforhairpros.com>',
+      to: email,
+      subject: `Your access to ${salonName} has been removed`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FFF8F0; padding: 40px 20px; margin: 0;">
+          <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <h1 style="color: #5D4E3C; font-size: 24px; margin: 0 0 8px;">Content Calendar</h1>
+              <p style="color: #8B7355; font-size: 14px; margin: 0;">for Hair Pros</p>
+            </div>
+            
+            <h2 style="color: #5D4E3C; font-size: 20px; text-align: center; margin-bottom: 16px;">
+              Your team access has been removed
+            </h2>
+            
+            <p style="color: #5D4E3C; font-size: 16px; line-height: 1.6; text-align: center; margin-bottom: 24px;">
+              Your access to ${salonName} on Content Calendar has been removed by the salon owner.
+            </p>
+            
+            <div style="background: #FFF8F0; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+              <p style="color: #5D4E3C; font-size: 14px; margin: 0; text-align: center;">
+                Your account is still active! To continue using Content Calendar:
+              </p>
+              <ul style="color: #8B7355; font-size: 14px; margin: 12px 0 0; padding-left: 20px;">
+                <li>Subscribe to a Solo plan to use independently</li>
+                <li>Get invited to another salon team</li>
+              </ul>
+            </div>
+            
+            <div style="text-align: center; margin-bottom: 32px;">
+              <a href="${upgradeUrl}" style="display: inline-block; background-color: #D4A574; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                View Solo Plans
+              </a>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid #F5EDE4; margin: 32px 0;">
+            
+            <p style="color: #8B7355; font-size: 12px; text-align: center;">
+              If you have questions, please contact the salon owner directly.
+            </p>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+    
+    console.log('[Email] Access revoked email sent successfully to:', email);
+    return true;
+  } catch (error: any) {
+    console.error('[Email] Failed to send access revoked email:', error?.message || error);
+    return false;
+  }
+}
