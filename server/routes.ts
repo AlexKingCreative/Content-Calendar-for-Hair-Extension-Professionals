@@ -918,10 +918,18 @@ export async function registerRoutes(
         }
       }
       
+      let salonInstagramHandle = "";
       if (userId) {
         const profile = await storage.getUserProfile(userId);
         if (profile?.accountType) {
           accountType = profile.accountType;
+        }
+        // If user is a salon member (stylist), get their salon's Instagram handle
+        if (profile?.salonId) {
+          const salon = await storage.getSalon(profile.salonId);
+          if (salon?.instagramHandle) {
+            salonInstagramHandle = salon.instagramHandle.replace(/^@/, ""); // Remove @ if present
+          }
         }
       }
 
@@ -930,6 +938,13 @@ export async function registerRoutes(
 - Example: "We specialize in..." "Our team loves..." "Book with us..."`
         : `- Write in first person SINGULAR ("I", "me", "my") since this is a solo stylist account
 - Example: "I specialize in..." "I love creating..." "Book with me..."`;
+
+      // Add salon mention instruction for stylists under a salon
+      const salonMentionGuideline = salonInstagramHandle 
+        ? `- IMPORTANT: Organically include a mention of the salon "@${salonInstagramHandle}" in the caption
+- Example phrases: "stop in and see me at @${salonInstagramHandle}", "book with me at @${salonInstagramHandle}", "find me at @${salonInstagramHandle}"
+- Make the mention feel natural, not forced`
+        : "";
 
       const prompt = `You are an expert social media copywriter for hair professionals. Generate an engaging Instagram caption for the following post idea.
 
@@ -940,6 +955,7 @@ Description: ${post.description}
 
 Guidelines:
 ${voiceGuideline}
+${salonMentionGuideline}
 - Write in a friendly, professional tone that connects with clients
 - Include a call-to-action (book now, DM for details, comment below, etc.)
 - Keep it concise but engaging (2-4 short paragraphs max)
@@ -1746,11 +1762,43 @@ Respond in JSON format with these fields:
         })
       );
       
+      // Calculate seat usage for billing display
+      // Only count ACCEPTED members for billing (pending invites don't consume seats until accepted)
+      const pendingMembersList = members.filter(m => m.invitationStatus === "pending");
+      const includedSeats = salon.seatLimit || 5;
+      const acceptedCount = acceptedMembers.length;
+      const additionalSeatsUsed = Math.max(0, acceptedCount - includedSeats);
+      // How many pending invites will become additional (billable) seats when accepted?
+      // Billable if their slot number exceeds included seats
+      const remainingFreeSlots = Math.max(0, includedSeats - acceptedCount);
+      const pendingWillBeAdditional = Math.max(0, pendingMembersList.length - remainingFreeSlots);
+      
+      // Annotate each pending member with whether they will be billed when accepted
+      const membersWithBillingInfo = members.map((m, _idx) => {
+        if (m.invitationStatus !== "pending") {
+          return m;
+        }
+        // Find this member's position in pending list to calculate if they'll be billed
+        // Slot = acceptedCount + pendingIndex + 1 (for 0-indexed pending list)
+        // Billable if slot exceeds included seats
+        const pendingIndex = pendingMembersList.findIndex(p => p.id === m.id);
+        const slotNumber = acceptedCount + pendingIndex + 1;
+        const willBeBilledWhenAccepted = slotNumber > includedSeats;
+        return { ...m, willBeBilledWhenAccepted };
+      });
+      
       res.json({
         ...salon,
-        members,
+        members: membersWithBillingInfo,
         membersWithStreaks,
-        seatCount: acceptedMembers.length,
+        seatUsage: {
+          included: includedSeats,
+          acceptedCount,
+          pendingCount: pendingMembersList.length,
+          additionalUsed: additionalSeatsUsed,
+          pendingWillBecomeAdditional: pendingWillBeAdditional,
+          isOverLimit: acceptedCount > includedSeats,
+        },
       });
     } catch (error) {
       console.error("Error fetching salon:", error);
@@ -1804,12 +1852,13 @@ Respond in JSON format with these fields:
         return res.status(400).json({ error: "Valid email is required" });
       }
       
-      // Check seat limit
+      // Check seat count - always allow invites, but track additional seat usage for billing
+      // Only count ACCEPTED members for billing (pending invites don't consume seats until accepted)
       const members = await storage.getSalonMembers(salonId);
-      const activeMembers = members.filter(m => m.invitationStatus !== "revoked");
-      if (activeMembers.length >= (salon.seatLimit || 5)) {
-        return res.status(400).json({ error: "Seat limit reached. Please upgrade your plan." });
-      }
+      const acceptedMembers = members.filter(m => m.invitationStatus === "accepted");
+      const includedSeats = salon.seatLimit || 5;
+      // When this new invite is accepted, will it be an additional seat?
+      const willBeAdditionalSeat = acceptedMembers.length >= includedSeats;
       
       // Check for existing invitation
       const existingMember = await storage.getSalonMemberByEmail(salonId, email.toLowerCase());
@@ -1827,7 +1876,15 @@ Respond in JSON format with these fields:
         invitationStatus: "pending",
       });
       
-      res.json(member);
+      // Return member with additional seat billing info
+      // Note: billing only applies when invite is accepted
+      res.json({
+        ...member,
+        willBeAdditionalSeat,
+        currentAcceptedMembers: acceptedMembers.length,
+        includedSeats,
+        additionalSeatsUsed: Math.max(0, acceptedMembers.length - includedSeats),
+      });
     } catch (error) {
       console.error("Error inviting stylist:", error);
       res.status(500).json({ error: "Failed to invite stylist" });

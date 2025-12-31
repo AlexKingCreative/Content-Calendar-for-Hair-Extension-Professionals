@@ -26,6 +26,16 @@ interface SalonMember {
   status: 'pending' | 'accepted' | 'revoked';
   currentStreak?: number;
   totalPosts?: number;
+  willBeBilledWhenAccepted?: boolean;
+}
+
+interface SeatUsage {
+  included: number;
+  acceptedCount: number;
+  pendingCount: number;
+  additionalUsed: number;
+  pendingWillBecomeAdditional: number;
+  isOverLimit: boolean;
 }
 
 interface Salon {
@@ -34,6 +44,7 @@ interface Salon {
   instagramHandle?: string;
   seatLimit: number;
   members: SalonMember[];
+  seatUsage: SeatUsage;
 }
 
 interface SalonChallenge {
@@ -74,12 +85,19 @@ export default function SalonDashboardScreen() {
   const inviteMutation = useMutation({
     mutationFn: ({ email, name }: { email: string; name: string }) =>
       salonApi.inviteMember(salon!.id, email, name),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['salon'] });
       setShowInviteForm(false);
       setInviteEmail('');
       setInviteName('');
-      Alert.alert('Success', 'Invitation sent successfully!');
+      if (data.willBeAdditionalSeat) {
+        Alert.alert(
+          'Invitation Sent',
+          `When this invite is accepted, it will be billed at the additional seat rate (beyond your ${data.includedSeats} included seats).`
+        );
+      } else {
+        Alert.alert('Success', 'Invitation sent successfully!');
+      }
     },
     onError: (error: any) => {
       Alert.alert('Error', error.response?.data?.error || 'Failed to send invitation');
@@ -229,7 +247,7 @@ export default function SalonDashboardScreen() {
             color={activeTab === 'team' ? colors.primary : colors.textSecondary} 
           />
           <Text style={[styles.tabText, activeTab === 'team' && styles.tabTextActive]}>
-            Team ({activeMembers.length}/{salon.seatLimit})
+            Team ({activeMembers.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -257,16 +275,32 @@ export default function SalonDashboardScreen() {
           <>
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Active Members</Text>
+                <View style={styles.sectionTitleGroup}>
+                  <Text style={styles.sectionTitle}>Active Members</Text>
+                  <Text style={styles.seatInfo}>
+                    {salon.seatUsage?.acceptedCount ?? 0}/{salon.seatUsage?.included ?? salon.seatLimit ?? 5} seats used
+                    {(salon.seatUsage?.additionalUsed ?? 0) > 0 && (
+                      <Text style={styles.seatWarning}> (+{salon.seatUsage?.additionalUsed ?? 0} billed extra)</Text>
+                    )}
+                  </Text>
+                </View>
                 <TouchableOpacity 
                   style={styles.addButton}
                   onPress={() => setShowInviteForm(true)}
-                  disabled={activeMembers.length >= salon.seatLimit}
                 >
                   <Ionicons name="add" size={20} color={colors.surface} />
                   <Text style={styles.addButtonText}>Invite</Text>
                 </TouchableOpacity>
               </View>
+              
+              {(salon.seatUsage?.pendingWillBecomeAdditional ?? 0) > 0 && (
+                <View style={styles.seatWarningCard}>
+                  <Ionicons name="information-circle-outline" size={18} color={colors.warning || '#f59e0b'} />
+                  <Text style={styles.seatWarningCardText}>
+                    {salon.seatUsage?.pendingWillBecomeAdditional ?? 0} pending invite(s) will be billed as additional seats when accepted
+                  </Text>
+                </View>
+              )}
 
               {activeMembers.length === 0 ? (
                 <View style={styles.emptyCard}>
@@ -310,28 +344,33 @@ export default function SalonDashboardScreen() {
             {pendingMembers.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Pending Invitations</Text>
-                {pendingMembers.map((member) => (
-                  <View key={member.id} style={styles.pendingCard}>
-                    <View style={styles.memberInfo}>
-                      <View style={[styles.memberAvatar, styles.pendingAvatar]}>
-                        <Ionicons name="mail-outline" size={20} color={colors.textSecondary} />
-                      </View>
-                      <View style={styles.memberDetails}>
-                        <Text style={styles.memberName}>{member.name}</Text>
-                        <Text style={styles.memberEmail}>{member.email}</Text>
-                        <View style={styles.pendingBadge}>
-                          <Text style={styles.pendingText}>Invitation sent</Text>
+                {pendingMembers.map((member) => {
+                  const willBeBilled = member.willBeBilledWhenAccepted ?? false;
+                  return (
+                    <View key={member.id} style={styles.pendingCard}>
+                      <View style={styles.memberInfo}>
+                        <View style={[styles.memberAvatar, styles.pendingAvatar]}>
+                          <Ionicons name="mail-outline" size={20} color={colors.textSecondary} />
+                        </View>
+                        <View style={styles.memberDetails}>
+                          <Text style={styles.memberName}>{member.name}</Text>
+                          <Text style={styles.memberEmail}>{member.email}</Text>
+                          <View style={[styles.pendingBadge, willBeBilled && styles.pendingBadgeBillable]}>
+                            <Text style={[styles.pendingText, willBeBilled && styles.pendingTextBillable]}>
+                              {willBeBilled ? 'Will be billed as extra seat' : 'Invitation sent'}
+                            </Text>
+                          </View>
                         </View>
                       </View>
+                      <TouchableOpacity 
+                        style={styles.revokeButton}
+                        onPress={() => handleRevoke(member)}
+                      >
+                        <Ionicons name="close-circle-outline" size={24} color={colors.textTertiary} />
+                      </TouchableOpacity>
                     </View>
-                    <TouchableOpacity 
-                      style={styles.revokeButton}
-                      onPress={() => handleRevoke(member)}
-                    >
-                      <Ionicons name="close-circle-outline" size={24} color={colors.textTertiary} />
-                    </TouchableOpacity>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
             )}
 
@@ -594,9 +633,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
+  sectionTitleGroup: {
+    flex: 1,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
+    color: colors.text,
+  },
+  seatInfo: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  seatWarning: {
+    color: colors.warning || '#f59e0b',
+    fontWeight: '500',
+  },
+  seatWarningCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: (colors.warning || '#f59e0b') + '15',
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.md,
+  },
+  seatWarningCardText: {
+    flex: 1,
+    fontSize: 13,
     color: colors.text,
   },
   addButton: {
@@ -696,17 +761,23 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   pendingBadge: {
-    backgroundColor: colors.warning + '20',
+    backgroundColor: colors.textTertiary + '20',
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: borderRadius.pill,
     alignSelf: 'flex-start',
     marginTop: spacing.xs,
   },
+  pendingBadgeBillable: {
+    backgroundColor: (colors.warning || '#f59e0b') + '20',
+  },
   pendingText: {
     fontSize: 11,
-    color: colors.warning,
+    color: colors.textSecondary,
     fontWeight: '500',
+  },
+  pendingTextBillable: {
+    color: colors.warning || '#f59e0b',
   },
   formCard: {
     ...glassCard,
