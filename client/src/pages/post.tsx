@@ -28,6 +28,11 @@ interface UserProfile {
   city?: string;
 }
 
+interface AshleysAdvice {
+  id: number;
+  advice: string;
+}
+
 const contentTypeIcons: Record<ContentType, typeof Camera> = {
   Photo: Camera,
   Video: Video,
@@ -100,6 +105,12 @@ export default function PostPage() {
   const { data: streakData } = useQuery<StreakData>({
     queryKey: ["/api/streak"],
     enabled: !!user && !!profile?.onboardingComplete,
+  });
+
+  const { data: ashleysAdvice } = useQuery<AshleysAdvice>({
+    queryKey: ["/api/ashleys-advice", postId],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!postId,
   });
 
   const logPostMutation = useMutation({
@@ -406,6 +417,22 @@ export default function PostPage() {
             </div>
           )}
         </div>
+
+        {ashleysAdvice && (
+          <div className="glass-card rounded-2xl p-4 animate-fade-in-up stagger-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Lightbulb className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-heading font-medium text-foreground text-sm mb-2">Ashley's Advice</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {ashleysAdvice.advice}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {post.instagramExampleUrl && (
           <Button

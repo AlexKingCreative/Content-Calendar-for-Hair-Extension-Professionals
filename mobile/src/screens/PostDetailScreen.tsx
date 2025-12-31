@@ -10,6 +10,7 @@ import {
   Animated,
   Alert,
   Image,
+  Linking,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
@@ -331,6 +332,34 @@ export default function PostDetailScreen() {
         )}
       </View>
 
+      {(post.instagramExampleUrl || post.videoExampleUrl) && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Example Content</Text>
+          <View style={styles.exampleLinks}>
+            {post.instagramExampleUrl && (
+              <TouchableOpacity 
+                style={styles.exampleLinkButton}
+                onPress={() => Linking.openURL(post.instagramExampleUrl!)}
+              >
+                <Ionicons name="logo-instagram" size={20} color="#E1306C" />
+                <Text style={styles.exampleLinkText}>See Example on Instagram</Text>
+                <Ionicons name="open-outline" size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+            {post.videoExampleUrl && (
+              <TouchableOpacity 
+                style={styles.exampleLinkButton}
+                onPress={() => Linking.openURL(post.videoExampleUrl!)}
+              >
+                <Ionicons name="play-circle" size={20} color={colors.primary} />
+                <Text style={styles.exampleLinkText}>Watch Example Video</Text>
+                <Ionicons name="open-outline" size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
+
       {ashleysAdvice && (
         <View style={styles.adviceCard}>
           <View style={styles.adviceHeader}>
@@ -601,5 +630,24 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
     fontStyle: 'italic',
+  },
+  exampleLinks: {
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  exampleLinkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: borderRadius.md,
+  },
+  exampleLinkText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text,
   },
 });

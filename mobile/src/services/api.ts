@@ -147,6 +147,10 @@ export const trendsApi = {
     const response = await api.get('/api/trends');
     return response.data;
   },
+  getAllWithExpired: async (includeExpired: boolean = false) => {
+    const response = await api.get(`/api/trends?includeExpired=${includeExpired}`);
+    return response.data;
+  },
 };
 
 export const challengesApi = {

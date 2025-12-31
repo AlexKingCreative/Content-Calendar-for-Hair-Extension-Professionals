@@ -39,6 +39,11 @@ interface Salon {
   instagramHandle?: string;
 }
 
+interface AshleysAdvice {
+  id: number;
+  advice: string;
+}
+
 const contentTypeIcons: Record<ContentType, typeof Camera> = {
   Photo: Camera,
   Video: Video,
@@ -112,6 +117,22 @@ export default function TodayPage() {
     enabled: !!user && !!profile?.salonId && profile?.salonRole === "stylist",
   });
 
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  
+  const userPostingServices = profile?.postingServices || [];
+  const filteredPosts = userPostingServices.length > 0
+    ? posts.filter(p => !p.serviceCategory || userPostingServices.includes(p.serviceCategory))
+    : posts;
+  const todayPost = filteredPosts.find(p => p.month === month && p.day === day);
+
+  const { data: ashleysAdvice } = useQuery<AshleysAdvice>({
+    queryKey: ["/api/ashleys-advice/today"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!todayPost,
+  });
+
   const logPostMutation = useMutation({
     mutationFn: async () => {
       return apiRequest("POST", "/api/streak/log", {});
@@ -157,16 +178,6 @@ export default function TodayPage() {
       });
     },
   });
-
-  const now = new Date();
-  const month = now.getMonth() + 1;
-  const day = now.getDate();
-  
-  const userPostingServices = profile?.postingServices || [];
-  const filteredPosts = userPostingServices.length > 0
-    ? posts.filter(p => !p.serviceCategory || userPostingServices.includes(p.serviceCategory))
-    : posts;
-  const todayPost = filteredPosts.find(p => p.month === month && p.day === day);
 
   const handleGenerateCaption = async () => {
     if (!todayPost) return;
@@ -440,6 +451,22 @@ export default function TodayPage() {
             </div>
           )}
         </div>
+
+        {ashleysAdvice && (
+          <div className="glass-card rounded-2xl p-4 animate-fade-in-up stagger-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Lightbulb className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-heading font-medium text-foreground text-sm mb-2">Ashley's Advice</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {ashleysAdvice.advice}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {todayPost.instagramExampleUrl && (
           <Button
