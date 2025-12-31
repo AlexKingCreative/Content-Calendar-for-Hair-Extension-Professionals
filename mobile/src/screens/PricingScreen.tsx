@@ -15,22 +15,23 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { colors, spacing, borderRadius } from '../theme';
 import { stripeApi } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 
 const { width } = Dimensions.get('window');
-const PLAN_WIDTH = (width - spacing.md * 2 - spacing.sm * 2) / 3;
 
-type RouteParams = {
-  GuestCheckout: {
+interface PricingScreenProps {
+  mode: 'guest' | 'authenticated';
+  preferences?: {
     city?: string;
     certifiedBrands?: string[];
     extensionMethods?: string[];
     businessType?: string;
   };
-};
+  onTrialStarted?: () => void;
+}
 
 const CHECKOUT_TOKEN_KEY = 'pendingCheckoutToken';
 
@@ -54,7 +55,7 @@ const SOCIAL_PROOF_MESSAGES = [
   { icon: 'heart', color: '#E74C3C', text: 'Your post reached 2,500 people' },
 ];
 
-export default function GuestCheckoutScreen() {
+export default function PricingScreen({ mode, preferences = {}, onTrialStarted }: PricingScreenProps) {
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly' | 'yearly'>('quarterly');
   const [isLoading, setIsLoading] = useState(false);
   const [isCompletingCheckout, setIsCompletingCheckout] = useState(false);
@@ -63,20 +64,19 @@ export default function GuestCheckoutScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const navigation = useNavigation();
-  const route = useRoute<RouteProp<RouteParams, 'GuestCheckout'>>();
-  const { loginWithToken } = useAuth();
-
-  const preferences = route.params || {};
+  const { loginWithToken, refreshSubscriptionStatus } = useAuth();
 
   useEffect(() => {
-    const loadPendingToken = async () => {
-      const savedToken = await SecureStore.getItemAsync(CHECKOUT_TOKEN_KEY);
-      if (savedToken) {
-        setCheckoutToken(savedToken);
-      }
-    };
-    loadPendingToken();
-  }, []);
+    if (mode === 'guest') {
+      const loadPendingToken = async () => {
+        const savedToken = await SecureStore.getItemAsync(CHECKOUT_TOKEN_KEY);
+        if (savedToken) {
+          setCheckoutToken(savedToken);
+        }
+      };
+      loadPendingToken();
+    }
+  }, [mode]);
 
   useEffect(() => {
     const animateMessage = () => {
@@ -126,23 +126,36 @@ export default function GuestCheckoutScreen() {
   const handleCheckout = async () => {
     setIsLoading(true);
     try {
-      const result = await stripeApi.guestCheckout({
-        plan: selectedPlan,
-        city: preferences.city,
-        certifiedBrands: preferences.certifiedBrands,
-        extensionMethods: preferences.extensionMethods,
-        businessType: preferences.businessType,
-      });
+      if (mode === 'guest') {
+        const result = await stripeApi.guestCheckout({
+          plan: selectedPlan,
+          city: preferences.city,
+          certifiedBrands: preferences.certifiedBrands,
+          extensionMethods: preferences.extensionMethods,
+          businessType: preferences.businessType,
+        });
 
-      if (result.url && result.checkoutToken) {
-        setCheckoutToken(result.checkoutToken);
-        await SecureStore.setItemAsync(CHECKOUT_TOKEN_KEY, result.checkoutToken);
-        
-        await WebBrowser.openBrowserAsync(result.url);
-        
-        await attemptCompleteCheckout(result.checkoutToken);
+        if (result.url && result.checkoutToken) {
+          setCheckoutToken(result.checkoutToken);
+          await SecureStore.setItemAsync(CHECKOUT_TOKEN_KEY, result.checkoutToken);
+          
+          await WebBrowser.openBrowserAsync(result.url);
+          
+          await attemptCompleteCheckout(result.checkoutToken);
+        } else {
+          Alert.alert('Error', 'Could not create checkout session.');
+        }
       } else {
-        Alert.alert('Error', 'Could not create checkout session.');
+        const { url } = await stripeApi.createCheckoutSession(selectedPlan);
+        if (url) {
+          const result = await WebBrowser.openBrowserAsync(url);
+          if (result.type === 'cancel' || result.type === 'dismiss') {
+            await refreshSubscriptionStatus();
+            onTrialStarted?.();
+          }
+        } else {
+          Alert.alert('Error', 'Could not create checkout session.');
+        }
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Could not open payment page.';
@@ -194,6 +207,8 @@ export default function GuestCheckoutScreen() {
     await attemptCompleteCheckout(checkoutToken);
   };
 
+  const canGoBack = mode === 'guest' && navigation.canGoBack();
+
   if (isCompletingCheckout) {
     return (
       <SafeAreaView style={styles.container}>
@@ -208,14 +223,16 @@ export default function GuestCheckoutScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-      </View>
+      {canGoBack && (
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       <ScrollView 
         style={styles.content} 
@@ -338,7 +355,7 @@ export default function GuestCheckoutScreen() {
           </Text>
         </View>
 
-        {checkoutToken && (
+        {mode === 'guest' && checkoutToken && (
           <TouchableOpacity
             style={styles.verifyButton}
             onPress={handleVerifySubscription}

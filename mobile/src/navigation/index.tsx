@@ -20,15 +20,15 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import HelpScreen from '../screens/HelpScreen';
 import AccountScreen from '../screens/AccountScreen';
 import UpgradeScreen from '../screens/UpgradeScreen';
-import StartTrialScreen from '../screens/StartTrialScreen';
-import GuestCheckoutScreen from '../screens/GuestCheckoutScreen';
+import PricingScreen from '../screens/PricingScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import { useRoute, RouteProp } from '@react-navigation/native';
 
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
   Onboarding: undefined;
-  StartTrial: undefined;
+  Pricing: undefined;
   PostDetail: { postId: number };
   Help: undefined;
   Account: undefined;
@@ -61,6 +61,18 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+function GuestCheckoutWrapper() {
+  const route = useRoute<RouteProp<AuthStackParamList, 'GuestCheckout'>>();
+  const preferences = route.params || {};
+  
+  return (
+    <PricingScreen 
+      mode="guest" 
+      preferences={preferences}
+    />
+  );
+}
+
 function AuthNavigator() {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
@@ -69,7 +81,7 @@ function AuthNavigator() {
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Register" component={RegisterScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <AuthStack.Screen name="GuestCheckout" component={GuestCheckoutScreen} />
+      <AuthStack.Screen name="GuestCheckout" component={GuestCheckoutWrapper} />
     </AuthStack.Navigator>
   );
 }
@@ -144,10 +156,9 @@ function MainTabs() {
   );
 }
 
-
-function StartTrialWrapper() {
+function AuthenticatedPricingScreen() {
   const { refreshSubscriptionStatus } = useAuth();
-  return <StartTrialScreen onTrialStarted={refreshSubscriptionStatus} />;
+  return <PricingScreen mode="authenticated" onTrialStarted={refreshSubscriptionStatus} />;
 }
 
 function AuthenticatedWelcomeScreen() {
@@ -200,7 +211,7 @@ export default function Navigation() {
           ) : (
             <>
               <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-              <Stack.Screen name="StartTrial" component={StartTrialWrapper} />
+              <Stack.Screen name="Pricing" component={AuthenticatedPricingScreen} />
             </>
           )
         ) : (
