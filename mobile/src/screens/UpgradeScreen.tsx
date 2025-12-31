@@ -34,7 +34,7 @@ interface Profile {
 
 export default function UpgradeScreen() {
   const navigation = useNavigation();
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const [isLoading, setIsLoading] = useState(false);
   
   const { data: profile } = useQuery<Profile>({
@@ -44,6 +44,7 @@ export default function UpgradeScreen() {
   
   const currentStreak = profile?.currentStreak || 0;
   const isOnTrial = profile?.subscriptionStatus === 'trialing';
+  const isRevoked = profile?.subscriptionStatus === 'revoked';
   const trialEndsAt = profile?.trialEndsAt ? new Date(profile.trialEndsAt) : null;
   const now = new Date();
   const daysLeftInTrial = trialEndsAt ? Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
@@ -96,7 +97,23 @@ export default function UpgradeScreen() {
           </Text>
         </View>
 
-        {showStreakWarning && (
+        {isRevoked && (
+          <View style={styles.streakWarning}>
+            <View style={styles.streakWarningIcon}>
+              <Ionicons name="alert-circle" size={24} color="#FF6B35" />
+            </View>
+            <View style={styles.streakWarningContent}>
+              <Text style={styles.streakWarningTitle}>
+                Salon access removed
+              </Text>
+              <Text style={styles.streakWarningText}>
+                Your salon owner has removed your team access. Subscribe to continue using the content calendar on your own.
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {showStreakWarning && !isRevoked && (
           <View style={styles.streakWarning}>
             <View style={styles.streakWarningIcon}>
               <Ionicons name="flame" size={24} color="#FF6B35" />
@@ -116,9 +133,9 @@ export default function UpgradeScreen() {
           <TouchableOpacity
             style={[
               styles.planCard,
-              selectedPlan === 'annual' && styles.planCardSelected,
+              selectedPlan === 'yearly' && styles.planCardSelected,
             ]}
-            onPress={() => setSelectedPlan('annual')}
+            onPress={() => setSelectedPlan('yearly')}
             activeOpacity={0.8}
           >
             <View style={styles.planBadge}>
@@ -127,9 +144,9 @@ export default function UpgradeScreen() {
             <View style={styles.planHeader}>
               <View style={[
                 styles.radioButton,
-                selectedPlan === 'annual' && styles.radioButtonSelected,
+                selectedPlan === 'yearly' && styles.radioButtonSelected,
               ]}>
-                {selectedPlan === 'annual' && (
+                {selectedPlan === 'yearly' && (
                   <View style={styles.radioButtonInner} />
                 )}
               </View>
