@@ -20,17 +20,41 @@ type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 };
 
-type Step = 'email' | 'code';
+type Step = 'login' | 'code';
+type LoginMethod = 'password' | 'magic';
 
 export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [step, setStep] = useState<Step>('email');
+  const [step, setStep] = useState<Step>('login');
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>('password');
   const [isLoading, setIsLoading] = useState(false);
   const [magicLinkToken, setMagicLinkToken] = useState<string | null>(null);
   const { loginWithToken } = useAuth();
   
   const codeInputRefs = useRef<(TextInput | null)[]>([]);
+
+  const handlePasswordLogin = async () => {
+    if (!email || !email.includes('@')) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+    if (!password) {
+      Alert.alert('Error', 'Please enter your password');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await authApi.login(email.toLowerCase().trim(), password);
+      await loginWithToken(response.token, response.user);
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.message || 'Invalid email or password. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleRequestMagicLink = async () => {
     if (!email || !email.includes('@')) {
@@ -89,7 +113,7 @@ export default function LoginScreen({ navigation }: Props) {
 
     if (!magicLinkToken) {
       Alert.alert('Error', 'Session expired. Please request a new code.');
-      setStep('email');
+      setStep('login');
       return;
     }
 
@@ -111,8 +135,8 @@ export default function LoginScreen({ navigation }: Props) {
     await handleRequestMagicLink();
   };
 
-  const handleBackToEmail = () => {
-    setStep('email');
+  const handleBackToLogin = () => {
+    setStep('login');
     setCode(['', '', '', '', '', '']);
     setMagicLinkToken(null);
   };
@@ -177,7 +201,7 @@ export default function LoginScreen({ navigation }: Props) {
 
             <TouchableOpacity
               style={styles.linkButton}
-              onPress={handleBackToEmail}
+              onPress={handleBackToLogin}
             >
               <Text style={styles.linkText}>
                 <Text style={styles.linkTextBold}>Use a different email</Text>
@@ -203,8 +227,30 @@ export default function LoginScreen({ navigation }: Props) {
         <View style={styles.form}>
           <Text style={styles.welcomeText}>Welcome back</Text>
           <Text style={styles.instructionText}>
-            Enter your email and we'll send you a magic link to sign in instantly.
+            {loginMethod === 'password' 
+              ? 'Sign in with your email and password.'
+              : "Enter your email and we'll send you a magic link to sign in instantly."
+            }
           </Text>
+
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, loginMethod === 'password' && styles.tabActive]}
+              onPress={() => setLoginMethod('password')}
+            >
+              <Text style={[styles.tabText, loginMethod === 'password' && styles.tabTextActive]}>
+                Password
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, loginMethod === 'magic' && styles.tabActive]}
+              onPress={() => setLoginMethod('magic')}
+            >
+              <Text style={[styles.tabText, loginMethod === 'magic' && styles.tabTextActive]}>
+                Magic Link
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <Text style={styles.label}>Email</Text>
           <TextInput
@@ -218,15 +264,33 @@ export default function LoginScreen({ navigation }: Props) {
             autoComplete="email"
           />
 
+          {loginMethod === 'password' && (
+            <>
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="password"
+              />
+            </>
+          )}
+
           <TouchableOpacity
             style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleRequestMagicLink}
+            onPress={loginMethod === 'password' ? handlePasswordLogin : handleRequestMagicLink}
             disabled={isLoading}
           >
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.buttonText}>Send Magic Link</Text>
+              <Text style={styles.buttonText}>
+                {loginMethod === 'password' ? 'Sign In' : 'Send Magic Link'}
+              </Text>
             )}
           </TouchableOpacity>
 
@@ -293,6 +357,35 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 20,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F5E6D3',
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 24,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  tabActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8B7355',
+  },
+  tabTextActive: {
+    color: '#D4A574',
   },
   label: {
     fontSize: 14,
