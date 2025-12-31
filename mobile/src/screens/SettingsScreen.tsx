@@ -153,12 +153,15 @@ export default function SettingsScreen() {
             <Text style={styles.menuText}>Upgrade Plan</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={() => Alert.alert('Coming Soon', 'Instagram Analytics will be available in a future update.')}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Challenges')}>
+            <Ionicons name="trophy-outline" size={22} color={colors.text} />
+            <Text style={styles.menuText}>Challenges</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={() => navigation.navigate('Instagram')}>
             <Ionicons name="logo-instagram" size={22} color={colors.text} />
             <Text style={styles.menuText}>Instagram Analytics</Text>
-            <View style={styles.comingSoonBadge}>
-              <Text style={styles.comingSoonText}>Coming Soon</Text>
-            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -222,14 +225,30 @@ export default function SettingsScreen() {
             <Text style={styles.menuText}>Help & Support</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={showAbout}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Contact')}>
+            <Ionicons name="mail-outline" size={22} color={colors.text} />
+            <Text style={styles.menuText}>Contact Us</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={showAbout}>
             <Ionicons name="information-circle-outline" size={22} color={colors.text} />
             <Text style={styles.menuText}>About</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>LEGAL</Text>
+        <View style={styles.card}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Terms')}>
+            <Ionicons name="document-text-outline" size={22} color={colors.text} />
+            <Text style={styles.menuText}>Terms & Conditions</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+          </TouchableOpacity>
           <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={showPrivacy}>
             <Ionicons name="shield-checkmark-outline" size={22} color={colors.text} />
-            <Text style={styles.menuText}>Your Privacy Choices</Text>
+            <Text style={styles.menuText}>Privacy Policy</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
         </View>

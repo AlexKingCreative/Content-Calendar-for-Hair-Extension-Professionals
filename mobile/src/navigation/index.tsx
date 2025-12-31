@@ -22,6 +22,10 @@ import AccountScreen from '../screens/AccountScreen';
 import UpgradeScreen from '../screens/UpgradeScreen';
 import PricingScreen from '../screens/PricingScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import ChallengesScreen from '../screens/ChallengesScreen';
+import InstagramScreen from '../screens/InstagramScreen';
+import TermsScreen from '../screens/TermsScreen';
+import ContactScreen from '../screens/ContactScreen';
 import { useRoute, RouteProp } from '@react-navigation/native';
 
 export type RootStackParamList = {
@@ -33,6 +37,10 @@ export type RootStackParamList = {
   Help: undefined;
   Account: undefined;
   Upgrade: undefined;
+  Challenges: undefined;
+  Instagram: undefined;
+  Terms: undefined;
+  Contact: undefined;
 };
 
 export type AuthStackParamList = {
@@ -203,6 +211,26 @@ export default function Navigation() {
               <Stack.Screen 
                 name="Upgrade" 
                 component={UpgradeScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Challenges" 
+                component={ChallengesScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Instagram" 
+                component={InstagramScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Terms" 
+                component={TermsScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Contact" 
+                component={ContactScreen}
                 options={{ headerShown: false }}
               />
             </>
