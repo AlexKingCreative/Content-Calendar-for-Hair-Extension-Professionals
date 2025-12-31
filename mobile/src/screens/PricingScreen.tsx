@@ -35,13 +35,22 @@ interface PricingScreenProps {
 
 const CHECKOUT_TOKEN_KEY = 'pendingCheckoutToken';
 
-const FEATURES = [
+const INDIVIDUAL_FEATURES = [
   { icon: 'calendar-outline', text: 'Monthly content ideas' },
   { icon: 'sparkles-outline', text: 'AI captions' },
   { icon: 'flame-outline', text: 'Streak rewards' },
   { icon: 'trending-up-outline', text: 'Trend alerts' },
   { icon: 'layers-outline', text: 'Multiple services' },
   { icon: 'person-outline', text: 'Personalized voice' },
+];
+
+const SALON_FEATURES = [
+  { icon: 'checkmark-circle-outline', text: 'Everything in Individual plan' },
+  { icon: 'people-outline', text: 'Manage your team from one dashboard' },
+  { icon: 'mail-outline', text: 'Invite stylists via email' },
+  { icon: 'flame-outline', text: 'Monitor team posting streaks' },
+  { icon: 'bar-chart-outline', text: 'Team performance insights' },
+  { icon: 'pricetag-outline', text: 'Bulk seat discounts' },
 ];
 
 const SOCIAL_PROOF_MESSAGES = [
@@ -56,6 +65,7 @@ const SOCIAL_PROOF_MESSAGES = [
 ];
 
 export default function PricingScreen({ mode, preferences = {}, onTrialStarted }: PricingScreenProps) {
+  const [planType, setPlanType] = useState<'individual' | 'salon'>('individual');
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly' | 'yearly'>('quarterly');
   const [isLoading, setIsLoading] = useState(false);
   const [isCompletingCheckout, setIsCompletingCheckout] = useState(false);
@@ -266,6 +276,29 @@ export default function PricingScreen({ mode, preferences = {}, onTrialStarted }
           </Text>
         </View>
 
+        <View style={styles.planTypeSelector}>
+          <TouchableOpacity
+            style={[styles.planTypeTab, planType === 'individual' && styles.planTypeTabActive]}
+            onPress={() => setPlanType('individual')}
+          >
+            <Ionicons name="person" size={16} color={planType === 'individual' ? colors.textOnPrimary : colors.text} />
+            <Text style={[styles.planTypeTabText, planType === 'individual' && styles.planTypeTabTextActive]}>
+              Individual
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.planTypeTab, planType === 'salon' && styles.planTypeTabActive]}
+            onPress={() => setPlanType('salon')}
+          >
+            <Ionicons name="people" size={16} color={planType === 'salon' ? colors.textOnPrimary : colors.text} />
+            <Text style={[styles.planTypeTabText, planType === 'salon' && styles.planTypeTabTextActive]}>
+              Salon Team
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {planType === 'individual' ? (
+        <>
         <View style={styles.plansRow}>
           <TouchableOpacity
             style={[
@@ -317,7 +350,7 @@ export default function PricingScreen({ mode, preferences = {}, onTrialStarted }
         </View>
 
         <View style={styles.featuresGrid}>
-          {FEATURES.map((feature, index) => (
+          {INDIVIDUAL_FEATURES.map((feature, index) => (
             <View key={index} style={styles.featureItem}>
               <View style={styles.featureIconContainer}>
                 <Ionicons name={feature.icon as any} size={18} color={colors.primary} />
@@ -326,6 +359,37 @@ export default function PricingScreen({ mode, preferences = {}, onTrialStarted }
             </View>
           ))}
         </View>
+        </>
+        ) : (
+        <>
+        <View style={styles.salonPricingCard}>
+          <View style={styles.salonBadge}>
+            <Text style={styles.salonBadgeText}>Best for Teams</Text>
+          </View>
+          <View style={styles.salonPricingHeader}>
+            <Ionicons name="people" size={24} color={colors.primary} />
+            <Text style={styles.salonPricingTitle}>Salon Owner</Text>
+          </View>
+          <Text style={styles.salonPricingSubtitle}>Manage your whole team</Text>
+          <View style={styles.salonPriceRow}>
+            <Text style={styles.salonPriceAmount}>$5-8</Text>
+            <Text style={styles.salonPricePeriod}>/seat/month</Text>
+          </View>
+          <Text style={styles.salonPriceInfo}>5 seats: $40/mo | 10+ seats: $50/mo</Text>
+        </View>
+
+        <View style={styles.featuresGrid}>
+          {SALON_FEATURES.map((feature, index) => (
+            <View key={index} style={styles.featureItem}>
+              <View style={styles.featureIconContainer}>
+                <Ionicons name={feature.icon as any} size={18} color={colors.primary} />
+              </View>
+              <Text style={styles.featureText}>{feature.text}</Text>
+            </View>
+          ))}
+        </View>
+        </>
+        )}
 
         <View style={styles.testimonialCard}>
           <View style={styles.starsRow}>
@@ -366,32 +430,53 @@ export default function PricingScreen({ mode, preferences = {}, onTrialStarted }
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.ctaButton, isLoading && styles.ctaButtonDisabled]}
-          onPress={handleCheckout}
-          disabled={isLoading}
-          activeOpacity={0.8}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <>
-              <Text style={styles.ctaButtonText}>
-                Start 7-Day Free Trial
+        {planType === 'individual' ? (
+          <>
+            <TouchableOpacity
+              style={[styles.ctaButton, isLoading && styles.ctaButtonDisabled]}
+              onPress={handleCheckout}
+              disabled={isLoading}
+              activeOpacity={0.8}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <>
+                  <Text style={styles.ctaButtonText}>
+                    Start 7-Day Free Trial
+                  </Text>
+                  <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                </>
+              )}
+            </TouchableOpacity>
+            
+            <Text style={styles.ctaDisclaimer}>
+              {selectedPlan === 'monthly' 
+                ? 'Then $10/month after trial ends'
+                : selectedPlan === 'quarterly'
+                ? 'Then $25/quarter (~$8.33/mo) after trial'
+                : 'Then $50/year (~$4.17/mo) after trial'
+              }
+            </Text>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={[styles.ctaButton, styles.ctaButtonOutline]}
+              onPress={() => Alert.alert('Salon Plans', 'Salon team plans are available on our website. Visit our website to set up your team account.')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.ctaButtonTextOutline}>
+                Contact for Salon Plans
               </Text>
-              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-            </>
-          )}
-        </TouchableOpacity>
-        
-        <Text style={styles.ctaDisclaimer}>
-          {selectedPlan === 'monthly' 
-            ? 'Then $10/month after trial ends'
-            : selectedPlan === 'quarterly'
-            ? 'Then $25/quarter (~$8.33/mo) after trial'
-            : 'Then $50/year (~$4.17/mo) after trial'
-          }
-        </Text>
+              <Ionicons name="open-outline" size={20} color={colors.primary} />
+            </TouchableOpacity>
+            
+            <Text style={styles.ctaDisclaimer}>
+              Set up team accounts on our website
+            </Text>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -679,5 +764,104 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     textAlign: 'center',
     marginTop: spacing.sm,
+  },
+  ctaButtonOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: colors.primary,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  ctaButtonTextOutline: {
+    color: colors.primary,
+    fontSize: 17,
+    fontWeight: 'bold',
+  },
+  planTypeSelector: {
+    flexDirection: 'row',
+    backgroundColor: colors.cardBackground,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xs,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  planTypeTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+  },
+  planTypeTabActive: {
+    backgroundColor: colors.primary,
+  },
+  planTypeTabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  planTypeTabTextActive: {
+    color: colors.textOnPrimary,
+  },
+  salonPricingCard: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    position: 'relative',
+    alignItems: 'center',
+  },
+  salonBadge: {
+    position: 'absolute',
+    top: -10,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  salonBadgeText: {
+    color: colors.textOnPrimary,
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  salonPricingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  salonPricingTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  salonPricingSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
+  },
+  salonPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  salonPriceAmount: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  salonPricePeriod: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginLeft: 4,
+  },
+  salonPriceInfo: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
 });
