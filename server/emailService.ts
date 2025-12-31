@@ -40,7 +40,9 @@ export async function getResendClient() {
 
 export async function sendMagicLinkEmail(email: string, magicLinkUrl: string, verificationCode?: string): Promise<boolean> {
   try {
+    console.log('[Email] Attempting to send magic link email to:', email);
     const { client, fromEmail } = await getResendClient();
+    console.log('[Email] Got Resend client, from email:', fromEmail);
     
     const codeSection = verificationCode ? `
             <div style="background: #FFF8F0; border-radius: 8px; padding: 20px; margin-bottom: 24px; text-align: center;">
@@ -105,9 +107,11 @@ export async function sendMagicLinkEmail(email: string, magicLinkUrl: string, ve
       `,
     });
     
+    console.log('[Email] Magic link email sent successfully to:', email);
     return true;
-  } catch (error) {
-    console.error('Failed to send magic link email:', error);
+  } catch (error: any) {
+    console.error('[Email] Failed to send magic link email:', error?.message || error);
+    console.error('[Email] Full error:', JSON.stringify(error, null, 2));
     return false;
   }
 }
