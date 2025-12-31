@@ -13,7 +13,7 @@ import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import mobileAuthRoutes from "./mobileAuth";
 import magicLinkAuthRoutes from "./magicLinkAuth";
-import { sendEmail } from "./emailService";
+import { sendEmail, sendSalonInvitationEmail, sendAccessRevokedEmail } from "./emailService";
 import { instagramService } from "./instagramService";
 
 async function getUserEmail(userId: string): Promise<string | null> {
@@ -1876,6 +1876,18 @@ Respond in JSON format with these fields:
         invitationStatus: "pending",
       });
       
+      // Get owner's name for the email
+      const owner = await db.select().from(users).where(eq(users.id, String(userId))).then(rows => rows[0]);
+      const ownerName = owner?.name || owner?.email || 'The salon owner';
+      
+      // Send invitation email (don't block response on email)
+      sendSalonInvitationEmail(
+        email.toLowerCase(),
+        salon.name,
+        ownerName,
+        invitationToken
+      ).catch(err => console.error('[Email] Failed to send salon invitation:', err));
+      
       // Return member with additional seat billing info
       // Note: billing only applies when invite is accepted
       res.json({
@@ -1949,9 +1961,19 @@ Respond in JSON format with these fields:
         return res.status(403).json({ error: "Unauthorized" });
       }
       
+      // Get member email before revoking so we can send notification
+      const members = await storage.getSalonMembers(salonId);
+      const member = members.find(m => m.id === memberId);
+      
       const success = await storage.revokeSalonMember(memberId);
       if (!success) {
         return res.status(404).json({ error: "Member not found" });
+      }
+      
+      // Send access revoked email if member was accepted (had access)
+      if (member && member.email && member.invitationStatus === 'accepted') {
+        sendAccessRevokedEmail(member.email, salon.name)
+          .catch(err => console.error('[Email] Failed to send access revoked email:', err));
       }
       
       res.json({ success: true });
