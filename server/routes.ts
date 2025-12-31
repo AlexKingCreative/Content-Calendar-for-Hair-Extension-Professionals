@@ -81,6 +81,38 @@ export async function registerRoutes(
   app.use('/api/mobile', mobileAuthRoutes);
   app.use('/api/auth', magicLinkAuthRoutes);
   
+  // Admin setup endpoint - sets specific emails as admin (protected by SESSION_SECRET)
+  app.get("/api/setup-admin/:secretKey", async (req: any, res) => {
+    const { secretKey } = req.params;
+    const sessionSecret = process.env.SESSION_SECRET;
+    if (!sessionSecret || secretKey !== sessionSecret) {
+      return res.status(403).json({ error: "Invalid key" });
+    }
+    
+    try {
+      const { db } = await import("./db");
+      const { userProfiles } = await import("@shared/schema");
+      const { users } = await import("@shared/models/auth");
+      const { eq } = await import("drizzle-orm");
+      
+      // Find user by email
+      const [user] = await db.select().from(users).where(eq(users.email, 'alex@alexkingcreative.com'));
+      if (!user) {
+        return res.json({ error: "User not found" });
+      }
+      
+      // Update profile to admin
+      await db.update(userProfiles)
+        .set({ isAdmin: true })
+        .where(eq(userProfiles.userId, String(user.id)));
+      
+      res.json({ success: true, message: "Admin access granted to alex@alexkingcreative.com" });
+    } catch (error: any) {
+      console.error("Setup admin error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
   // Test email endpoint (admin only in production)
   app.post("/api/test-email", async (req: any, res) => {
     try {
@@ -622,6 +654,7 @@ export async function registerRoutes(
         });
       }
       
+      console.log('[Profile API] Returning profile for user', userId, '- isAdmin:', profile.isAdmin);
       res.json(profile);
     } catch (error) {
       console.error("Error fetching profile:", error);
