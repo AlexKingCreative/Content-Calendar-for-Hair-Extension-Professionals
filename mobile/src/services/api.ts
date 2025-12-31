@@ -176,4 +176,54 @@ export const challengesApi = {
   },
 };
 
+export const salonApi = {
+  getMySalon: async () => {
+    const response = await api.get('/api/salons/me');
+    return response.data;
+  },
+  updateSalon: async (id: number, data: { name?: string; instagramHandle?: string }) => {
+    const response = await api.put(`/api/salons/${id}`, data);
+    return response.data;
+  },
+  inviteMember: async (salonId: number, email: string, name: string) => {
+    const response = await api.post(`/api/salons/${salonId}/invitations`, { email, name });
+    return response.data;
+  },
+  revokeMember: async (salonId: number, memberId: number) => {
+    const response = await api.delete(`/api/salons/${salonId}/members/${memberId}`);
+    return response.data;
+  },
+  getChallenges: async () => {
+    const response = await api.get('/api/salon/challenges');
+    return response.data;
+  },
+  createChallenge: async (data: { title: string; description: string; durationDays: number; postsRequired: number; rewardText: string }) => {
+    const response = await api.post('/api/salon/challenges', data);
+    return response.data;
+  },
+  updateChallenge: async (id: number, data: { status?: string }) => {
+    const response = await api.patch(`/api/salon/challenges/${id}`, data);
+    return response.data;
+  },
+  deleteChallenge: async (id: number) => {
+    const response = await api.delete(`/api/salon/challenges/${id}`);
+    return response.data;
+  },
+  getChallengeProgress: async (id: number) => {
+    const response = await api.get(`/api/salon/challenges/${id}/progress`);
+    return response.data;
+  },
+};
+
+export const stylistApi = {
+  getChallenges: async () => {
+    const response = await api.get('/api/stylist/challenges');
+    return response.data;
+  },
+  logProgress: async (id: number) => {
+    const response = await api.post(`/api/stylist/challenges/${id}/log`);
+    return response.data;
+  },
+};
+
 export default api;

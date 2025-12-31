@@ -26,6 +26,8 @@ import ChallengesScreen from '../screens/ChallengesScreen';
 import InstagramScreen from '../screens/InstagramScreen';
 import TermsScreen from '../screens/TermsScreen';
 import ContactScreen from '../screens/ContactScreen';
+import SalonDashboardScreen from '../screens/SalonDashboardScreen';
+import ChallengeProgressScreen from '../screens/ChallengeProgressScreen';
 import { useRoute, RouteProp } from '@react-navigation/native';
 
 export type RootStackParamList = {
@@ -41,6 +43,8 @@ export type RootStackParamList = {
   Instagram: undefined;
   Terms: undefined;
   Contact: undefined;
+  SalonDashboard: undefined;
+  ChallengeProgress: { challengeId: number };
 };
 
 export type AuthStackParamList = {
@@ -231,6 +235,16 @@ export default function Navigation() {
               <Stack.Screen 
                 name="Contact" 
                 component={ContactScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="SalonDashboard" 
+                component={SalonDashboardScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="ChallengeProgress" 
+                component={ChallengeProgressScreen}
                 options={{ headerShown: false }}
               />
             </>

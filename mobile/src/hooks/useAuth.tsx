@@ -17,6 +17,7 @@ interface AuthContextType {
   onboardingComplete: boolean;
   hasSeenWelcome: boolean;
   token: string | null;
+  isSalonOwner: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithToken: (token: string, userData: User) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
@@ -35,15 +36,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [hasSeenWelcome, setHasSeenWelcome] = useState(false);
+  const [isSalonOwner, setIsSalonOwner] = useState(false);
 
   const checkSubscription = useCallback(async () => {
     try {
       const profile = await profileApi.get();
       setSubscriptionStatus(profile.subscriptionStatus || null);
       setOnboardingComplete(profile.onboardingComplete || false);
+      setIsSalonOwner(profile.isSalonOwner || false);
     } catch (error) {
       setSubscriptionStatus(null);
       setOnboardingComplete(false);
+      setIsSalonOwner(false);
     }
   }, []);
 
@@ -122,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         onboardingComplete,
         hasSeenWelcome,
         token,
+        isSalonOwner,
         login,
         loginWithToken,
         register,

@@ -33,7 +33,7 @@ interface Profile {
 }
 
 export default function SettingsScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, isSalonOwner } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const queryClient = useQueryClient();
   const [showStreaks, setShowStreaks] = useState(true);
@@ -153,6 +153,13 @@ export default function SettingsScreen() {
             <Text style={styles.menuText}>Upgrade Plan</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
+          {isSalonOwner && (
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('SalonDashboard')}>
+              <Ionicons name="business-outline" size={22} color={colors.text} />
+              <Text style={styles.menuText}>Salon Dashboard</Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Challenges')}>
             <Ionicons name="trophy-outline" size={22} color={colors.text} />
             <Text style={styles.menuText}>Challenges</Text>
