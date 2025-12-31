@@ -13,10 +13,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as WebBrowser from 'expo-web-browser';
-import * as SecureStore from 'expo-secure-store';
 import { postsApi } from '../services/api';
 import { RootStackParamList } from '../navigation';
 import { colors, borderRadius, shadows, spacing, glassCard } from '../theme';
+import { useAuth } from '../hooks/useAuth';
 
 interface Post {
   id: number;
@@ -36,6 +36,7 @@ const MONTHS = [
 
 export default function CalendarScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { token } = useAuth();
   const today = new Date();
   const currentMonth = today.getMonth() + 1;
   const currentDay = today.getDate();
@@ -76,15 +77,19 @@ export default function CalendarScreen() {
 
   const handleDownloadPDF = async () => {
     try {
-      const token = await SecureStore.getItemAsync('authToken');
       if (!token) {
-        Alert.alert('Error', 'Please sign in to download the calendar');
+        Alert.alert(
+          'Sign In Required', 
+          'Please sign in to download the printable PDF calendar.',
+          [{ text: 'OK' }]
+        );
         return;
       }
       const pdfUrl = postsApi.getCalendarPdfUrl(selectedMonth);
-      await WebBrowser.openBrowserAsync(`${pdfUrl}?token=${token}`);
+      await WebBrowser.openBrowserAsync(`${pdfUrl}?token=${encodeURIComponent(token)}`);
     } catch (error) {
-      Alert.alert('Error', 'Could not download PDF. Please try again.');
+      console.error('PDF download error:', error);
+      Alert.alert('Download Error', 'Could not download PDF. Please try again.');
     }
   };
 
@@ -145,7 +150,10 @@ export default function CalendarScreen() {
           style={styles.downloadButton}
           onPress={handleDownloadPDF}
         >
-          <Ionicons name="download-outline" size={20} color={colors.primary} />
+          <View style={styles.pdfButtonContent}>
+            <Ionicons name="document-text-outline" size={18} color={colors.primary} />
+            <Text style={styles.pdfButtonText}>PDF</Text>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -302,5 +310,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  pdfButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  pdfButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });

@@ -16,6 +16,7 @@ interface AuthContextType {
   subscriptionStatus: string | null;
   onboardingComplete: boolean;
   hasSeenWelcome: boolean;
+  token: string | null;
   login: (email: string, password: string) => Promise<void>;
   loginWithToken: (token: string, userData: User) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
@@ -51,14 +53,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const token = await SecureStore.getItemAsync('authToken');
-      if (token) {
+      const storedToken = await SecureStore.getItemAsync('authToken');
+      if (storedToken) {
+        setToken(storedToken);
         const userData = await authApi.getUser();
         setUser(userData);
         await checkSubscription();
       }
     } catch (error) {
       await SecureStore.deleteItemAsync('authToken');
+      setToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -67,12 +71,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const response = await authApi.login(email, password);
     await SecureStore.setItemAsync('authToken', response.token);
+    setToken(response.token);
     setUser(response.user);
     await checkSubscription();
   };
 
-  const loginWithToken = async (token: string, userData: User) => {
-    await SecureStore.setItemAsync('authToken', token);
+  const loginWithToken = async (authToken: string, userData: User) => {
+    await SecureStore.setItemAsync('authToken', authToken);
+    setToken(authToken);
     setUser(userData);
     await checkSubscription();
   };
@@ -80,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (email: string, password: string, name: string) => {
     const response = await authApi.register(email, password, name);
     await SecureStore.setItemAsync('authToken', response.token);
+    setToken(response.token);
     setUser(response.user);
     await checkSubscription();
   };
@@ -91,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Ignore logout API errors
     }
     await SecureStore.deleteItemAsync('authToken');
+    setToken(null);
     setUser(null);
     setSubscriptionStatus(null);
     setOnboardingComplete(false);
@@ -113,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         subscriptionStatus,
         onboardingComplete,
         hasSeenWelcome,
+        token,
         login,
         loginWithToken,
         register,
