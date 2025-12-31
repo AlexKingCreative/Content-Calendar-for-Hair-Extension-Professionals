@@ -20,6 +20,7 @@ function addHeaderAndFooter(
   doc: jsPDF, 
   pageNum: number, 
   totalPages: number, 
+  userName: string,
   userEmail: string,
   pageWidth: number,
   pageHeight: number,
@@ -33,14 +34,21 @@ function addHeaderAndFooter(
   
   const headerY = 0.35;
   doc.text("ContentCalendarForHairPros.com", margin, headerY);
-  doc.text(`Licensed to: ${userEmail}`, pageWidth - margin, headerY, { align: "right" });
+  const licensedTo = userName ? `${userName} (${userEmail})` : userEmail;
+  doc.text(`Licensed to: ${licensedTo}`, pageWidth - margin, headerY, { align: "right" });
   
-  const footerY = pageHeight - 0.35;
+  const footerY = pageHeight - 0.45;
   doc.text(`Page ${pageNum} of ${totalPages}`, pageWidth / 2, footerY, { align: "center" });
   
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(180, 60, 60);
+  doc.text("UNAUTHORIZED DISTRIBUTION PROHIBITED", pageWidth / 2, footerY + 0.15, { align: "center" });
+  
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(6);
-  doc.setTextColor(160, 160, 160);
-  doc.text("This content is licensed for personal use only and may not be redistributed, shared, or resold.", pageWidth / 2, footerY + 0.15, { align: "center" });
+  doc.setTextColor(120, 120, 120);
+  doc.text("This content is licensed for personal use only. Sharing, redistributing, or reselling is strictly prohibited.", pageWidth / 2, footerY + 0.28, { align: "center" });
 }
 
 function addCalendarGridPage(
@@ -141,7 +149,7 @@ function addCalendarGridPage(
   }
 }
 
-export function generateMonthPDF(posts: Post[], month: number, userEmail: string = "Unknown", year: number = new Date().getFullYear()): Buffer {
+export function generateMonthPDF(posts: Post[], month: number, userName: string = "", userEmail: string = "Unknown", year: number = new Date().getFullYear()): Buffer {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "in",
@@ -215,7 +223,7 @@ export function generateMonthPDF(posts: Post[], month: number, userEmail: string
 
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
-    addHeaderAndFooter(doc, i, pageCount, userEmail, pageWidth, pageHeight, margin);
+    addHeaderAndFooter(doc, i, pageCount, userName, userEmail, pageWidth, pageHeight, margin);
   }
 
   return Buffer.from(doc.output('arraybuffer'));

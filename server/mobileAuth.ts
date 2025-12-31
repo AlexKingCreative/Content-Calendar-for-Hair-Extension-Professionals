@@ -365,10 +365,11 @@ router.get('/calendar/pdf/:month', async (req: any, res) => {
     }
     
     const [user] = await db.select().from(users).where(eq(users.id, payload.userId));
+    const userName = user?.name || '';
     const userEmail = user?.email || 'Unknown';
     
     const posts = await storage.getPostsByMonth(month);
-    const pdfBuffer = generateMonthPDF(posts, month, userEmail);
+    const pdfBuffer = generateMonthPDF(posts, month, userName, userEmail);
     
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=content-calendar-${month}.pdf`);
