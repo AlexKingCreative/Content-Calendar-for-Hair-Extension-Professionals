@@ -458,11 +458,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async revokeSalonMember(id: number): Promise<boolean> {
+    // First get the member to find the stylistUserId
+    const [member] = await db.select().from(salonMembers).where(eq(salonMembers.id, id));
+    if (!member) return false;
+    
     const [updated] = await db
       .update(salonMembers)
       .set({ invitationStatus: "revoked", revokedAt: new Date() })
       .where(eq(salonMembers.id, id))
       .returning();
+    
+    // If this member had a linked user account, clear their salon access
+    if (updated && member.stylistUserId) {
+      await db.update(userProfiles)
+        .set({ 
+          salonId: null, 
+          salonRole: null, 
+          subscriptionStatus: "revoked",
+          updatedAt: new Date() 
+        })
+        .where(eq(userProfiles.userId, member.stylistUserId));
+    }
+    
     return !!updated;
   }
 

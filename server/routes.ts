@@ -1346,6 +1346,38 @@ Respond in JSON format with these fields:
       const currentMonth = now.getMonth() + 1;
       const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
 
+      // Check if user was revoked from a salon - they need to upgrade or rejoin
+      if (profile.subscriptionStatus === "revoked") {
+        return res.json({ 
+          hasAccess: false, 
+          accessibleMonths: [],
+          subscriptionStatus: "revoked",
+          reason: "access_revoked" 
+        });
+      }
+
+      // Salon members get access through their salon owner's subscription
+      // Verify they are actually an accepted member of the salon
+      if (profile.subscriptionStatus === "salon_member" && profile.salonId) {
+        const members = await storage.getSalonMembers(profile.salonId);
+        const myMembership = members.find(m => m.stylistUserId === userId && m.invitationStatus === "accepted");
+        if (myMembership) {
+          return res.json({ 
+            hasAccess: true, 
+            accessibleMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+            subscriptionStatus: "salon_member" 
+          });
+        } else {
+          // Profile is stale - user was revoked but profile not updated
+          return res.json({ 
+            hasAccess: false, 
+            accessibleMonths: [],
+            subscriptionStatus: "revoked",
+            reason: "access_revoked" 
+          });
+        }
+      }
+
       if (profile.subscriptionStatus === "active" || profile.subscriptionStatus === "trialing") {
         return res.json({ 
           hasAccess: true, 

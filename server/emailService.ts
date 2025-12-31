@@ -221,7 +221,7 @@ export async function sendSalonInvitationEmail(
         ? `https://${process.env.REPLIT_DEV_DOMAIN}`
         : 'https://contentcalendarforhairpros.com');
     
-    const acceptUrl = `${baseUrl}/accept-invitation/${invitationToken}`;
+    const acceptUrl = `${baseUrl}/join-salon/${invitationToken}`;
     
     await client.emails.send({
       from: fromEmail || 'Content Calendar <hello@contentcalendarforhairpros.com>',
