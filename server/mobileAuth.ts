@@ -147,11 +147,15 @@ router.post('/request-magic-link', async (req, res) => {
       onboardingData: JSON.stringify({ verificationCode }),
     });
 
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-      : 'https://content-calendar-hair-pro.replit.app';
+    const baseUrl = process.env.REPLIT_DEPLOYMENT === '1'
+      ? 'https://contentcalendarforhairpros.com'
+      : (process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+        : 'https://contentcalendarforhairpros.com');
     
     const magicLinkUrl = `${baseUrl}/api/auth/verify-magic-link?token=${token}`;
+    
+    console.log('[Mobile Auth] Sending magic link email to:', normalizedEmail, 'with code:', verificationCode);
     
     const emailSent = await sendMagicLinkEmail(normalizedEmail, magicLinkUrl, verificationCode);
     
