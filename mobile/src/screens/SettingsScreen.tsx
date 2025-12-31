@@ -29,6 +29,7 @@ interface Profile {
   postingGoal: string;
   showStreaks: boolean;
   pushNotificationsEnabled: boolean;
+  emailReminders: boolean;
 }
 
 export default function SettingsScreen() {
@@ -37,6 +38,7 @@ export default function SettingsScreen() {
   const queryClient = useQueryClient();
   const [showStreaks, setShowStreaks] = useState(true);
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(false);
+  const [emailReminders, setEmailReminders] = useState(false);
 
   const { data: profile } = useQuery<Profile>({
     queryKey: ['profile'],
@@ -46,6 +48,7 @@ export default function SettingsScreen() {
   React.useEffect(() => {
     if (profile?.showStreaks !== undefined) setShowStreaks(profile.showStreaks);
     if (profile?.pushNotificationsEnabled !== undefined) setPushNotificationsEnabled(profile.pushNotificationsEnabled);
+    if (profile?.emailReminders !== undefined) setEmailReminders(profile.emailReminders);
   }, [profile]);
 
   const updatePreferenceMutation = useMutation({
@@ -109,8 +112,29 @@ export default function SettingsScreen() {
     updatePreferenceMutation.mutate({ pushNotificationsEnabled: value });
   };
 
+  const toggleEmailReminders = (value: boolean) => {
+    setEmailReminders(value);
+    updatePreferenceMutation.mutate({ emailReminders: value });
+  };
+
   const handleManageAccount = () => {
     navigation.navigate('Account');
+  };
+
+  const showAbout = () => {
+    Alert.alert(
+      'About Hair Calendar',
+      `Version 1.0.0\n\nHair Calendar helps hair extension professionals plan and create engaging social media content.\n\nFeatures:\n- 365 days of pre-planned content ideas\n- AI-powered caption generation\n- Posting streak tracking\n- Instagram integration`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  const showPrivacy = () => {
+    Alert.alert(
+      'Privacy Choices',
+      'Your data is secure and never shared with third parties without your consent.\n\nWe collect only the information needed to personalize your content suggestions and track your posting progress.\n\nYou can delete your account at any time by contacting support.',
+      [{ text: 'OK' }]
+    );
   };
 
 
@@ -157,7 +181,7 @@ export default function SettingsScreen() {
               thumbColor={colors.surface}
             />
           </View>
-          <View style={[styles.switchItem, styles.menuItemLast]}>
+          <View style={styles.switchItem}>
             <View style={styles.switchLeft}>
               <Ionicons name="notifications-outline" size={22} color={colors.text} />
               <View style={styles.switchTextContainer}>
@@ -172,23 +196,40 @@ export default function SettingsScreen() {
               thumbColor={colors.surface}
             />
           </View>
+          <View style={[styles.switchItem, styles.menuItemLast]}>
+            <View style={styles.switchLeft}>
+              <Ionicons name="mail-outline" size={22} color={colors.text} />
+              <View style={styles.switchTextContainer}>
+                <Text style={styles.switchTitle}>Email Reminders</Text>
+                <Text style={styles.switchDescription}>Get weekly posting summaries</Text>
+              </View>
+            </View>
+            <Switch
+              value={emailReminders}
+              onValueChange={toggleEmailReminders}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.surface}
+            />
+          </View>
         </View>
-      </View>
-
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.notificationRow} onPress={() => openLink(`${API_URL}/notifications`)}>
-          <Ionicons name="notifications" size={22} color={colors.text} />
-          <Text style={styles.menuText}>Notifications</Text>
-          <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
-        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>SUPPORT</Text>
         <View style={styles.card}>
-          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={() => navigation.navigate('Help')}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Help')}>
             <Ionicons name="help-circle-outline" size={22} color={colors.text} />
             <Text style={styles.menuText}>Help & Support</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={showAbout}>
+            <Ionicons name="information-circle-outline" size={22} color={colors.text} />
+            <Text style={styles.menuText}>About</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={showPrivacy}>
+            <Ionicons name="shield-checkmark-outline" size={22} color={colors.text} />
+            <Text style={styles.menuText}>Your Privacy Choices</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
           </TouchableOpacity>
         </View>

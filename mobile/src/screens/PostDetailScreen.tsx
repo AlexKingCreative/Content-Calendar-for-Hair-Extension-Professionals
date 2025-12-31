@@ -107,6 +107,9 @@ export default function PostDetailScreen() {
   const markCompleteMutation = useMutation({
     mutationFn: (id: number) => streakApi.logPost(id),
     onSuccess: () => {
+      const isFirstPost = !streak?.totalPosts || streak.totalPosts === 0;
+      const newStreak = (streak?.currentStreak || 0) + 1;
+      
       setMarkedPosted(true);
       queryClient.invalidateQueries({ queryKey: ['streak'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
@@ -135,6 +138,34 @@ export default function PostDetailScreen() {
         useNativeDriver: true,
         friction: 4,
       }).start();
+
+      setTimeout(() => {
+        if (isFirstPost) {
+          Alert.alert(
+            'Your First Post!',
+            'Amazing start! Keep posting daily to build your streak and unlock rewards.',
+            [{ text: 'Keep Going!' }]
+          );
+        } else if (newStreak === 7) {
+          Alert.alert(
+            '7-Day Streak!',
+            "Incredible! You've earned the One Week Wonder badge!",
+            [{ text: 'Celebrate!' }]
+          );
+        } else if (newStreak === 14) {
+          Alert.alert(
+            '14-Day Streak!',
+            "Two weeks strong! You've earned the Two Week Warrior badge!",
+            [{ text: 'Amazing!' }]
+          );
+        } else if (newStreak === 30) {
+          Alert.alert(
+            '30-Day Streak!',
+            "A whole month! You've earned the Monthly Master badge!",
+            [{ text: 'Incredible!' }]
+          );
+        }
+      }, 500);
     },
     onError: () => {
       Alert.alert('Error', 'Could not log your post. Please try again.');

@@ -74,8 +74,42 @@ export default function StreaksScreen() {
   const logPostMutation = useMutation({
     mutationFn: streakApi.logPost,
     onSuccess: () => {
+      const isFirstPost = !streak?.totalPosts || streak.totalPosts === 0;
+      const newStreak = (streak?.currentStreak || 0) + 1;
+      
       queryClient.invalidateQueries({ queryKey: ['streak'] });
-      Alert.alert('Success', 'Post logged! Keep up the great work!');
+      
+      if (isFirstPost) {
+        Alert.alert(
+          'Your First Post!',
+          'Amazing start! Keep posting daily to build your streak and unlock rewards.',
+          [{ text: 'Keep Going!' }]
+        );
+      } else if (newStreak === 7) {
+        Alert.alert(
+          '7-Day Streak!',
+          "Incredible! You've earned the One Week Wonder badge!",
+          [{ text: 'Celebrate!' }]
+        );
+      } else if (newStreak === 14) {
+        Alert.alert(
+          '14-Day Streak!',
+          "Two weeks strong! You've earned the Two Week Warrior badge!",
+          [{ text: 'Amazing!' }]
+        );
+      } else if (newStreak === 30) {
+        Alert.alert(
+          '30-Day Streak!',
+          "A whole month! You've earned the Monthly Master badge!",
+          [{ text: 'Incredible!' }]
+        );
+      } else {
+        Alert.alert(
+          'Post Logged!',
+          `You're on a ${newStreak} day streak! Keep it going!`,
+          [{ text: 'OK' }]
+        );
+      }
     },
     onError: () => {
       Alert.alert('Already Logged', "You've already logged a post for today.");
