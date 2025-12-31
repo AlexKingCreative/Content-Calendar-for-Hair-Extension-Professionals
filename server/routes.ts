@@ -1342,6 +1342,16 @@ Respond in JSON format with these fields:
         return res.json({ hasAccess: false, reason: "no_profile" });
       }
 
+      // Admins always have full access - no trial/subscription prompts
+      if (profile.isAdmin) {
+        return res.json({ 
+          hasAccess: true, 
+          accessibleMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+          subscriptionStatus: "admin",
+          isAdmin: true
+        });
+      }
+
       const now = new Date();
       const currentMonth = now.getMonth() + 1;
       const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
