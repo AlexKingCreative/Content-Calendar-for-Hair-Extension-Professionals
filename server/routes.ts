@@ -591,6 +591,34 @@ export async function registerRoutes(
     }
   });
 
+  // Debug endpoint to check admin status
+  app.get("/api/debug/admin-status", async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.json({ authenticated: false, message: "No session userId found" });
+      }
+      
+      const { users } = await import("@shared/models/auth");
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      const profile = await storage.getUserProfile(userId);
+      
+      res.json({
+        authenticated: true,
+        sessionUserId: userId,
+        sessionUserIdType: typeof userId,
+        userFound: !!user,
+        userEmail: user?.email,
+        profileFound: !!profile,
+        profileUserId: profile?.userId,
+        profileIsAdmin: profile?.isAdmin,
+        profileOnboardingComplete: profile?.onboardingComplete,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Disconnect Google account
   app.post("/api/auth/google/disconnect", async (req: any, res) => {
     try {
@@ -1695,17 +1723,20 @@ Respond in JSON format with these fields:
   app.get("/api/billing/access-status", isAuthenticated, async (req: any, res) => {
     try {
       const userId = getUserId(req);
+      console.log('[Access Status] userId from session:', userId, 'type:', typeof userId);
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
       
       const profile = await storage.getUserProfile(userId);
+      console.log('[Access Status] profile found:', !!profile, 'isAdmin:', profile?.isAdmin, 'profileUserId:', profile?.userId);
       if (!profile) {
         return res.json({ hasAccess: false, reason: "no_profile" });
       }
 
       // Admins always have full access - no trial/subscription prompts
       if (profile.isAdmin) {
+        console.log('[Access Status] User is admin, granting full access');
         return res.json({ 
           hasAccess: true, 
           accessibleMonths: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
