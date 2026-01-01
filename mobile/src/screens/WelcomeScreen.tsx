@@ -238,11 +238,6 @@ export default function WelcomeScreen({ onContinue, isAuthenticated, onSignOut }
             </TouchableOpacity>
           )}
 
-          {!isAuthenticated && (
-            <Text style={styles.trialText}>
-              7-day free trial, then $10/month
-            </Text>
-          )}
         </Animated.View>
       </View>
 
@@ -356,12 +351,6 @@ const styles = StyleSheet.create({
     color: '#8B7355',
     fontSize: 15,
     fontWeight: '500',
-  },
-  trialText: {
-    textAlign: 'center',
-    fontSize: 13,
-    color: '#A89580',
-    marginTop: 8,
   },
   footer: {
     alignItems: 'center',
