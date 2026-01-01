@@ -289,6 +289,16 @@ export async function registerRoutes(
         return res.redirect("/login?error=No+authorization+code+received");
       }
       
+      // Validate state for CSRF protection
+      const storedState = req.session.googleOAuthState;
+      if (!state || !storedState || state !== storedState) {
+        console.error("OAuth state mismatch - possible CSRF attack");
+        return res.redirect("/login?error=Invalid+state+parameter");
+      }
+      
+      // Clear used state
+      delete req.session.googleOAuthState;
+      
       const clientId = process.env.GOOGLE_CLIENT_ID;
       const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
       
@@ -421,7 +431,7 @@ export async function registerRoutes(
         return res.redirect("/login");
       }
       
-      const { code, error } = req.query;
+      const { code, state, error } = req.query;
       
       if (error) {
         return res.redirect(`/settings?error=${encodeURIComponent(error)}`);
@@ -430,6 +440,26 @@ export async function registerRoutes(
       if (!code) {
         return res.redirect("/settings?error=No+authorization+code");
       }
+      
+      // Validate state for CSRF protection
+      const storedState = req.session.googleOAuthState;
+      if (!state || !storedState || state !== storedState) {
+        console.error("OAuth connect state mismatch - possible CSRF attack");
+        return res.redirect("/settings?error=Invalid+state+parameter");
+      }
+      
+      // Verify state contains correct userId
+      try {
+        const stateData = JSON.parse(Buffer.from(storedState, 'base64').toString());
+        if (stateData.action !== 'connect' || stateData.userId !== userId) {
+          return res.redirect("/settings?error=Invalid+session+state");
+        }
+      } catch {
+        return res.redirect("/settings?error=Invalid+state+format");
+      }
+      
+      // Clear used state
+      delete req.session.googleOAuthState;
       
       const clientId = process.env.GOOGLE_CLIENT_ID;
       const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
