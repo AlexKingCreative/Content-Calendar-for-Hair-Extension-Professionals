@@ -17,16 +17,20 @@ export function registerAuthRoutes(app: Express): void {
       if (req.session?.userId) {
         const { db } = await import("../../db");
         const { users } = await import("@shared/models/auth");
+        const { userProfiles } = await import("@shared/schema");
         const { eq } = await import("drizzle-orm");
         
         const [user] = await db.select().from(users).where(eq(users.id, req.session.userId));
         if (user) {
+          // Also fetch profile to get isAdmin status
+          const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, user.id));
           return res.json({
             id: user.id,
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
             profileImageUrl: null,
+            isAdmin: profile?.isAdmin || false,
           });
         }
       }
