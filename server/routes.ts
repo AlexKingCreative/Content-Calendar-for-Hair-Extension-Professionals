@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, registerAuthRoutes } from "./replit_integrations/auth";
 import { seedPosts, seedChallenges, seedBrandsAndMethods } from "./seed";
-import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads, users, salonMembers } from "@shared/schema";
+import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads, users, salonMembers, userProfiles } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import OpenAI from "openai";
@@ -15,6 +15,58 @@ import mobileAuthRoutes from "./mobileAuth";
 import magicLinkAuthRoutes from "./magicLinkAuth";
 import { sendEmail, sendSalonInvitationEmail, sendAccessRevokedEmail } from "./emailService";
 import { instagramService } from "./instagramService";
+
+// Admin email allowlist - these emails will automatically get admin access
+const ADMIN_EMAILS = [
+  'alex@alexkingcreative.com',
+  // Add more admin emails here
+];
+
+// Reconcile admin access for users on the allowlist
+async function reconcileAdminUsers() {
+  console.log('[Admin Reconciliation] Starting admin user reconciliation...');
+  
+  for (const email of ADMIN_EMAILS) {
+    try {
+      const normalizedEmail = email.toLowerCase().trim();
+      
+      // Find user by email
+      const [user] = await db.select().from(users).where(eq(users.email, normalizedEmail));
+      
+      if (!user) {
+        console.log(`[Admin Reconciliation] User not found for email: ${normalizedEmail}`);
+        continue;
+      }
+      
+      // Check if profile exists
+      const [existingProfile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, user.id));
+      
+      if (existingProfile) {
+        if (!existingProfile.isAdmin) {
+          // Update existing profile to admin
+          await db.update(userProfiles)
+            .set({ isAdmin: true })
+            .where(eq(userProfiles.userId, user.id));
+          console.log(`[Admin Reconciliation] Granted admin to existing profile: ${normalizedEmail} (userId: ${user.id})`);
+        } else {
+          console.log(`[Admin Reconciliation] User already admin: ${normalizedEmail}`);
+        }
+      } else {
+        // Create new profile with admin access
+        await db.insert(userProfiles).values({
+          userId: user.id,
+          isAdmin: true,
+          onboardingComplete: true,
+        });
+        console.log(`[Admin Reconciliation] Created admin profile: ${normalizedEmail} (userId: ${user.id})`);
+      }
+    } catch (error) {
+      console.error(`[Admin Reconciliation] Error processing ${email}:`, error);
+    }
+  }
+  
+  console.log('[Admin Reconciliation] Completed');
+}
 
 async function getUserEmail(userId: string): Promise<string | null> {
   const [user] = await db.select().from(users).where(eq(users.id, userId));
@@ -687,6 +739,9 @@ export async function registerRoutes(
   await seedPosts();
   await seedChallenges();
   await seedBrandsAndMethods();
+  
+  // Auto-reconcile admin users on startup
+  await reconcileAdminUsers();
 
   app.get("/api/posts", async (req, res) => {
     try {
