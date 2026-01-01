@@ -9,6 +9,15 @@ import { sendMagicLinkEmail } from './emailService';
 
 const router = Router();
 
+// Admin email allowlist - must match the list in routes.ts
+const ADMIN_EMAILS = [
+  'alex@alexkingcreative.com',
+];
+
+function isAdminEmail(email: string): boolean {
+  return ADMIN_EMAILS.includes(email.toLowerCase().trim());
+}
+
 function generateMagicToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
@@ -97,6 +106,7 @@ router.get('/verify-magic-link', async (req, res) => {
         ? JSON.parse(magicLink.onboardingData) 
         : {};
 
+      const shouldBeAdmin = isAdminEmail(magicLink.email);
       await db.insert(userProfiles).values({
         userId: existingUser.id,
         city: onboardingData.city || null,
@@ -104,21 +114,37 @@ router.get('/verify-magic-link', async (req, res) => {
         postingServices: onboardingData.postingServices || [],
         certifiedBrands: onboardingData.certifiedBrands || [],
         extensionMethods: onboardingData.extensionMethods || [],
-        onboardingComplete: !!onboardingData.city,
+        onboardingComplete: shouldBeAdmin || !!onboardingData.city,
+        isAdmin: shouldBeAdmin,
       });
+      if (shouldBeAdmin) {
+        console.log(`[Magic Link Auth] Granted admin access to new user: ${magicLink.email}`);
+      }
     } else {
+      // Check if existing user should be admin and update accordingly
+      const shouldBeAdmin = isAdminEmail(magicLink.email);
+      const updateData: any = {};
+      
       if (magicLink.onboardingData) {
         const onboardingData = JSON.parse(magicLink.onboardingData);
-        
+        if (onboardingData.city) updateData.city = onboardingData.city;
+        if (onboardingData.offeredServices) updateData.offeredServices = onboardingData.offeredServices;
+        if (onboardingData.postingServices) updateData.postingServices = onboardingData.postingServices;
+        if (onboardingData.certifiedBrands) updateData.certifiedBrands = onboardingData.certifiedBrands;
+        if (onboardingData.extensionMethods) updateData.extensionMethods = onboardingData.extensionMethods;
+        if (onboardingData.city) updateData.onboardingComplete = true;
+      }
+      
+      // Always ensure admin status is correct for admin emails
+      if (shouldBeAdmin) {
+        updateData.isAdmin = true;
+        updateData.onboardingComplete = true;
+        console.log(`[Magic Link Auth] Ensuring admin access for existing user: ${magicLink.email}`);
+      }
+      
+      if (Object.keys(updateData).length > 0) {
         await db.update(userProfiles)
-          .set({
-            city: onboardingData.city || undefined,
-            offeredServices: onboardingData.offeredServices || undefined,
-            postingServices: onboardingData.postingServices || undefined,
-            certifiedBrands: onboardingData.certifiedBrands || undefined,
-            extensionMethods: onboardingData.extensionMethods || undefined,
-            onboardingComplete: !!onboardingData.city,
-          })
+          .set(updateData)
           .where(eq(userProfiles.userId, existingUser.id));
       }
     }
