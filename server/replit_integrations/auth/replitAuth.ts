@@ -131,13 +131,31 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req: any, res, next) => {
-  // Check for session-based auth first (email/password login)
+  // Check for session-based auth first (email/password login or magic link)
   if (req.session?.userId) {
     return next();
   }
   
   const user = req.user as any;
 
+  // For magic link auth: user.claims.sub exists but no expires_at
+  // For Replit OAuth: user.claims.sub AND expires_at both exist
+  if (user?.claims?.sub) {
+    // Magic link or Replit OAuth - allow if claims exist
+    if (!user.expires_at) {
+      // Magic link auth - no token refresh needed
+      return next();
+    }
+    // Replit OAuth - check expiration
+    if (req.isAuthenticated()) {
+      const now = Math.floor(Date.now() / 1000);
+      if (now <= user.expires_at) {
+        return next();
+      }
+    }
+  }
+
+  // Legacy check for Replit OAuth without the above handling
   if (!req.isAuthenticated() || !user?.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
