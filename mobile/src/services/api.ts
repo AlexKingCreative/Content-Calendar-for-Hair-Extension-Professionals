@@ -53,6 +53,10 @@ export const authApi = {
   logout: async () => {
     await SecureStore.deleteItemAsync('authToken');
   },
+  googleAuth: async (idToken?: string, accessToken?: string) => {
+    const response = await api.post('/api/mobile/google-auth', { idToken, accessToken });
+    return response.data;
+  },
 };
 
 export const postsApi = {

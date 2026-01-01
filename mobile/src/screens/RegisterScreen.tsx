@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,17 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
 import { useAuth } from '../hooks/useAuth';
+import { authApi } from '../services/api';
 import { AuthStackParamList } from '../navigation';
+
+WebBrowser.maybeCompleteAuthSession();
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Register'>;
@@ -24,7 +31,45 @@ export default function RegisterScreen({ navigation }: Props) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const { register, loginWithToken } = useAuth();
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  });
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      handleGoogleResponse(response.authentication?.accessToken);
+    }
+  }, [response]);
+
+  const handleGoogleResponse = async (accessToken?: string) => {
+    if (!accessToken) {
+      Alert.alert('Error', 'Failed to get Google authentication token');
+      return;
+    }
+
+    setIsGoogleLoading(true);
+    try {
+      const result = await authApi.googleAuth(undefined, accessToken);
+      await loginWithToken(result.token, result.user);
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.message || 'Google sign-up failed. Please try again.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await promptAsync();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to start Google sign-in');
+    }
+  };
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -120,6 +165,27 @@ export default function RegisterScreen({ navigation }: Props) {
               Already have an account? <Text style={styles.linkTextBold}>Sign In</Text>
             </Text>
           </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.googleButton, (isGoogleLoading || !request) && styles.buttonDisabled]}
+            onPress={handleGoogleSignIn}
+            disabled={isGoogleLoading || !request}
+          >
+            {isGoogleLoading ? (
+              <ActivityIndicator color="#5D4E3C" />
+            ) : (
+              <>
+                <Ionicons name="logo-google" size={20} color="#5D4E3C" />
+                <Text style={styles.googleButtonText}>Continue with Google</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -194,5 +260,36 @@ const styles = StyleSheet.create({
   linkTextBold: {
     fontWeight: '600',
     color: '#D4A574',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5D5C5',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    color: '#8B7355',
+    fontSize: 14,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#E5D5C5',
+    borderRadius: 12,
+    paddingVertical: 16,
+  },
+  googleButtonText: {
+    color: '#5D4E3C',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

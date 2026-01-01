@@ -12,7 +12,7 @@ import { sendMagicLinkEmail } from './emailService';
 
 const router = Router();
 
-const JWT_SECRET = process.env.SESSION_SECRET || 'hairpro-mobile-secret-key';
+const JWT_SECRET = process.env.SESSION_SECRET!;
 
 function generateToken(userId: string): string {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '30d' });
@@ -123,6 +123,85 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Login failed' });
+  }
+});
+
+router.post('/google-auth', async (req, res) => {
+  try {
+    const { idToken, accessToken } = req.body;
+
+    if (!idToken && !accessToken) {
+      return res.status(400).json({ message: 'Google token is required' });
+    }
+
+    let googleUserInfo;
+    
+    if (accessToken) {
+      const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      
+      if (!response.ok) {
+        return res.status(401).json({ message: 'Invalid Google token' });
+      }
+      
+      googleUserInfo = await response.json();
+    } else {
+      const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+      
+      if (!response.ok) {
+        return res.status(401).json({ message: 'Invalid Google token' });
+      }
+      
+      googleUserInfo = await response.json();
+    }
+
+    const email = googleUserInfo.email;
+    const firstName = googleUserInfo.given_name || googleUserInfo.name?.split(' ')[0] || null;
+    const lastName = googleUserInfo.family_name || googleUserInfo.name?.split(' ').slice(1).join(' ') || null;
+    const profileImageUrl = googleUserInfo.picture || null;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email not provided by Google' });
+    }
+
+    let [existingUser] = await db.select().from(users).where(eq(users.email, email));
+
+    if (!existingUser) {
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+      const passwordHash = await bcrypt.hash(randomPassword, 10);
+      
+      [existingUser] = await db.insert(users).values({
+        email,
+        passwordHash,
+        firstName,
+        lastName,
+        profileImageUrl,
+      }).returning();
+
+      await db.insert(userProfiles).values({
+        userId: existingUser.id,
+        onboardingComplete: false,
+      });
+    } else if (profileImageUrl && !existingUser.profileImageUrl) {
+      await db.update(users)
+        .set({ profileImageUrl })
+        .where(eq(users.id, existingUser.id));
+    }
+
+    const token = generateToken(existingUser.id);
+
+    res.json({
+      token,
+      user: {
+        id: existingUser.id,
+        email: existingUser.email,
+        name: `${existingUser.firstName || ''}${existingUser.lastName ? ' ' + existingUser.lastName : ''}`.trim() || email.split('@')[0],
+      },
+    });
+  } catch (error) {
+    console.error('Google auth error:', error);
+    res.status(500).json({ message: 'Google authentication failed' });
   }
 });
 
