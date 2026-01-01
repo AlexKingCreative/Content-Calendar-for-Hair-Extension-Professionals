@@ -252,6 +252,283 @@ export async function registerRoutes(
     });
   });
 
+  // Google OAuth for web - initiate flow
+  app.get("/api/auth/google", (req: any, res) => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      return res.redirect("/login?error=Google+sign-in+not+configured");
+    }
+    
+    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+    const state = Buffer.from(JSON.stringify({ action: 'login', timestamp: Date.now() })).toString('base64');
+    
+    req.session.googleOAuthState = state;
+    
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    authUrl.searchParams.set('client_id', clientId);
+    authUrl.searchParams.set('redirect_uri', redirectUri);
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set('scope', 'openid email profile');
+    authUrl.searchParams.set('state', state);
+    authUrl.searchParams.set('access_type', 'offline');
+    authUrl.searchParams.set('prompt', 'select_account');
+    
+    res.redirect(authUrl.toString());
+  });
+
+  // Google OAuth callback
+  app.get("/api/auth/google/callback", async (req: any, res) => {
+    try {
+      const { code, state, error } = req.query;
+      
+      if (error) {
+        return res.redirect(`/login?error=${encodeURIComponent(error)}`);
+      }
+      
+      if (!code) {
+        return res.redirect("/login?error=No+authorization+code+received");
+      }
+      
+      const clientId = process.env.GOOGLE_CLIENT_ID;
+      const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+      
+      if (!clientId || !clientSecret) {
+        return res.redirect("/login?error=Google+OAuth+not+configured");
+      }
+      
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+      
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code: code as string,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+          grant_type: 'authorization_code',
+        }),
+      });
+      
+      if (!tokenResponse.ok) {
+        const errorData = await tokenResponse.json();
+        console.error('Google token error:', errorData);
+        return res.redirect("/login?error=Failed+to+authenticate+with+Google");
+      }
+      
+      const tokens = await tokenResponse.json();
+      
+      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+      
+      if (!userInfoResponse.ok) {
+        return res.redirect("/login?error=Failed+to+get+user+info+from+Google");
+      }
+      
+      const googleUser = await userInfoResponse.json();
+      const email = googleUser.email;
+      const firstName = googleUser.given_name || null;
+      const lastName = googleUser.family_name || null;
+      const profileImageUrl = googleUser.picture || null;
+      
+      if (!email) {
+        return res.redirect("/login?error=No+email+provided+by+Google");
+      }
+      
+      const bcrypt = await import("bcryptjs");
+      const crypto = await import("crypto");
+      const { users } = await import("@shared/models/auth");
+      const { userProfiles } = await import("@shared/schema");
+      
+      let [existingUser] = await db.select().from(users).where(eq(users.email, email));
+      
+      if (!existingUser) {
+        const randomPassword = crypto.randomBytes(16).toString('hex');
+        const passwordHash = await bcrypt.default.hash(randomPassword, 10);
+        
+        [existingUser] = await db.insert(users).values({
+          email,
+          passwordHash,
+          firstName,
+          lastName,
+          profileImageUrl,
+          googleId: googleUser.sub,
+        }).returning();
+        
+        await db.insert(userProfiles).values({
+          userId: existingUser.id,
+          onboardingComplete: false,
+        });
+      } else {
+        await db.update(users)
+          .set({
+            googleId: googleUser.sub,
+            ...(profileImageUrl && !existingUser.profileImageUrl ? { profileImageUrl } : {}),
+            ...(firstName && !existingUser.firstName ? { firstName } : {}),
+            ...(lastName && !existingUser.lastName ? { lastName } : {}),
+          })
+          .where(eq(users.id, existingUser.id));
+      }
+      
+      const userName = `${existingUser.firstName || firstName || ''}${existingUser.lastName || lastName ? ' ' + (existingUser.lastName || lastName) : ''}`.trim();
+      
+      req.session.userId = existingUser.id;
+      req.session.userEmail = existingUser.email;
+      req.session.userName = userName || existingUser.email;
+      
+      res.redirect("/calendar");
+    } catch (error) {
+      console.error("Google OAuth callback error:", error);
+      res.redirect("/login?error=Authentication+failed");
+    }
+  });
+
+  // Google OAuth connect - for linking Google to existing account
+  app.get("/api/auth/google/connect", (req: any, res) => {
+    const userId = getUserId(req);
+    if (!userId) {
+      return res.redirect("/login");
+    }
+    
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      return res.redirect("/settings?error=Google+not+configured");
+    }
+    
+    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google/connect/callback`;
+    const state = Buffer.from(JSON.stringify({ action: 'connect', userId, timestamp: Date.now() })).toString('base64');
+    
+    req.session.googleOAuthState = state;
+    
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    authUrl.searchParams.set('client_id', clientId);
+    authUrl.searchParams.set('redirect_uri', redirectUri);
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set('scope', 'openid email profile');
+    authUrl.searchParams.set('state', state);
+    authUrl.searchParams.set('access_type', 'offline');
+    authUrl.searchParams.set('prompt', 'select_account');
+    
+    res.redirect(authUrl.toString());
+  });
+
+  // Google OAuth connect callback
+  app.get("/api/auth/google/connect/callback", async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.redirect("/login");
+      }
+      
+      const { code, error } = req.query;
+      
+      if (error) {
+        return res.redirect(`/settings?error=${encodeURIComponent(error)}`);
+      }
+      
+      if (!code) {
+        return res.redirect("/settings?error=No+authorization+code");
+      }
+      
+      const clientId = process.env.GOOGLE_CLIENT_ID;
+      const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+      
+      if (!clientId || !clientSecret) {
+        return res.redirect("/settings?error=Google+not+configured");
+      }
+      
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google/connect/callback`;
+      
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code: code as string,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+          grant_type: 'authorization_code',
+        }),
+      });
+      
+      if (!tokenResponse.ok) {
+        return res.redirect("/settings?error=Failed+to+connect+Google");
+      }
+      
+      const tokens = await tokenResponse.json();
+      
+      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+      
+      if (!userInfoResponse.ok) {
+        return res.redirect("/settings?error=Failed+to+get+Google+info");
+      }
+      
+      const googleUser = await userInfoResponse.json();
+      
+      const { users } = await import("@shared/models/auth");
+      
+      const [otherUser] = await db.select().from(users).where(eq(users.googleId, googleUser.sub));
+      if (otherUser && otherUser.id !== userId) {
+        return res.redirect("/settings?error=Google+account+already+linked+to+another+user");
+      }
+      
+      await db.update(users)
+        .set({
+          googleId: googleUser.sub,
+          ...(googleUser.picture ? { profileImageUrl: googleUser.picture } : {}),
+        })
+        .where(eq(users.id, userId));
+      
+      res.redirect("/settings?success=Google+account+connected");
+    } catch (error) {
+      console.error("Google connect callback error:", error);
+      res.redirect("/settings?error=Connection+failed");
+    }
+  });
+
+  // Get Google connection status
+  app.get("/api/auth/google/status", async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const { users } = await import("@shared/models/auth");
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      
+      res.json({
+        connected: !!user?.googleId,
+        googleConfigured: !!process.env.GOOGLE_CLIENT_ID,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check status" });
+    }
+  });
+
+  // Disconnect Google account
+  app.post("/api/auth/google/disconnect", async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const { users } = await import("@shared/models/auth");
+      
+      await db.update(users)
+        .set({ googleId: null })
+        .where(eq(users.id, userId));
+      
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to disconnect Google" });
+    }
+  });
+
   // Onboarding endpoint - creates account with auto-generated password and logs in
   app.post("/api/auth/onboard", async (req: any, res) => {
     try {
@@ -1920,7 +2197,7 @@ Respond in JSON format with these fields:
       
       // Get owner's name for the email
       const owner = await db.select().from(users).where(eq(users.id, String(userId))).then(rows => rows[0]);
-      const ownerName = owner?.name || owner?.email || 'The salon owner';
+      const ownerName = owner?.firstName ? `${owner.firstName}${owner.lastName ? ' ' + owner.lastName : ''}` : (owner?.email || 'The salon owner');
       
       // Send invitation email (don't block response on email)
       sendSalonInvitationEmail(

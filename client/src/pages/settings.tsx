@@ -3,8 +3,9 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   ArrowLeft, User, ChevronRight, 
-  Bell, HelpCircle, Info, Shield, LogOut, Flame, Check, Instagram, Crown
+  Bell, HelpCircle, Info, Shield, LogOut, Flame, Check, Instagram, Crown, Link2, Unlink
 } from "lucide-react";
+import { SiGoogle } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -127,6 +128,32 @@ export default function SettingsPage() {
     enabled: !!user,
   });
 
+  const { data: googleStatus } = useQuery<{ connected: boolean; googleConfigured: boolean }>({
+    queryKey: ["/api/auth/google/status"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !!user,
+  });
+
+  const disconnectGoogleMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/auth/google/disconnect");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/google/status"] });
+      toast({
+        title: "Google account disconnected",
+        description: "You can reconnect at any time.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error disconnecting Google",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   useEffect(() => {
     if (profile) {
       setShowStreaks(profile.showStreaks ?? true);
@@ -211,6 +238,44 @@ export default function SettingsPage() {
             onClick={() => setLocation("/instagram")}
           />
         </SettingsSection>
+
+        {googleStatus?.googleConfigured && (
+          <SettingsSection title="Connected Accounts">
+            <div className="flex items-center justify-between gap-3 py-3 px-1">
+              <div className="flex items-center gap-3">
+                <SiGoogle className="w-5 h-5 text-muted-foreground" />
+                <div>
+                  <div className="text-sm font-medium text-foreground">Google</div>
+                  <div className="text-xs text-muted-foreground">
+                    {googleStatus?.connected ? "Connected" : "Not connected"}
+                  </div>
+                </div>
+              </div>
+              {googleStatus?.connected ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => disconnectGoogleMutation.mutate()}
+                  disabled={disconnectGoogleMutation.isPending}
+                  data-testid="button-disconnect-google"
+                >
+                  <Unlink className="w-4 h-4 mr-2" />
+                  Disconnect
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.location.href = '/api/auth/google/connect'}
+                  data-testid="button-connect-google"
+                >
+                  <Link2 className="w-4 h-4 mr-2" />
+                  Connect
+                </Button>
+              )}
+            </div>
+          </SettingsSection>
+        )}
 
         <SettingsSection title="Preferences">
           <SettingsToggle

@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, LogIn, ArrowLeft, Loader2, Mail, Lock, Sparkles } from "lucide-react";
+import { Calendar, LogIn, ArrowLeft, Loader2, Mail, Lock, Sparkles, Chrome } from "lucide-react";
+import { SiGoogle } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 
@@ -298,6 +299,28 @@ export default function LoginPage() {
                 )}
               </TabsContent>
             </Tabs>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              className="w-full"
+              size="lg"
+              onClick={() => window.location.href = '/api/auth/google'}
+              data-testid="button-google-signin"
+            >
+              <SiGoogle className="w-4 h-4 mr-2" />
+              Continue with Google
+            </Button>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
