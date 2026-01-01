@@ -591,15 +591,25 @@ export async function registerRoutes(
     }
   });
 
-  // Debug endpoint to check admin status
+  // Debug endpoint to check admin status - also shows raw session state
   app.get("/api/debug/admin-status", async (req: any, res) => {
     try {
       const userId = getUserId(req);
+      const { users } = await import("@shared/models/auth");
+      
+      // Debug info about session
+      const sessionInfo = {
+        hasSession: !!req.session,
+        sessionUserId: req.session?.userId,
+        hasReqUser: !!req.user,
+        reqUserClaims: req.user?.claims?.sub,
+        isAuthenticatedFn: typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : 'no function',
+      };
+      
       if (!userId) {
-        return res.json({ authenticated: false, message: "No session userId found" });
+        return res.json({ authenticated: false, message: "No userId found", sessionInfo });
       }
       
-      const { users } = await import("@shared/models/auth");
       const [user] = await db.select().from(users).where(eq(users.id, userId));
       const profile = await storage.getUserProfile(userId);
       
@@ -613,6 +623,7 @@ export async function registerRoutes(
         profileUserId: profile?.userId,
         profileIsAdmin: profile?.isAdmin,
         profileOnboardingComplete: profile?.onboardingComplete,
+        sessionInfo,
       });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
