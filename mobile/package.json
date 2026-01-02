@@ -10,7 +10,8 @@
     "eas-build": "eas build",
     "eas-build:ios": "eas build --platform ios",
     "eas-build:android": "eas build --platform android",
-    "eas-submit:ios": "eas submit --platform ios"
+    "eas-submit:ios": "eas submit --platform ios",
+    "eas-submit:android": "eas submit --platform android"
   },
   "dependencies": {
     "expo": "~52.0.27",

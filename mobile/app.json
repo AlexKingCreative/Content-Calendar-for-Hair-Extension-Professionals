@@ -25,7 +25,30 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#D4A574"
       },
-      "package": "com.hairpro360.contentcalendar"
+      "package": "com.hairpro360.contentcalendar",
+      "versionCode": 34,
+      "permissions": [
+        "INTERNET",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "hairpro"
+            },
+            {
+              "scheme": "https",
+              "host": "contentcalendarforhairpros.com",
+              "pathPrefix": "/mobile"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "scheme": "hairpro",
     "owner": "alexkingcreative",

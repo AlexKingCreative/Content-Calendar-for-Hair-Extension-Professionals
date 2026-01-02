@@ -1,11 +1,41 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, LinkingOptions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
 import { ActivityIndicator, View, Platform, StyleSheet } from 'react-native';
 import { colors, borderRadius, shadows, spacing } from '../theme';
+import * as Linking from 'expo-linking';
+
+const prefix = Linking.createURL('/');
+
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: [prefix, 'hairpro://', 'https://contentcalendarforhairpros.com/mobile'],
+  config: {
+    screens: {
+      Auth: {
+        screens: {
+          Login: 'login',
+          Welcome: 'welcome',
+        },
+      },
+      Main: {
+        screens: {
+          Today: 'today',
+          Calendar: 'calendar',
+          Trends: 'trends',
+          Streaks: 'streaks',
+          Settings: 'settings',
+        },
+      },
+      PostDetail: 'post/:postId',
+      Challenges: 'challenges',
+      Instagram: 'instagram',
+      SalonDashboard: 'salon',
+    },
+  },
+};
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -190,7 +220,7 @@ export default function Navigation() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
           hasActiveSubscription ? (
