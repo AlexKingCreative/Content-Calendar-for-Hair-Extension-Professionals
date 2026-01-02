@@ -168,6 +168,158 @@ const whatYouGet = [
   },
 ];
 
+type PricingTier = 'free' | 'monthly' | 'yearly';
+
+function PricingSection() {
+  const [selectedTier, setSelectedTier] = useState<PricingTier>('monthly');
+  
+  const features = [
+    "Fresh post ideas every month",
+    "Personalized hashtags for your city",
+    "Trend alerts for viral opportunities",
+    "AI caption generation",
+    "Daily reminders to keep you consistent",
+    "Streak milestones and rewards",
+  ];
+  
+  const getButtonText = () => {
+    switch (selectedTier) {
+      case 'free':
+        return 'Try Free Preview';
+      case 'monthly':
+        return 'Start Free Trial';
+      case 'yearly':
+        return 'Start Free Trial';
+    }
+  };
+  
+  const getButtonLink = () => {
+    return selectedTier === 'free' ? '/calendar' : '/onboarding';
+  };
+  
+  const getPriceText = () => {
+    switch (selectedTier) {
+      case 'free':
+        return '$0';
+      case 'monthly':
+        return '$10/month. Cancel anytime.';
+      case 'yearly':
+        return '$60/year. Save 50%.';
+    }
+  };
+
+  return (
+    <section className="py-20 sm:py-28 bg-gradient-to-b from-muted/50 via-muted/30 to-background relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(212,165,116,0.1),transparent_50%)]" />
+      <div className="max-w-xl mx-auto px-4 relative">
+        <motion.div 
+          className="text-center mb-10"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-3xl sm:text-4xl font-bold mb-3">
+            Choose Your Plan
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Start free, upgrade when you're ready
+          </p>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="flex justify-center items-end gap-3 mb-10">
+            <button
+              onClick={() => setSelectedTier('free')}
+              className={`flex flex-col items-center px-6 py-4 rounded-xl transition-all ${
+                selectedTier === 'free'
+                  ? 'bg-card border-2 border-foreground shadow-lg'
+                  : 'bg-muted/50 border border-border hover-elevate'
+              }`}
+              data-testid="button-tier-free"
+            >
+              <span className="text-sm text-muted-foreground mb-1">Free</span>
+              <span className="text-2xl font-bold">$0</span>
+            </button>
+            
+            <button
+              onClick={() => setSelectedTier('monthly')}
+              className={`flex flex-col items-center px-6 py-4 rounded-xl transition-all ${
+                selectedTier === 'monthly'
+                  ? 'bg-card border-2 border-foreground shadow-lg'
+                  : 'bg-muted/50 border border-border hover-elevate'
+              }`}
+              data-testid="button-tier-monthly"
+            >
+              <span className="text-sm text-muted-foreground mb-1">Monthly</span>
+              <span className="text-2xl font-bold">$10<span className="text-sm font-normal text-muted-foreground">/mo</span></span>
+            </button>
+            
+            <div className="flex flex-col items-center">
+              <Badge className="mb-2 bg-primary text-primary-foreground text-xs px-2 py-0.5">
+                Best Value
+              </Badge>
+              <button
+                onClick={() => setSelectedTier('yearly')}
+                className={`flex flex-col items-center px-6 py-4 rounded-xl transition-all ${
+                  selectedTier === 'yearly'
+                    ? 'bg-card border-2 border-foreground shadow-lg'
+                    : 'bg-muted/50 border border-border hover-elevate'
+                }`}
+                data-testid="button-tier-yearly"
+              >
+                <span className="text-sm text-muted-foreground mb-1">Yearly</span>
+                <span className="text-2xl font-bold">$60<span className="text-sm font-normal text-muted-foreground">/yr</span></span>
+                <span className="text-xs text-primary font-medium mt-1">Save 50%</span>
+              </button>
+            </div>
+          </div>
+          
+          <ul className="space-y-3 mb-8">
+            {features.map((feature, i) => (
+              <li key={i} className="flex items-center gap-3 justify-center">
+                <Check className="w-5 h-5 text-primary flex-shrink-0" />
+                <span className="text-foreground">{feature}</span>
+              </li>
+            ))}
+          </ul>
+          
+          <Link href={getButtonLink()}>
+            <Button size="lg" className="w-full text-lg py-6 rounded-full shadow-lg shadow-primary/25" data-testid="button-pricing-subscribe">
+              {getButtonText()}
+            </Button>
+          </Link>
+          
+          <p className="text-center text-sm text-muted-foreground mt-4">
+            {getPriceText()}
+          </p>
+        </motion.div>
+        
+        <motion.div 
+          className="text-center mt-10"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <Link href="/salon-pricing">
+            <Button variant="ghost" size="lg" className="gap-2">
+              <Users className="w-4 h-4" />
+              Salon owner? Get team pricing
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
 export default function LandingPage() {
   const [showIOSModal, setShowIOSModal] = useState(false);
   const { isInstallable, isInstalled, isIOS, isAndroid, promptInstall, platform } = useInstallPrompt();
@@ -839,112 +991,8 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing - Simple and Clear */}
-      <section className="py-20 sm:py-28 bg-gradient-to-b from-muted/50 via-muted/30 to-background relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(212,165,116,0.1),transparent_50%)]" />
-        <div className="max-w-4xl mx-auto px-4 relative">
-          <motion.div 
-            className="text-center mb-14"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <Badge variant="secondary" className="mb-4 px-4 py-1.5">
-              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-              Pricing
-            </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Less Than a Coffee a Week
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Try free for 7 days. Then just $10/month for unlimited access.
-            </p>
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <Card className="p-10 max-w-xl mx-auto border-primary/50 relative bg-gradient-to-br from-card via-card to-primary/5 shadow-xl shadow-primary/10">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <Badge className="px-4 py-1.5 shadow-lg">
-                  <Flame className="w-3.5 h-3.5 mr-1.5" />
-                  7-Day Free Trial
-                </Badge>
-              </div>
-              <div className="text-center mb-8 pt-4">
-                <div className="text-6xl font-bold mb-2 bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent">
-                  $10<span className="text-2xl font-normal text-muted-foreground">/mo</span>
-                </div>
-                <p className="text-muted-foreground">After your free trial</p>
-              </div>
-              <ul className="space-y-4 mb-10">
-                <li className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                    <Check className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  Fresh post ideas every month
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                    <Check className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  Personalized hashtags for your city
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                    <Check className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  Trend alerts for viral opportunities
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                    <Check className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  AI caption generation
-                </li>
-                <li className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                    <Check className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  Daily reminders to keep you consistent
-                </li>
-                <li className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
-                  <Gift className="w-5 h-5 text-primary flex-shrink-0" />
-                  <span className="text-primary font-medium">Streak milestones unlock special rewards!</span>
-                </li>
-              </ul>
-              <Link href="/onboarding">
-                <Button size="lg" className="w-full text-lg py-6 shadow-lg shadow-primary/25" data-testid="button-pricing-start">
-                  Start Your Free 7-Day Trial
-                  <ChevronRight className="w-5 h-5 ml-1" />
-                </Button>
-              </Link>
-              <p className="text-center text-sm text-muted-foreground mt-4">
-                Cancel anytime. 7-day free trial.
-              </p>
-            </Card>
-          </motion.div>
-          
-          <motion.div 
-            className="text-center mt-10"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <Link href="/salon-pricing">
-              <Button variant="ghost" size="lg" className="gap-2">
-                <Users className="w-4 h-4" />
-                Salon owner? Get team pricing
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+      <PricingSection />
+      
 
       {/* FAQ Section */}
       <section className="py-20 sm:py-28 relative overflow-hidden">
