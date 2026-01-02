@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, registerAuthRoutes } from "./replit_integrations/auth";
 import { seedPosts, seedChallenges, seedBrandsAndMethods } from "./seed";
-import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads, users, salonMembers, userProfiles } from "@shared/schema";
+import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads, users, salonMembers, userProfiles, postingLogs as postingLogsTable, userChallenges as userChallengesTable, instagramAccounts as instagramAccountsTable, instagramMedia as instagramMediaTable, salons as salonsTable, salonMembers as salonMembersTable } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import OpenAI from "openai";
@@ -1391,8 +1391,27 @@ Return only the caption text, nothing else.`;
       const activeSubscribers = allProfiles.filter(p => p.subscriptionStatus === "active").length;
       const trialingUsers = allProfiles.filter(p => p.subscriptionStatus === "trialing").length;
       const freeUsers = allProfiles.filter(p => !p.subscriptionStatus || p.subscriptionStatus === "free").length;
+      const cancelledUsers = allProfiles.filter(p => p.subscriptionStatus === "canceled" || p.subscriptionStatus === "cancelled").length;
       
-      const mrr = activeSubscribers * 1000;
+      // Calculate MRR based on subscription tiers (estimates based on $10/month average)
+      const mrr = activeSubscribers * 1000; // $10.00 in cents
+      
+      // Subscription analytics - conversion rate = paid / (paid + cancelled)
+      // This measures how many users who finished trial became paying vs cancelled
+      const usersWhoFinishedTrial = activeSubscribers + cancelledUsers;
+      const conversionRate = usersWhoFinishedTrial > 0 
+        ? Math.round((activeSubscribers / usersWhoFinishedTrial) * 100) 
+        : 0;
+      
+      // Calculate signups by time period
+      const now = new Date();
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      
+      const signupsToday = allProfiles.filter(p => new Date(p.createdAt) > oneDayAgo).length;
+      const signupsThisWeek = allProfiles.filter(p => new Date(p.createdAt) > oneWeekAgo).length;
+      const signupsThisMonth = allProfiles.filter(p => new Date(p.createdAt) > oneMonthAgo).length;
       
       const recentSignups = allProfiles
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -1427,13 +1446,136 @@ Return only the caption text, nothing else.`;
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
       
+      // Engagement stats - streaks (with safe empty array handling)
+      const usersWithStreaks = allProfiles.filter(p => (p.currentStreak || 0) > 0).length;
+      const totalStreakDays = allProfiles.reduce((sum, p) => sum + (p.currentStreak || 0), 0);
+      const averageStreak = usersWithStreaks > 0 ? Math.round(totalStreakDays / usersWithStreaks * 10) / 10 : 0;
+      const streakValues = allProfiles.map(p => p.currentStreak || 0);
+      const longestActiveStreak = streakValues.length > 0 ? Math.max(...streakValues) : 0;
+      const totalPostsLogged = allProfiles.reduce((sum, p) => sum + (p.totalPosts || 0), 0);
+      
+      // Top streakers
+      const topStreakers = allProfiles
+        .filter(p => (p.currentStreak || 0) > 0)
+        .sort((a, b) => (b.currentStreak || 0) - (a.currentStreak || 0))
+        .slice(0, 5)
+        .map(p => ({
+          userId: p.userId,
+          currentStreak: p.currentStreak || 0,
+          totalPosts: p.totalPosts || 0,
+        }));
+      
+      // Posting logs for activity metrics
+      const postingLogs = await db.select().from(postingLogsTable);
+      const logsToday = postingLogs.filter(l => new Date(l.createdAt) > oneDayAgo).length;
+      const logsThisWeek = postingLogs.filter(l => new Date(l.createdAt) > oneWeekAgo).length;
+      const logsThisMonth = postingLogs.filter(l => new Date(l.createdAt) > oneMonthAgo).length;
+      
+      // Challenge participation
+      const userChallengesData = await db.select().from(userChallengesTable);
+      const activeChallenges = userChallengesData.filter(c => c.status === "active").length;
+      const completedChallenges = userChallengesData.filter(c => c.status === "completed").length;
+      const abandonedChallenges = userChallengesData.filter(c => c.status === "abandoned").length;
+      // Completion rate = completed / (completed + abandoned) - only counts finished challenges
+      const finishedChallenges = completedChallenges + abandonedChallenges;
+      const challengeCompletionRate = finishedChallenges > 0
+        ? Math.round((completedChallenges / finishedChallenges) * 100)
+        : 0;
+      
+      // Instagram integration stats
+      const instagramAccountsData = await db.select().from(instagramAccountsTable);
+      const connectedInstagramUsers = instagramAccountsData.filter(a => a.isActive).length;
+      const totalInstagramSyncs = instagramAccountsData.filter(a => a.lastSyncAt).length;
+      
+      // Instagram media stats
+      const instagramMediaData = await db.select().from(instagramMediaTable);
+      const totalSyncedPosts = instagramMediaData.length;
+      const recentlySyncedPosts = instagramMediaData.filter(m => {
+        const syncDate = new Date(m.syncedAt);
+        return syncDate > oneWeekAgo;
+      }).length;
+      
+      // Content popularity - count posts by category
+      const allPosts = await storage.getAllPosts();
+      const categoryPopularity: Record<string, number> = {};
+      allPosts.forEach(p => {
+        categoryPopularity[p.category] = (categoryPopularity[p.category] || 0) + 1;
+      });
+      const popularCategories = Object.entries(categoryPopularity)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+      
+      // Content type popularity
+      const contentTypePopularity: Record<string, number> = {};
+      allPosts.forEach(p => {
+        contentTypePopularity[p.contentType] = (contentTypePopularity[p.contentType] || 0) + 1;
+      });
+      const popularContentTypes = Object.entries(contentTypePopularity)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+      
+      // Salon stats
+      const salonsData = await db.select().from(salonsTable);
+      const activeSalons = salonsData.filter(s => s.billingStatus === "active").length;
+      const totalSalonSeats = salonsData.reduce((sum, s) => sum + (s.seatLimit || 5), 0);
+      
+      // Salon members
+      const salonMembersData = await db.select().from(salonMembersTable);
+      const acceptedMembers = salonMembersData.filter(m => m.invitationStatus === "accepted").length;
+      const pendingInvites = salonMembersData.filter(m => m.invitationStatus === "pending").length;
+      
       res.json({
+        // Core metrics
         totalUsers,
         activeSubscribers,
         trialingUsers,
         freeUsers,
+        cancelledUsers,
         mrr,
+        conversionRate,
+        
+        // Signups
+        signupsToday,
+        signupsThisWeek,
+        signupsThisMonth,
         recentSignups,
+        
+        // Engagement
+        usersWithStreaks,
+        averageStreak,
+        longestActiveStreak,
+        totalPostsLogged,
+        topStreakers,
+        
+        // Activity
+        postsLoggedToday: logsToday,
+        postsLoggedThisWeek: logsThisWeek,
+        postsLoggedThisMonth: logsThisMonth,
+        
+        // Challenges
+        activeChallenges,
+        completedChallenges,
+        abandonedChallenges,
+        challengeCompletionRate,
+        
+        // Instagram
+        connectedInstagramUsers,
+        totalInstagramSyncs,
+        totalSyncedPosts,
+        recentlySyncedPosts,
+        
+        // Content
+        popularCategories,
+        popularContentTypes,
+        totalPosts: allPosts.length,
+        
+        // Salons
+        activeSalons,
+        totalSalonSeats,
+        acceptedSalonMembers: acceptedMembers,
+        pendingSalonInvites: pendingInvites,
+        
+        // Original data
         popularBrands,
         popularMethods,
       });

@@ -1125,9 +1125,9 @@ function StatsSection({ stats, isLoading }: { stats: any; isLoading: boolean }) 
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-stats-title">
-          Stats & MRR
+          Stats & Analytics
         </h1>
-        <p className="text-muted-foreground">Overview of your business metrics</p>
+        <p className="text-muted-foreground">Comprehensive overview of your business metrics</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -1174,7 +1174,7 @@ function StatsSection({ stats, isLoading }: { stats: any; isLoading: boolean }) 
             {isLoading ? (
               <Skeleton className="h-8 w-16" />
             ) : (
-              <div className="text-2xl font-bold text-green-600" data-testid="text-active-subs">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400" data-testid="text-active-subs">
                 {stats?.activeSubscribers || 0}
               </div>
             )}
@@ -1184,18 +1184,65 @@ function StatsSection({ stats, isLoading }: { stats: any; isLoading: boolean }) 
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-            <CardTitle className="text-sm font-medium">Trial Users</CardTitle>
-            <BarChart3 className="w-4 h-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+            <TrendingUp className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <Skeleton className="h-8 w-16" />
             ) : (
-              <div className="text-2xl font-bold text-amber-600" data-testid="text-trialing">
-                {stats?.trialingUsers || 0}
+              <div className="text-2xl font-bold" data-testid="text-conversion">
+                {stats?.conversionRate || 0}%
               </div>
             )}
-            <p className="text-xs text-muted-foreground">On free trial</p>
+            <p className="text-xs text-muted-foreground">Trial to paid conversion</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+            <CardTitle className="text-sm font-medium">Signups Today</CardTitle>
+            <Users className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-6 w-12" /> : (
+              <div className="text-xl font-bold">{stats?.signupsToday || 0}</div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+            <CardTitle className="text-sm font-medium">Signups This Week</CardTitle>
+            <Users className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-6 w-12" /> : (
+              <div className="text-xl font-bold">{stats?.signupsThisWeek || 0}</div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+            <CardTitle className="text-sm font-medium">Signups This Month</CardTitle>
+            <Users className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-6 w-12" /> : (
+              <div className="text-xl font-bold">{stats?.signupsThisMonth || 0}</div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+            <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <Skeleton className="h-6 w-12" /> : (
+              <div className="text-xl font-bold">{stats?.totalPosts || 0}</div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -1231,10 +1278,303 @@ function StatsSection({ stats, isLoading }: { stats: any; isLoading: boolean }) 
                 </div>
                 <span className="font-medium">{stats?.freeUsers || 0}</span>
               </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                  <span>Cancelled</span>
+                </div>
+                <span className="font-medium">{stats?.cancelledUsers || 0}</span>
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              Engagement Stats
+            </CardTitle>
+            <CardDescription>User streaks and posting activity</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-6" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Users with streaks</span>
+                  <span className="font-medium">{stats?.usersWithStreaks || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Average streak</span>
+                  <span className="font-medium">{stats?.averageStreak || 0} days</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Longest active streak</span>
+                  <span className="font-medium">{stats?.longestActiveStreak || 0} days</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Total posts logged</span>
+                  <span className="font-medium">{stats?.totalPostsLogged || 0}</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Posting Activity
+            </CardTitle>
+            <CardDescription>Posts logged by time period</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-6" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Today</span>
+                  <span className="font-medium">{stats?.postsLoggedToday || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">This week</span>
+                  <span className="font-medium">{stats?.postsLoggedThisWeek || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">This month</span>
+                  <span className="font-medium">{stats?.postsLoggedThisMonth || 0}</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="w-5 h-5" />
+              Challenge Stats
+            </CardTitle>
+            <CardDescription>User challenge participation</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-6" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Active challenges</span>
+                  <span className="font-medium">{stats?.activeChallenges || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Completed</span>
+                  <span className="font-medium">{stats?.completedChallenges || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Abandoned</span>
+                  <span className="font-medium">{stats?.abandonedChallenges || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Completion rate</span>
+                  <span className="font-medium">{stats?.challengeCompletionRate || 0}%</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <SiInstagram className="w-5 h-5" />
+              Instagram Integration
+            </CardTitle>
+            <CardDescription>Connected accounts and sync stats</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-6" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Connected users</span>
+                  <span className="font-medium">{stats?.connectedInstagramUsers || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Total syncs</span>
+                  <span className="font-medium">{stats?.totalInstagramSyncs || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Total synced posts</span>
+                  <span className="font-medium">{stats?.totalSyncedPosts || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Recently synced (7 days)</span>
+                  <span className="font-medium">{stats?.recentlySyncedPosts || 0}</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Salon Stats
+            </CardTitle>
+            <CardDescription>Salon owner plans and team members</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-6" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Active salons</span>
+                  <span className="font-medium">{stats?.activeSalons || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Total seats</span>
+                  <span className="font-medium">{stats?.totalSalonSeats || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Accepted members</span>
+                  <span className="font-medium">{stats?.acceptedSalonMembers || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Pending invites</span>
+                  <span className="font-medium">{stats?.pendingSalonInvites || 0}</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {stats?.topStreakers?.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="w-5 h-5" />
+              Top Streakers
+            </CardTitle>
+            <CardDescription>Users with the highest active streaks</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {stats.topStreakers.map((user: { userId: string; currentStreak: number; totalPosts: number }, i: number) => (
+                <div key={user.userId} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground w-5">{i + 1}.</span>
+                    <span className="font-medium font-mono text-sm">{user.userId.slice(0, 8)}...</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="secondary">{user.currentStreak} day streak</Badge>
+                    <span className="text-sm text-muted-foreground">{user.totalPosts} posts</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <List className="w-5 h-5" />
+              Popular Categories
+            </CardTitle>
+            <CardDescription>Content categories by post count</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8" />
+                ))}
+              </div>
+            ) : stats?.popularCategories?.length > 0 ? (
+              <div className="space-y-3">
+                {stats.popularCategories.slice(0, 8).map((cat: { name: string; count: number }, i: number) => (
+                  <div key={cat.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground w-5">{i + 1}.</span>
+                      <span className="font-medium">{cat.name}</span>
+                    </div>
+                    <Badge variant="secondary">{cat.count} posts</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-4">No category data yet</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Video className="w-5 h-5" />
+              Popular Content Types
+            </CardTitle>
+            <CardDescription>Content types by post count</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8" />
+                ))}
+              </div>
+            ) : stats?.popularContentTypes?.length > 0 ? (
+              <div className="space-y-3">
+                {stats.popularContentTypes.map((type: { name: string; count: number }, i: number) => (
+                  <div key={type.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground w-5">{i + 1}.</span>
+                      <span className="font-medium">{type.name}</span>
+                    </div>
+                    <Badge variant="secondary">{type.count} posts</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-4">No content type data yet</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
