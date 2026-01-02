@@ -1660,6 +1660,14 @@ function UsersSection({ stats, isLoading: statsLoading }: { stats: any; isLoadin
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
+  const [createUserForm, setCreateUserForm] = useState({
+    email: "",
+    firstName: "",
+    lastName: "",
+    subscriptionTier: "free",
+    subscriptionStatus: "free",
+  });
 
   const { data: usersData, isLoading } = useQuery({
     queryKey: ["/api/admin/users", sortField, sortOrder],
@@ -1683,6 +1691,31 @@ function UsersSection({ stats, isLoading: statsLoading }: { stats: any; isLoadin
     },
     onError: () => {
       toast({ title: "Failed to delete user", variant: "destructive" });
+    },
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: async (data: typeof createUserForm) => {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create user");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      qc.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      setIsCreateUserOpen(false);
+      setCreateUserForm({ email: "", firstName: "", lastName: "", subscriptionTier: "free", subscriptionStatus: "free" });
+      toast({ title: "User created successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: error.message || "Failed to create user", variant: "destructive" });
     },
   });
 
@@ -1716,12 +1749,105 @@ function UsersSection({ stats, isLoading: statsLoading }: { stats: any; isLoadin
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-users-title">
-          Users
-        </h1>
-        <p className="text-muted-foreground">View and manage all user accounts</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-users-title">
+            Users
+          </h1>
+          <p className="text-muted-foreground">View and manage all user accounts</p>
+        </div>
+        <Button onClick={() => setIsCreateUserOpen(true)} data-testid="button-add-user">
+          <UserPlus className="w-4 h-4 mr-2" />
+          Add User
+        </Button>
       </div>
+
+      <Dialog open={isCreateUserOpen} onOpenChange={setIsCreateUserOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>Create a new user account manually</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email (required)</label>
+              <Input
+                type="email"
+                placeholder="user@example.com"
+                value={createUserForm.email}
+                onChange={(e) => setCreateUserForm({ ...createUserForm, email: e.target.value })}
+                data-testid="input-create-user-email"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">First Name</label>
+                <Input
+                  placeholder="First name"
+                  value={createUserForm.firstName}
+                  onChange={(e) => setCreateUserForm({ ...createUserForm, firstName: e.target.value })}
+                  data-testid="input-create-user-firstname"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Last Name</label>
+                <Input
+                  placeholder="Last name"
+                  value={createUserForm.lastName}
+                  onChange={(e) => setCreateUserForm({ ...createUserForm, lastName: e.target.value })}
+                  data-testid="input-create-user-lastname"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Subscription Tier</label>
+                <Select 
+                  value={createUserForm.subscriptionTier} 
+                  onValueChange={(v) => setCreateUserForm({ ...createUserForm, subscriptionTier: v })}
+                >
+                  <SelectTrigger data-testid="select-create-user-tier">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="pro">Pro</SelectItem>
+                    <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="salon_owner">Salon Owner</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Status</label>
+                <Select 
+                  value={createUserForm.subscriptionStatus} 
+                  onValueChange={(v) => setCreateUserForm({ ...createUserForm, subscriptionStatus: v })}
+                >
+                  <SelectTrigger data-testid="select-create-user-status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="trialing">Trialing</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateUserOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={() => createUserMutation.mutate(createUserForm)}
+              disabled={!createUserForm.email || createUserMutation.isPending}
+              data-testid="button-submit-create-user"
+            >
+              {createUserMutation.isPending ? "Creating..." : "Create User"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -1952,6 +2078,12 @@ function SalonsSection() {
   const qc = useQueryClient();
   const [editingSalon, setEditingSalon] = useState<any>(null);
   const [expandedSalon, setExpandedSalon] = useState<number | null>(null);
+  const [isCreateSalonOpen, setIsCreateSalonOpen] = useState(false);
+  const [createSalonForm, setCreateSalonForm] = useState({
+    name: "",
+    ownerEmail: "",
+    seatLimit: 5,
+  });
 
   const { data: salonsData, isLoading } = useQuery({
     queryKey: ["/api/admin/salons"],
@@ -2018,16 +2150,99 @@ function SalonsSection() {
     },
   });
 
+  const createSalonMutation = useMutation({
+    mutationFn: async (data: typeof createSalonForm) => {
+      const res = await fetch("/api/admin/salons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create salon");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/salons"] });
+      qc.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      qc.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      setIsCreateSalonOpen(false);
+      setCreateSalonForm({ name: "", ownerEmail: "", seatLimit: 5 });
+      toast({ title: "Salon created successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: error.message || "Failed to create salon", variant: "destructive" });
+    },
+  });
+
   const salons = salonsData?.salons || [];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-salons-title">
-          Salons
-        </h1>
-        <p className="text-muted-foreground">Manage salon owner accounts and their team members</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-salons-title">
+            Salons
+          </h1>
+          <p className="text-muted-foreground">Manage salon owner accounts and their team members</p>
+        </div>
+        <Button onClick={() => setIsCreateSalonOpen(true)} data-testid="button-add-salon">
+          <Building2 className="w-4 h-4 mr-2" />
+          Add Salon
+        </Button>
       </div>
+
+      <Dialog open={isCreateSalonOpen} onOpenChange={setIsCreateSalonOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Salon</DialogTitle>
+            <DialogDescription>Create a new salon with an owner. If the owner email does not exist, a new user will be created.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Salon Name (required)</label>
+              <Input
+                placeholder="Glamour Hair Studio"
+                value={createSalonForm.name}
+                onChange={(e) => setCreateSalonForm({ ...createSalonForm, name: e.target.value })}
+                data-testid="input-create-salon-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Owner Email (required)</label>
+              <Input
+                type="email"
+                placeholder="owner@example.com"
+                value={createSalonForm.ownerEmail}
+                onChange={(e) => setCreateSalonForm({ ...createSalonForm, ownerEmail: e.target.value })}
+                data-testid="input-create-salon-email"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Seat Limit</label>
+              <Input
+                type="number"
+                min={1}
+                max={50}
+                value={createSalonForm.seatLimit}
+                onChange={(e) => setCreateSalonForm({ ...createSalonForm, seatLimit: parseInt(e.target.value) || 5 })}
+                data-testid="input-create-salon-seats"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateSalonOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={() => createSalonMutation.mutate(createSalonForm)}
+              disabled={!createSalonForm.name || !createSalonForm.ownerEmail || createSalonMutation.isPending}
+              data-testid="button-submit-create-salon"
+            >
+              {createSalonMutation.isPending ? "Creating..." : "Create Salon"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>

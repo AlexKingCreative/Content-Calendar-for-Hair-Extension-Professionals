@@ -1922,6 +1922,129 @@ Return only the caption text, nothing else.`;
     }
   });
 
+  // Create user (admin only)
+  const createUserSchema = z.object({
+    email: z.string().email("Valid email is required"),
+    firstName: z.string().optional().default(""),
+    lastName: z.string().optional().default(""),
+    subscriptionTier: z.enum(["free", "pro", "premium", "salon_owner"]).optional().default("free"),
+    subscriptionStatus: z.enum(["free", "trialing", "active", "cancelled", "past_due"]).optional().default("free"),
+  });
+
+  app.post("/api/admin/users", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const validation = createUserSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: validation.error.errors[0]?.message || "Invalid input" });
+      }
+      const { email, firstName, lastName, subscriptionTier, subscriptionStatus } = validation.data;
+
+      // Check if user already exists
+      const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase().trim()));
+      if (existing) {
+        return res.status(400).json({ error: "User with this email already exists" });
+      }
+
+      // Create user in auth table
+      const userId = crypto.randomUUID();
+      await db.insert(usersTable).values({
+        id: userId,
+        email: email.toLowerCase().trim(),
+        createdAt: new Date(),
+      });
+
+      // Create user profile
+      await db.insert(userProfilesTable).values({
+        userId,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        subscriptionTier,
+        subscriptionStatus,
+        currentStreak: 0,
+        longestStreak: 0,
+        totalPostsLogged: 0,
+        onboardingCompleted: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      res.json({ success: true, userId, message: "User created" });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ error: "Failed to create user" });
+    }
+  });
+
+  // Create salon (admin only)
+  const createSalonSchema = z.object({
+    name: z.string().min(1, "Salon name is required"),
+    ownerEmail: z.string().email("Valid owner email is required"),
+    seatLimit: z.number().min(1).max(50).optional().default(5),
+  });
+
+  app.post("/api/admin/salons", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const validation = createSalonSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: validation.error.errors[0]?.message || "Invalid input" });
+      }
+      const { name, ownerEmail, seatLimit } = validation.data;
+
+      // Find or create owner
+      let [owner] = await db.select().from(usersTable).where(eq(usersTable.email, ownerEmail.toLowerCase().trim()));
+      
+      if (!owner) {
+        // Create the owner user
+        const userId = crypto.randomUUID();
+        await db.insert(usersTable).values({
+          id: userId,
+          email: ownerEmail.toLowerCase().trim(),
+          createdAt: new Date(),
+        });
+        
+        await db.insert(userProfilesTable).values({
+          userId,
+          subscriptionTier: "salon_owner",
+          subscriptionStatus: "active",
+          currentStreak: 0,
+          longestStreak: 0,
+          totalPostsLogged: 0,
+          onboardingCompleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        
+        owner = { id: userId, email: ownerEmail.toLowerCase().trim() } as any;
+      } else {
+        // Update existing user to salon owner tier (preserve subscription status if already active)
+        const [profile] = await db.select().from(userProfilesTable).where(eq(userProfilesTable.userId, owner.id));
+        const newStatus = profile?.subscriptionStatus === "active" ? "active" : "active";
+        await db.update(userProfilesTable)
+          .set({ 
+            subscriptionTier: "salon_owner",
+            subscriptionStatus: newStatus,
+            updatedAt: new Date(),
+          })
+          .where(eq(userProfilesTable.userId, owner.id));
+      }
+
+      // Create salon
+      const [salon] = await db.insert(salonsTable).values({
+        ownerUserId: owner.id,
+        name,
+        seatLimit,
+        billingStatus: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).returning();
+
+      res.json({ success: true, salon, message: "Salon created" });
+    } catch (error) {
+      console.error("Error creating salon:", error);
+      res.status(500).json({ error: "Failed to create salon" });
+    }
+  });
+
   app.get("/api/admin/posts", isAuthenticated, requireAdmin, async (req, res) => {
     try {
       const posts = await storage.getAllPosts();
