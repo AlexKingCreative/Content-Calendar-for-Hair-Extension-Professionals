@@ -213,8 +213,8 @@ function PricingSection() {
         </motion.div>
         
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          whileInView={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
@@ -408,12 +408,11 @@ export default function LandingPage() {
                 </Link>
               </motion.div>
 
-              {/* App Store Buttons */}
-              {!isInstalled && (
-                <div className="mb-8">
-                  <p className="text-sm text-muted-foreground mb-3 text-center lg:text-left">Also available as an app:</p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-                    {(isIOS || (!isIOS && !isAndroid)) && (
+              {/* App Store Buttons - Always render container to prevent layout shift */}
+              <div className="mb-8 min-h-[88px]" style={{ visibility: isInstalled ? 'hidden' : 'visible' }}>
+                <p className="text-sm text-muted-foreground mb-3 text-center lg:text-left">Also available as an app:</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+                  {(isIOS || (!isIOS && !isAndroid)) && (
                       <a 
                         href="https://apps.apple.com/app/content-calendar-hair-pro/id6757116246" 
                         target="_blank" 
@@ -447,7 +446,6 @@ export default function LandingPage() {
                     )}
                   </div>
                 </div>
-              )}
               
               {/* Trust Indicators */}
               <motion.div 
