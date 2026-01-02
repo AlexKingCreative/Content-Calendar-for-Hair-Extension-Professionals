@@ -26,7 +26,7 @@
         "backgroundColor": "#D4A574"
       },
       "package": "com.hairpro360.contentcalendar",
-      "versionCode": 41,
+      "versionCode": 42,
       "targetSdkVersion": 35,
       "googleServicesFile": "./google-services.json",
       "permissions": [
