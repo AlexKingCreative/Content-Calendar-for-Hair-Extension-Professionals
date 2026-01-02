@@ -482,12 +482,12 @@ export function HashtagDemo() {
 
         <div className="flex flex-wrap gap-2 min-h-[120px]" data-testid="hashtag-container">
           {hashtags.map((h, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: i < visible ? 1 : 0 }}
-              transition={{ duration: 0.3 }}
-              className={i >= visible ? "invisible" : ""}
+              style={{ 
+                opacity: i < visible ? 1 : 0,
+                transition: 'opacity 0.3s ease'
+              }}
             >
               <Badge 
                 variant="secondary" 
@@ -497,22 +497,22 @@ export function HashtagDemo() {
                 {h.tag}
                 <span className="text-[10px] text-muted-foreground ml-1">{h.type}</span>
               </Badge>
-            </motion.div>
+            </div>
           ))}
         </div>
 
-        {visible >= hashtags.length && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-3 p-2 bg-primary/10 rounded-lg text-center"
-            data-testid="button-copy-all-hashtags"
-          >
-            <div className="text-xs text-primary font-medium">
-              Tap to copy all 6 hashtags
-            </div>
-          </motion.div>
-        )}
+        <div 
+          className="mt-3 p-2 bg-primary/10 rounded-lg text-center"
+          style={{ 
+            opacity: visible >= hashtags.length ? 1 : 0,
+            transition: 'opacity 0.3s ease'
+          }}
+          data-testid="button-copy-all-hashtags"
+        >
+          <div className="text-xs text-primary font-medium">
+            Tap to copy all 6 hashtags
+          </div>
+        </div>
       </Card>
     </div>
   );
