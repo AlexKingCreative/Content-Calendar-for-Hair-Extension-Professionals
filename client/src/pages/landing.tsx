@@ -168,10 +168,10 @@ const whatYouGet = [
   },
 ];
 
-type PricingTier = 'monthly' | 'yearly';
+type PricingTier = 'monthly' | 'quarterly' | 'yearly';
 
 function PricingSection() {
-  const [selectedTier, setSelectedTier] = useState<PricingTier>('monthly');
+  const [selectedTier, setSelectedTier] = useState<PricingTier>('quarterly');
   
   const features = [
     "Monthly pre-planned content",
@@ -183,9 +183,14 @@ function PricingSection() {
   ];
   
   const getPriceText = () => {
-    return selectedTier === 'monthly' 
-      ? '$10/month. Cancel anytime.' 
-      : '$60/year. Save 50%.';
+    switch (selectedTier) {
+      case 'monthly':
+        return '$10/month. Cancel anytime.';
+      case 'quarterly':
+        return '$25 for 3 months (~$8.33/mo). Cancel anytime.';
+      case 'yearly':
+        return '$50/year (~$4.17/mo). Best value!';
+    }
   };
 
   return (
@@ -213,36 +218,55 @@ function PricingSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex justify-center items-end gap-4 mb-10">
+          <div className="flex justify-center items-end gap-3 mb-10">
             <button
               onClick={() => setSelectedTier('monthly')}
-              className={`flex flex-col items-center px-8 py-5 rounded-xl transition-all ${
+              className={`flex flex-col items-center px-5 py-4 rounded-xl transition-all ${
                 selectedTier === 'monthly'
                   ? 'bg-card border-2 border-foreground shadow-lg'
                   : 'bg-muted/50 border border-border hover-elevate'
               }`}
               data-testid="button-tier-monthly"
             >
-              <span className="text-sm text-muted-foreground mb-1">Monthly</span>
-              <span className="text-3xl font-bold">$10<span className="text-base font-normal text-muted-foreground">/mo</span></span>
+              <span className="text-sm text-muted-foreground mb-1">30 Days</span>
+              <span className="text-2xl font-bold">$10</span>
             </button>
             
             <div className="flex flex-col items-center">
               <Badge className="mb-2 bg-primary text-primary-foreground text-xs px-2 py-0.5">
+                Most Popular
+              </Badge>
+              <button
+                onClick={() => setSelectedTier('quarterly')}
+                className={`flex flex-col items-center px-5 py-4 rounded-xl transition-all ${
+                  selectedTier === 'quarterly'
+                    ? 'bg-card border-2 border-foreground shadow-lg'
+                    : 'bg-muted/50 border border-border hover-elevate'
+                }`}
+                data-testid="button-tier-quarterly"
+              >
+                <span className="text-sm text-muted-foreground mb-1">90 Days</span>
+                <span className="text-2xl font-bold">$25</span>
+                <span className="text-xs text-primary font-medium mt-1">Save 17%</span>
+              </button>
+            </div>
+            
+            <div className="flex flex-col items-center">
+              <Badge className="mb-2 bg-emerald-600 text-white text-xs px-2 py-0.5">
                 Best Value
               </Badge>
               <button
                 onClick={() => setSelectedTier('yearly')}
-                className={`flex flex-col items-center px-8 py-5 rounded-xl transition-all ${
+                className={`flex flex-col items-center px-5 py-4 rounded-xl transition-all ${
                   selectedTier === 'yearly'
                     ? 'bg-card border-2 border-foreground shadow-lg'
                     : 'bg-muted/50 border border-border hover-elevate'
                 }`}
                 data-testid="button-tier-yearly"
               >
-                <span className="text-sm text-muted-foreground mb-1">Yearly</span>
-                <span className="text-3xl font-bold">$60<span className="text-base font-normal text-muted-foreground">/yr</span></span>
-                <span className="text-xs text-primary font-medium mt-1">Save 50%</span>
+                <span className="text-sm text-muted-foreground mb-1">1 Year</span>
+                <span className="text-2xl font-bold">$50</span>
+                <span className="text-xs text-emerald-600 font-medium mt-1">Save 58%</span>
               </button>
             </div>
           </div>
