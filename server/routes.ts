@@ -3,7 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, registerAuthRoutes } from "./replit_integrations/auth";
 import { seedPosts, seedChallenges, seedBrandsAndMethods } from "./seed";
-import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads, users, salonMembers, userProfiles, postingLogs as postingLogsTable, userChallenges as userChallengesTable, instagramAccounts as instagramAccountsTable, instagramMedia as instagramMediaTable, salons as salonsTable, salonMembers as salonMembersTable } from "@shared/schema";
+import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads, users, salonMembers, userProfiles, userProfiles as userProfilesTable, postingLogs as postingLogsTable, userChallenges as userChallengesTable, instagramAccounts as instagramAccountsTable, instagramMedia as instagramMediaTable, salons as salonsTable, salonMembers as salonMembersTable } from "@shared/schema";
+import { users as usersTable } from "@shared/models/auth";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import OpenAI from "openai";
@@ -1582,6 +1583,285 @@ Return only the caption text, nothing else.`;
     } catch (error) {
       console.error("Error fetching admin stats:", error);
       res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  // Admin Users endpoint - list all users with sorting
+  app.get("/api/admin/users", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const { sort = "createdAt", order = "desc" } = req.query;
+      
+      // Get all users from auth table
+      const allUsers = await db.select().from(usersTable);
+      const allProfiles = await storage.getAllUserProfiles();
+      const allSalons = await db.select().from(salonsTable);
+      const allSalonMembers = await db.select().from(salonMembersTable);
+      
+      // Create profile lookup map
+      const profileMap = new Map(allProfiles.map(p => [p.userId, p]));
+      const salonOwnerMap = new Map(allSalons.map(s => [s.ownerUserId, s]));
+      
+      // Combine user and profile data
+      const usersWithProfiles = allUsers.map(user => {
+        const profile = profileMap.get(user.id);
+        const ownedSalon = salonOwnerMap.get(user.id);
+        
+        // Count members if this user owns a salon
+        let memberCount = 0;
+        let acceptedMembers = 0;
+        let pendingMembers = 0;
+        if (ownedSalon) {
+          const members = allSalonMembers.filter(m => m.salonId === ownedSalon.id);
+          memberCount = members.length;
+          acceptedMembers = members.filter(m => m.invitationStatus === "accepted").length;
+          pendingMembers = members.filter(m => m.invitationStatus === "pending").length;
+        }
+        
+        return {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+          googleId: user.googleId,
+          createdAt: user.createdAt,
+          // Profile data
+          city: profile?.city,
+          instagram: profile?.instagram,
+          experience: profile?.experience,
+          accountType: profile?.accountType,
+          isSalonOwner: profile?.isSalonOwner || false,
+          currentStreak: profile?.currentStreak || 0,
+          longestStreak: profile?.longestStreak || 0,
+          totalPosts: profile?.totalPosts || 0,
+          isAdmin: profile?.isAdmin || false,
+          onboardingComplete: profile?.onboardingComplete || false,
+          subscriptionStatus: profile?.subscriptionStatus || "free",
+          stripeCustomerId: profile?.stripeCustomerId,
+          salonId: profile?.salonId,
+          salonRole: profile?.salonRole,
+          certifiedBrands: profile?.certifiedBrands || [],
+          extensionMethods: profile?.extensionMethods || [],
+          // Salon owner data
+          ownedSalon: ownedSalon ? {
+            id: ownedSalon.id,
+            name: ownedSalon.name,
+            seatTier: ownedSalon.seatTier,
+            seatLimit: ownedSalon.seatLimit,
+            billingStatus: ownedSalon.billingStatus,
+            memberCount,
+            acceptedMembers,
+            pendingMembers,
+          } : null,
+        };
+      });
+      
+      // Sort users
+      const sortKey = sort as string;
+      const sortOrder = order === "asc" ? 1 : -1;
+      usersWithProfiles.sort((a: any, b: any) => {
+        const aVal = a[sortKey];
+        const bVal = b[sortKey];
+        if (aVal === null || aVal === undefined) return sortOrder;
+        if (bVal === null || bVal === undefined) return -sortOrder;
+        if (typeof aVal === "string") {
+          return aVal.localeCompare(bVal) * sortOrder;
+        }
+        if (aVal instanceof Date && bVal instanceof Date) {
+          return (aVal.getTime() - bVal.getTime()) * sortOrder;
+        }
+        return (aVal - bVal) * sortOrder;
+      });
+      
+      res.json({
+        users: usersWithProfiles,
+        total: usersWithProfiles.length,
+      });
+    } catch (error) {
+      console.error("Error fetching admin users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  // Admin Salons endpoint - list all salons with their members
+  app.get("/api/admin/salons", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const allSalons = await db.select().from(salonsTable);
+      const allSalonMembers = await db.select().from(salonMembersTable);
+      const allUsers = await db.select().from(usersTable);
+      const allProfiles = await storage.getAllUserProfiles();
+      
+      const userMap = new Map(allUsers.map(u => [u.id, u]));
+      const profileMap = new Map(allProfiles.map(p => [p.userId, p]));
+      
+      const salonsWithDetails = allSalons.map(salon => {
+        const owner = userMap.get(salon.ownerUserId);
+        const ownerProfile = profileMap.get(salon.ownerUserId);
+        const members = allSalonMembers.filter(m => m.salonId === salon.id);
+        
+        return {
+          ...salon,
+          owner: {
+            id: salon.ownerUserId,
+            email: owner?.email,
+            firstName: owner?.firstName,
+            lastName: owner?.lastName,
+            subscriptionStatus: ownerProfile?.subscriptionStatus || "free",
+          },
+          members: members.map(m => {
+            const memberUser = m.stylistUserId ? userMap.get(m.stylistUserId) : null;
+            const memberProfile = m.stylistUserId ? profileMap.get(m.stylistUserId) : null;
+            return {
+              id: m.id,
+              email: m.email,
+              invitationStatus: m.invitationStatus,
+              invitedAt: m.invitedAt,
+              acceptedAt: m.acceptedAt,
+              revokedAt: m.revokedAt,
+              stylistUserId: m.stylistUserId,
+              stylistName: memberUser ? `${memberUser.firstName || ""} ${memberUser.lastName || ""}`.trim() : null,
+              stylistStreak: memberProfile?.currentStreak || 0,
+            };
+          }),
+          memberStats: {
+            total: members.length,
+            accepted: members.filter(m => m.invitationStatus === "accepted").length,
+            pending: members.filter(m => m.invitationStatus === "pending").length,
+            revoked: members.filter(m => m.invitationStatus === "revoked").length,
+          },
+        };
+      });
+      
+      res.json({
+        salons: salonsWithDetails,
+        total: salonsWithDetails.length,
+      });
+    } catch (error) {
+      console.error("Error fetching admin salons:", error);
+      res.status(500).json({ error: "Failed to fetch salons" });
+    }
+  });
+
+  // Admin update salon endpoint
+  app.patch("/api/admin/salons/:id", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid salon ID" });
+      }
+      
+      const { name, seatLimit, seatTier, billingStatus } = req.body;
+      
+      const [updatedSalon] = await db
+        .update(salonsTable)
+        .set({
+          ...(name !== undefined && { name }),
+          ...(seatLimit !== undefined && { seatLimit: parseInt(seatLimit) }),
+          ...(seatTier !== undefined && { seatTier }),
+          ...(billingStatus !== undefined && { billingStatus }),
+          updatedAt: new Date(),
+        })
+        .where(eq(salonsTable.id, id))
+        .returning();
+      
+      if (!updatedSalon) {
+        return res.status(404).json({ error: "Salon not found" });
+      }
+      
+      res.json(updatedSalon);
+    } catch (error) {
+      console.error("Error updating salon:", error);
+      res.status(500).json({ error: "Failed to update salon" });
+    }
+  });
+
+  // Admin update salon member status
+  app.patch("/api/admin/salon-members/:id", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid member ID" });
+      }
+      
+      const { invitationStatus } = req.body;
+      
+      if (!invitationStatus || !["pending", "accepted", "revoked"].includes(invitationStatus)) {
+        return res.status(400).json({ error: "Invalid invitation status" });
+      }
+      
+      const updateData: any = { invitationStatus };
+      if (invitationStatus === "accepted") {
+        updateData.acceptedAt = new Date();
+      } else if (invitationStatus === "revoked") {
+        updateData.revokedAt = new Date();
+      }
+      
+      const [updatedMember] = await db
+        .update(salonMembersTable)
+        .set(updateData)
+        .where(eq(salonMembersTable.id, id))
+        .returning();
+      
+      if (!updatedMember) {
+        return res.status(404).json({ error: "Member not found" });
+      }
+      
+      res.json(updatedMember);
+    } catch (error) {
+      console.error("Error updating salon member:", error);
+      res.status(500).json({ error: "Failed to update member" });
+    }
+  });
+
+  // Admin delete salon member
+  app.delete("/api/admin/salon-members/:id", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid member ID" });
+      }
+      
+      const [deleted] = await db
+        .delete(salonMembersTable)
+        .where(eq(salonMembersTable.id, id))
+        .returning();
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Member not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting salon member:", error);
+      res.status(500).json({ error: "Failed to delete member" });
+    }
+  });
+
+  // Admin update user profile (e.g., set admin status, subscription)
+  app.patch("/api/admin/users/:userId", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { isAdmin, subscriptionStatus } = req.body;
+      
+      const profile = await storage.getUserProfile(userId);
+      if (!profile) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      const updateData: any = {};
+      if (isAdmin !== undefined) updateData.isAdmin = isAdmin;
+      if (subscriptionStatus !== undefined) updateData.subscriptionStatus = subscriptionStatus;
+      
+      const [updated] = await db
+        .update(userProfilesTable)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(eq(userProfilesTable.userId, userId))
+        .returning();
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Failed to update user" });
     }
   });
 

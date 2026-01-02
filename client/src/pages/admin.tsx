@@ -4,7 +4,8 @@ import {
   Plus, Sparkles, Pencil, Trash2, Calendar, ArrowLeft, Award, 
   Users, CreditCard, BarChart3, DollarSign, Settings, ChevronLeft,
   List, LayoutGrid, Scissors, Send, Check, X, ExternalLink, LogOut,
-  TrendingUp, Video, Play, MessageCircle
+  TrendingUp, Video, Play, MessageCircle, ArrowUpDown, ChevronUp, ChevronDown,
+  Search, Shield, Flame, Building2, UserPlus
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { Link } from "wouter";
@@ -40,7 +41,7 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-type AdminSection = "posts" | "brands" | "methods" | "users" | "billing" | "stats" | "submissions" | "trends" | "advice";
+type AdminSection = "posts" | "brands" | "methods" | "users" | "salons" | "billing" | "stats" | "submissions" | "trends" | "advice";
 
 interface PostSubmission {
   id: number;
@@ -63,6 +64,7 @@ const navItems = [
   { id: "brands" as AdminSection, title: "Brands", icon: Award },
   { id: "methods" as AdminSection, title: "Methods", icon: Scissors },
   { id: "users" as AdminSection, title: "Users", icon: Users },
+  { id: "salons" as AdminSection, title: "Salons", icon: Building2 },
   { id: "billing" as AdminSection, title: "Billing", icon: CreditCard },
 ];
 
@@ -724,6 +726,10 @@ export default function AdminPage() {
             
             {activeSection === "users" && (
               <UsersSection stats={adminStats} isLoading={statsLoading} />
+            )}
+            
+            {activeSection === "salons" && (
+              <SalonsSection />
             )}
             
             {activeSection === "billing" && (
@@ -1647,25 +1653,65 @@ function StatsSection({ stats, isLoading }: { stats: any; isLoading: boolean }) 
   );
 }
 
-function UsersSection({ stats, isLoading }: { stats: any; isLoading: boolean }) {
+function UsersSection({ stats, isLoading: statsLoading }: { stats: any; isLoading: boolean }) {
+  const [sortField, setSortField] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const { data: usersData, isLoading } = useQuery({
+    queryKey: ["/api/admin/users", sortField, sortOrder],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/users?sort=${sortField}&order=${sortOrder}`);
+      if (!res.ok) throw new Error("Failed to fetch users");
+      return res.json();
+    },
+  });
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("desc");
+    }
+  };
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 ml-1 opacity-50" />;
+    return sortOrder === "asc" ? 
+      <ChevronUp className="w-3 h-3 ml-1" /> : 
+      <ChevronDown className="w-3 h-3 ml-1" />;
+  };
+
+  const filteredUsers = usersData?.users?.filter((user: any) => {
+    const matchesSearch = !searchTerm || 
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.instagram?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || user.subscriptionStatus === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  }) || [];
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-users-title">
           Users
         </h1>
-        <p className="text-muted-foreground">Manage user accounts and subscriptions</p>
+        <p className="text-muted-foreground">View and manage all user accounts</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
+            {statsLoading ? <Skeleton className="h-8 w-16" /> : (
               <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
             )}
           </CardContent>
@@ -1675,10 +1721,8 @@ function UsersSection({ stats, isLoading }: { stats: any; isLoading: boolean }) 
             <CardTitle className="text-sm font-medium">Paying</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
-              <div className="text-2xl font-bold text-green-600">{stats?.activeSubscribers || 0}</div>
+            {statsLoading ? <Skeleton className="h-8 w-16" /> : (
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats?.activeSubscribers || 0}</div>
             )}
           </CardContent>
         </Card>
@@ -1687,10 +1731,18 @@ function UsersSection({ stats, isLoading }: { stats: any; isLoading: boolean }) 
             <CardTitle className="text-sm font-medium">Free</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
+            {statsLoading ? <Skeleton className="h-8 w-16" /> : (
               <div className="text-2xl font-bold text-muted-foreground">{stats?.freeUsers || 0}</div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Salon Owners</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {statsLoading ? <Skeleton className="h-8 w-16" /> : (
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats?.activeSalons || 0}</div>
             )}
           </CardContent>
         </Card>
@@ -1698,37 +1750,497 @@ function UsersSection({ stats, isLoading }: { stats: any; isLoading: boolean }) 
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Signups</CardTitle>
-          <CardDescription>Latest user registrations</CardDescription>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>All Users</CardTitle>
+              <CardDescription>{filteredUsers.length} users found</CardDescription>
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by email, name, instagram..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 w-64"
+                  data-testid="input-user-search"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-32" data-testid="select-status-filter">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Paying</SelectItem>
+                  <SelectItem value="trialing">Trial</SelectItem>
+                  <SelectItem value="free">Free</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 10 }).map((_, i) => (
                 <Skeleton key={i} className="h-12" />
               ))}
             </div>
-          ) : stats?.recentSignups?.length > 0 ? (
-            <div className="space-y-2">
-              {stats.recentSignups.map((user: any, i: number) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-md border">
-                  <div>
-                    <p className="font-medium">User {user.userId}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <Badge variant={user.subscriptionStatus === "active" ? "default" : "secondary"}>
-                    {user.subscriptionStatus || "free"}
-                  </Badge>
-                </div>
-              ))}
-            </div>
           ) : (
-            <p className="text-muted-foreground text-center py-8">No recent signups</p>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th 
+                      className="text-left py-3 px-2 font-medium text-sm cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort("email")}
+                      data-testid="header-email"
+                    >
+                      <span className="flex items-center">Email<SortIcon field="email" /></span>
+                    </th>
+                    <th 
+                      className="text-left py-3 px-2 font-medium text-sm cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort("firstName")}
+                    >
+                      <span className="flex items-center">Name<SortIcon field="firstName" /></span>
+                    </th>
+                    <th 
+                      className="text-left py-3 px-2 font-medium text-sm cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort("subscriptionStatus")}
+                    >
+                      <span className="flex items-center">Status<SortIcon field="subscriptionStatus" /></span>
+                    </th>
+                    <th 
+                      className="text-left py-3 px-2 font-medium text-sm cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort("currentStreak")}
+                    >
+                      <span className="flex items-center">Streak<SortIcon field="currentStreak" /></span>
+                    </th>
+                    <th 
+                      className="text-left py-3 px-2 font-medium text-sm cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort("totalPosts")}
+                    >
+                      <span className="flex items-center">Posts<SortIcon field="totalPosts" /></span>
+                    </th>
+                    <th className="text-left py-3 px-2 font-medium text-sm">Salon</th>
+                    <th 
+                      className="text-left py-3 px-2 font-medium text-sm cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort("createdAt")}
+                    >
+                      <span className="flex items-center">Joined<SortIcon field="createdAt" /></span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((user: any) => (
+                    <tr key={user.id} className="border-b hover:bg-muted/30" data-testid={`row-user-${user.id}`}>
+                      <td className="py-3 px-2">
+                        <div className="flex items-center gap-2">
+                          {user.isAdmin && <Shield className="w-4 h-4 text-primary" />}
+                          <span className="text-sm">{user.email || "No email"}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-2">
+                        <span className="text-sm">
+                          {user.firstName || user.lastName 
+                            ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
+                            : "-"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2">
+                        <Badge 
+                          variant={
+                            user.subscriptionStatus === "active" ? "default" : 
+                            user.subscriptionStatus === "trialing" ? "outline" : 
+                            "secondary"
+                          }
+                        >
+                          {user.subscriptionStatus || "free"}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-2">
+                        <span className="text-sm font-medium">{user.currentStreak || 0}</span>
+                        {user.currentStreak >= 7 && <Flame className="w-3 h-3 inline ml-1 text-orange-500" />}
+                      </td>
+                      <td className="py-3 px-2 text-sm">{user.totalPosts || 0}</td>
+                      <td className="py-3 px-2">
+                        {user.ownedSalon ? (
+                          <Badge variant="outline" className="bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800">
+                            Owner: {user.ownedSalon.name}
+                            <span className="ml-1 text-xs">({user.ownedSalon.acceptedMembers}/{user.ownedSalon.seatLimit})</span>
+                          </Badge>
+                        ) : user.salonId ? (
+                          <Badge variant="secondary">Member</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-2 text-sm text-muted-foreground">
+                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filteredUsers.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No users found matching your criteria</p>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function SalonsSection() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [editingSalon, setEditingSalon] = useState<any>(null);
+  const [expandedSalon, setExpandedSalon] = useState<number | null>(null);
+
+  const { data: salonsData, isLoading } = useQuery({
+    queryKey: ["/api/admin/salons"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/salons");
+      if (!res.ok) throw new Error("Failed to fetch salons");
+      return res.json();
+    },
+  });
+
+  const updateSalonMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const res = await fetch(`/api/admin/salons/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update salon");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/salons"] });
+      setEditingSalon(null);
+      toast({ title: "Salon updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update salon", variant: "destructive" });
+    },
+  });
+
+  const updateMemberMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      const res = await fetch(`/api/admin/salon-members/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invitationStatus: status }),
+      });
+      if (!res.ok) throw new Error("Failed to update member");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/salons"] });
+      toast({ title: "Member status updated" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update member", variant: "destructive" });
+    },
+  });
+
+  const deleteMemberMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/admin/salon-members/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete member");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/salons"] });
+      toast({ title: "Member removed" });
+    },
+    onError: () => {
+      toast({ title: "Failed to remove member", variant: "destructive" });
+    },
+  });
+
+  const salons = salonsData?.salons || [];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-heading text-2xl font-semibold text-foreground" data-testid="text-salons-title">
+          Salons
+        </h1>
+        <p className="text-muted-foreground">Manage salon owner accounts and their team members</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Salons</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{salons.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Members</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              {salons.reduce((sum: number, s: any) => sum + (s.memberStats?.accepted || 0), 0)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Pending Invites</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+              {salons.reduce((sum: number, s: any) => sum + (s.memberStats?.pending || 0), 0)}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      ) : salons.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Building2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">No salons created yet</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {salons.map((salon: any) => (
+            <Card key={salon.id} data-testid={`card-salon-${salon.id}`}>
+              <CardHeader>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                      <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">{salon.name}</CardTitle>
+                      <CardDescription>
+                        Owner: {salon.owner?.email || salon.ownerUserId}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <Badge variant={salon.billingStatus === "active" ? "default" : "secondary"}>
+                      {salon.billingStatus || "active"}
+                    </Badge>
+                    <Badge variant="outline">
+                      {salon.memberStats?.accepted || 0}/{salon.seatLimit} seats
+                    </Badge>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setEditingSalon(salon)}
+                      data-testid={`button-edit-salon-${salon.id}`}
+                    >
+                      <Pencil className="w-3 h-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setExpandedSalon(expandedSalon === salon.id ? null : salon.id)}
+                    >
+                      {expandedSalon === salon.id ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              {expandedSalon === salon.id && (
+                <CardContent className="border-t pt-4">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Team Members ({salon.members?.length || 0})</h4>
+                    </div>
+                    
+                    {salon.members?.length > 0 ? (
+                      <div className="space-y-2">
+                        {salon.members.map((member: any) => (
+                          <div 
+                            key={member.id} 
+                            className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 rounded-md border"
+                            data-testid={`row-member-${member.id}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                                <Users className="w-4 h-4 text-muted-foreground" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">
+                                  {member.stylistName || member.email}
+                                </p>
+                                {member.stylistName && (
+                                  <p className="text-xs text-muted-foreground">{member.email}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2 items-center">
+                              {member.stylistStreak > 0 && (
+                                <span className="text-xs text-muted-foreground">
+                                  {member.stylistStreak} day streak
+                                </span>
+                              )}
+                              <Badge 
+                                variant={
+                                  member.invitationStatus === "accepted" ? "default" : 
+                                  member.invitationStatus === "pending" ? "outline" : 
+                                  "secondary"
+                                }
+                              >
+                                {member.invitationStatus}
+                              </Badge>
+                              {member.invitationStatus === "pending" && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => updateMemberMutation.mutate({ id: member.id, status: "accepted" })}
+                                  disabled={updateMemberMutation.isPending}
+                                >
+                                  <Check className="w-3 h-3 mr-1" />
+                                  Accept
+                                </Button>
+                              )}
+                              {member.invitationStatus !== "revoked" && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => updateMemberMutation.mutate({ id: member.id, status: "revoked" })}
+                                  disabled={updateMemberMutation.isPending}
+                                >
+                                  <X className="w-3 h-3 mr-1" />
+                                  Revoke
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (confirm("Remove this member from the salon?")) {
+                                    deleteMemberMutation.mutate(member.id);
+                                  }
+                                }}
+                                disabled={deleteMemberMutation.isPending}
+                              >
+                                <Trash2 className="w-3 h-3 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-sm py-4 text-center">No team members yet</p>
+                    )}
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={!!editingSalon} onOpenChange={(open) => !open && setEditingSalon(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Salon</DialogTitle>
+            <DialogDescription>Update salon details and seat limits</DialogDescription>
+          </DialogHeader>
+          {editingSalon && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Salon Name</label>
+                <Input
+                  value={editingSalon.name || ""}
+                  onChange={(e) => setEditingSalon({ ...editingSalon, name: e.target.value })}
+                  data-testid="input-salon-name"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Seat Limit</label>
+                <Input
+                  type="number"
+                  value={editingSalon.seatLimit || 5}
+                  onChange={(e) => setEditingSalon({ ...editingSalon, seatLimit: parseInt(e.target.value) })}
+                  data-testid="input-seat-limit"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Seat Tier</label>
+                <Select 
+                  value={editingSalon.seatTier || "5-seats"}
+                  onValueChange={(v) => setEditingSalon({ ...editingSalon, seatTier: v })}
+                >
+                  <SelectTrigger data-testid="select-seat-tier">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5-seats">5 Seats</SelectItem>
+                    <SelectItem value="10-plus-seats">10+ Seats</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Billing Status</label>
+                <Select 
+                  value={editingSalon.billingStatus || "active"}
+                  onValueChange={(v) => setEditingSalon({ ...editingSalon, billingStatus: v })}
+                >
+                  <SelectTrigger data-testid="select-billing-status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="past_due">Past Due</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingSalon(null)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => updateSalonMutation.mutate({ 
+                id: editingSalon.id, 
+                data: {
+                  name: editingSalon.name,
+                  seatLimit: editingSalon.seatLimit,
+                  seatTier: editingSalon.seatTier,
+                  billingStatus: editingSalon.billingStatus,
+                }
+              })}
+              disabled={updateSalonMutation.isPending}
+              data-testid="button-save-salon"
+            >
+              {updateSalonMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
