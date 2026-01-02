@@ -168,44 +168,24 @@ const whatYouGet = [
   },
 ];
 
-type PricingTier = 'free' | 'monthly' | 'yearly';
+type PricingTier = 'monthly' | 'yearly';
 
 function PricingSection() {
   const [selectedTier, setSelectedTier] = useState<PricingTier>('monthly');
   
   const features = [
-    "Fresh post ideas every month",
+    "Monthly pre-planned content",
+    "AI-powered captions",
     "Personalized hashtags for your city",
+    "Posting streak tracker",
     "Trend alerts for viral opportunities",
-    "AI caption generation",
-    "Daily reminders to keep you consistent",
-    "Streak milestones and rewards",
+    "Daily reminders to stay consistent",
   ];
   
-  const getButtonText = () => {
-    switch (selectedTier) {
-      case 'free':
-        return 'Try Free Preview';
-      case 'monthly':
-        return 'Start Free Trial';
-      case 'yearly':
-        return 'Start Free Trial';
-    }
-  };
-  
-  const getButtonLink = () => {
-    return selectedTier === 'free' ? '/calendar' : '/onboarding';
-  };
-  
   const getPriceText = () => {
-    switch (selectedTier) {
-      case 'free':
-        return '$0';
-      case 'monthly':
-        return '$10/month. Cancel anytime.';
-      case 'yearly':
-        return '$60/year. Save 50%.';
-    }
+    return selectedTier === 'monthly' 
+      ? '$10/month. Cancel anytime.' 
+      : '$60/year. Save 50%.';
   };
 
   return (
@@ -223,7 +203,7 @@ function PricingSection() {
             Choose Your Plan
           </h2>
           <p className="text-lg text-muted-foreground">
-            Start free, upgrade when you're ready
+            Start with a 7-day free trial
           </p>
         </motion.div>
         
@@ -233,23 +213,10 @@ function PricingSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex justify-center items-end gap-3 mb-10">
-            <button
-              onClick={() => setSelectedTier('free')}
-              className={`flex flex-col items-center px-6 py-4 rounded-xl transition-all ${
-                selectedTier === 'free'
-                  ? 'bg-card border-2 border-foreground shadow-lg'
-                  : 'bg-muted/50 border border-border hover-elevate'
-              }`}
-              data-testid="button-tier-free"
-            >
-              <span className="text-sm text-muted-foreground mb-1">Free</span>
-              <span className="text-2xl font-bold">$0</span>
-            </button>
-            
+          <div className="flex justify-center items-end gap-4 mb-10">
             <button
               onClick={() => setSelectedTier('monthly')}
-              className={`flex flex-col items-center px-6 py-4 rounded-xl transition-all ${
+              className={`flex flex-col items-center px-8 py-5 rounded-xl transition-all ${
                 selectedTier === 'monthly'
                   ? 'bg-card border-2 border-foreground shadow-lg'
                   : 'bg-muted/50 border border-border hover-elevate'
@@ -257,7 +224,7 @@ function PricingSection() {
               data-testid="button-tier-monthly"
             >
               <span className="text-sm text-muted-foreground mb-1">Monthly</span>
-              <span className="text-2xl font-bold">$10<span className="text-sm font-normal text-muted-foreground">/mo</span></span>
+              <span className="text-3xl font-bold">$10<span className="text-base font-normal text-muted-foreground">/mo</span></span>
             </button>
             
             <div className="flex flex-col items-center">
@@ -266,7 +233,7 @@ function PricingSection() {
               </Badge>
               <button
                 onClick={() => setSelectedTier('yearly')}
-                className={`flex flex-col items-center px-6 py-4 rounded-xl transition-all ${
+                className={`flex flex-col items-center px-8 py-5 rounded-xl transition-all ${
                   selectedTier === 'yearly'
                     ? 'bg-card border-2 border-foreground shadow-lg'
                     : 'bg-muted/50 border border-border hover-elevate'
@@ -274,7 +241,7 @@ function PricingSection() {
                 data-testid="button-tier-yearly"
               >
                 <span className="text-sm text-muted-foreground mb-1">Yearly</span>
-                <span className="text-2xl font-bold">$60<span className="text-sm font-normal text-muted-foreground">/yr</span></span>
+                <span className="text-3xl font-bold">$60<span className="text-base font-normal text-muted-foreground">/yr</span></span>
                 <span className="text-xs text-primary font-medium mt-1">Save 50%</span>
               </button>
             </div>
@@ -289,9 +256,9 @@ function PricingSection() {
             ))}
           </ul>
           
-          <Link href={getButtonLink()}>
+          <Link href="/onboarding">
             <Button size="lg" className="w-full text-lg py-6 rounded-full shadow-lg shadow-primary/25" data-testid="button-pricing-subscribe">
-              {getButtonText()}
+              Start Your Free 7-Day Trial
             </Button>
           </Link>
           
