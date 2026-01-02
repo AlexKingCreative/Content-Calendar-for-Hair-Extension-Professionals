@@ -12,7 +12,7 @@
       },
 
       "android": {
-        "package": "com.alexkingcreative.restexpress",
+        "package": "com.hairpro360.contentcalendar",
         "adaptiveIcon": {
           "foregroundImage": "./generated-icon.png",
           "backgroundColor": "#FFFFFF"
