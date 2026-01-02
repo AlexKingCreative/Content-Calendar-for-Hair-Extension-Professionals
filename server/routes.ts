@@ -1837,6 +1837,60 @@ Return only the caption text, nothing else.`;
     }
   });
 
+  // Admin add member to salon
+  const addSalonMemberSchema = z.object({
+    email: z.string().email("Valid email is required"),
+    stylistName: z.string().optional().default(""),
+  });
+
+  app.post("/api/admin/salons/:salonId/members", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const salonId = parseInt(req.params.salonId);
+      if (isNaN(salonId)) {
+        return res.status(400).json({ error: "Invalid salon ID" });
+      }
+
+      const validation = addSalonMemberSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: validation.error.errors[0]?.message || "Invalid input" });
+      }
+      const { email, stylistName } = validation.data;
+
+      // Check salon exists
+      const [salon] = await db.select().from(salonsTable).where(eq(salonsTable.id, salonId));
+      if (!salon) {
+        return res.status(404).json({ error: "Salon not found" });
+      }
+
+      // Check seat limit
+      const members = await storage.getSalonMembers(salonId);
+      const acceptedMembers = members.filter(m => m.invitationStatus === "accepted" || m.invitationStatus === "pending").length;
+      if (acceptedMembers >= (salon.seatLimit || 5)) {
+        return res.status(400).json({ error: "Salon has reached its seat limit" });
+      }
+
+      // Check if member already exists
+      const existingMember = await storage.getSalonMemberByEmail(salonId, email.toLowerCase());
+      if (existingMember) {
+        return res.status(400).json({ error: "Member with this email already exists in the salon" });
+      }
+
+      // Create member with accepted status (admin-added members are auto-accepted)
+      const invitationToken = crypto.randomUUID();
+      const member = await storage.createSalonMember({
+        salonId,
+        email: email.toLowerCase(),
+        invitationToken,
+        invitationStatus: "accepted",
+      });
+
+      res.json({ success: true, member });
+    } catch (error) {
+      console.error("Error adding salon member:", error);
+      res.status(500).json({ error: "Failed to add member" });
+    }
+  });
+
   // Admin update user profile (e.g., set admin status, subscription)
   app.patch("/api/admin/users/:userId", isAuthenticated, requireAdmin, async (req, res) => {
     try {
@@ -1956,16 +2010,11 @@ Return only the caption text, nothing else.`;
       // Create user profile
       await db.insert(userProfilesTable).values({
         userId,
-        firstName: firstName || null,
-        lastName: lastName || null,
-        subscriptionTier,
         subscriptionStatus,
         currentStreak: 0,
         longestStreak: 0,
-        totalPostsLogged: 0,
-        onboardingCompleted: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        totalPosts: 0,
+        onboardingComplete: false,
       });
 
       res.json({ success: true, userId, message: "User created" });
@@ -2004,14 +2053,12 @@ Return only the caption text, nothing else.`;
         
         await db.insert(userProfilesTable).values({
           userId,
-          subscriptionTier: "salon_owner",
           subscriptionStatus: "active",
+          isSalonOwner: true,
           currentStreak: 0,
           longestStreak: 0,
-          totalPostsLogged: 0,
-          onboardingCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          totalPosts: 0,
+          onboardingComplete: false,
         });
         
         owner = { id: userId, email: ownerEmail.toLowerCase().trim() } as any;
@@ -2021,7 +2068,7 @@ Return only the caption text, nothing else.`;
         const newStatus = profile?.subscriptionStatus === "active" ? "active" : "active";
         await db.update(userProfilesTable)
           .set({ 
-            subscriptionTier: "salon_owner",
+            isSalonOwner: true,
             subscriptionStatus: newStatus,
             updatedAt: new Date(),
           })

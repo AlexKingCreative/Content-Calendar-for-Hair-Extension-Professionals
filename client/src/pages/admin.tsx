@@ -2084,6 +2084,8 @@ function SalonsSection() {
     ownerEmail: "",
     seatLimit: 5,
   });
+  const [addingMemberToSalon, setAddingMemberToSalon] = useState<number | null>(null);
+  const [addMemberForm, setAddMemberForm] = useState({ email: "" });
 
   const { data: salonsData, isLoading } = useQuery({
     queryKey: ["/api/admin/salons"],
@@ -2176,6 +2178,30 @@ function SalonsSection() {
     },
   });
 
+  const addMemberMutation = useMutation({
+    mutationFn: async ({ salonId, email }: { salonId: number; email: string }) => {
+      const res = await fetch(`/api/admin/salons/${salonId}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to add member");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/salons"] });
+      setAddingMemberToSalon(null);
+      setAddMemberForm({ email: "" });
+      toast({ title: "Member added successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: error.message || "Failed to add member", variant: "destructive" });
+    },
+  });
+
   const salons = salonsData?.salons || [];
 
   return (
@@ -2239,6 +2265,37 @@ function SalonsSection() {
               data-testid="button-submit-create-salon"
             >
               {createSalonMutation.isPending ? "Creating..." : "Create Salon"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addingMemberToSalon !== null} onOpenChange={(open) => !open && setAddingMemberToSalon(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Team Member</DialogTitle>
+            <DialogDescription>Add a new stylist to this salon. They will be immediately added with accepted status.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email Address (required)</label>
+              <Input
+                type="email"
+                placeholder="stylist@example.com"
+                value={addMemberForm.email}
+                onChange={(e) => setAddMemberForm({ email: e.target.value })}
+                data-testid="input-add-member-email"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddingMemberToSalon(null)}>Cancel</Button>
+            <Button 
+              onClick={() => addingMemberToSalon && addMemberMutation.mutate({ salonId: addingMemberToSalon, email: addMemberForm.email })}
+              disabled={!addMemberForm.email || addMemberMutation.isPending}
+              data-testid="button-submit-add-member"
+            >
+              {addMemberMutation.isPending ? "Adding..." : "Add Member"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2341,6 +2398,14 @@ function SalonsSection() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h4 className="font-medium">Team Members ({salon.members?.length || 0})</h4>
+                      <Button 
+                        size="sm" 
+                        onClick={() => setAddingMemberToSalon(salon.id)}
+                        data-testid={`button-add-member-${salon.id}`}
+                      >
+                        <UserPlus className="w-3 h-3 mr-1" />
+                        Add Member
+                      </Button>
                     </div>
                     
                     {salon.members?.length > 0 ? (

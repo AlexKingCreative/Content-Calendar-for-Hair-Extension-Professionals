@@ -9,6 +9,15 @@
       "bundleIdentifier": "com.alexkingcreative.restexpress",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+
+      "android": {
+        "package": "com.alexkingcreative.restexpress",
+        "adaptiveIcon": {
+          "foregroundImage": "./generated-icon.png",
+          "backgroundColor": "#FFFFFF"
+        },
+        "googleServicesFile": "./google-services.json"
       }
     }
   }

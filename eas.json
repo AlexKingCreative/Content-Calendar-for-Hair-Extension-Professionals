@@ -12,10 +12,16 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "android": {
+      "buildType": "app-bundle"      }
     }
   },
   "submit": {
     "production": {}
+    "android": {
+      "serviceAccountKeyPath": "./android-service-account.json",
+      "track": "internal"
+    }
   }
 }
