@@ -27,6 +27,7 @@
       },
       "package": "com.hairpro360.contentcalendar",
       "versionCode": 34,
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "INTERNET",
         "RECEIVE_BOOT_COMPLETED",
