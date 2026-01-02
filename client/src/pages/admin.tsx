@@ -1654,6 +1654,8 @@ function StatsSection({ stats, isLoading }: { stats: any; isLoading: boolean }) 
 }
 
 function UsersSection({ stats, isLoading: statsLoading }: { stats: any; isLoading: boolean }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
   const [sortField, setSortField] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [searchTerm, setSearchTerm] = useState("");
@@ -1665,6 +1667,22 @@ function UsersSection({ stats, isLoading: statsLoading }: { stats: any; isLoadin
       const res = await fetch(`/api/admin/users?sort=${sortField}&order=${sortOrder}`);
       if (!res.ok) throw new Error("Failed to fetch users");
       return res.json();
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete user");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      qc.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      toast({ title: "User deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete user", variant: "destructive" });
     },
   });
 
@@ -1831,6 +1849,7 @@ function UsersSection({ stats, isLoading: statsLoading }: { stats: any; isLoadin
                     >
                       <span className="flex items-center">Joined<SortIcon field="createdAt" /></span>
                     </th>
+                    <th className="text-right py-3 px-2 font-medium text-sm">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1879,6 +1898,39 @@ function UsersSection({ stats, isLoading: statsLoading }: { stats: any; isLoadin
                       </td>
                       <td className="py-3 px-2 text-sm text-muted-foreground">
                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {user.stripeCustomerId && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              asChild
+                              data-testid={`button-stripe-${user.id}`}
+                            >
+                              <a 
+                                href={`https://dashboard.stripe.com/customers/${user.stripeCustomerId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <CreditCard className="w-4 h-4" />
+                              </a>
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to delete ${user.email}? This action cannot be undone.`)) {
+                                deleteUserMutation.mutate(user.id);
+                              }
+                            }}
+                            disabled={deleteUserMutation.isPending || user.isAdmin}
+                            data-testid={`button-delete-user-${user.id}`}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}

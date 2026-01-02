@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, registerAuthRoutes } from "./replit_integrations/auth";
 import { seedPosts, seedChallenges, seedBrandsAndMethods } from "./seed";
-import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads, users, salonMembers, userProfiles, userProfiles as userProfilesTable, postingLogs as postingLogsTable, userChallenges as userChallengesTable, instagramAccounts as instagramAccountsTable, instagramMedia as instagramMediaTable, salons as salonsTable, salonMembers as salonMembersTable } from "@shared/schema";
+import { insertPostSchema, categories, contentTypes, certifiedBrands, extensionMethods, serviceCategories, leads, users, salonMembers, userProfiles, userProfiles as userProfilesTable, postingLogs as postingLogsTable, userChallenges as userChallengesTable, instagramAccounts as instagramAccountsTable, instagramMedia as instagramMediaTable, salons as salonsTable, salonMembers as salonMembersTable, instagramDailyInsights as instagramDailyInsightsTable, stylistChallenges as stylistChallengesTable, postSubmissions as postSubmissionsTable, pushSubscriptions as pushSubscriptionsTable, salonChallenges as salonChallengesTable } from "@shared/schema";
 import { users as usersTable } from "@shared/models/auth";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -1862,6 +1862,63 @@ Return only the caption text, nothing else.`;
     } catch (error) {
       console.error("Error updating user:", error);
       res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
+  // Delete user (admin only)
+  app.delete("/api/admin/users/:userId", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Use a transaction to ensure all deletions succeed or fail together
+      await db.transaction(async (tx) => {
+        // Delete Instagram-related data
+        await tx.delete(instagramMediaTable).where(eq(instagramMediaTable.userId, userId));
+        await tx.delete(instagramDailyInsightsTable).where(eq(instagramDailyInsightsTable.userId, userId));
+        await tx.delete(instagramAccountsTable).where(eq(instagramAccountsTable.userId, userId));
+        
+        // Delete stylist challenges (for salon stylists)
+        await tx.delete(stylistChallengesTable).where(eq(stylistChallengesTable.stylistUserId, userId));
+        
+        // Delete user challenges
+        await tx.delete(userChallengesTable).where(eq(userChallengesTable.userId, userId));
+        
+        // Delete posting logs
+        await tx.delete(postingLogsTable).where(eq(postingLogsTable.userId, userId));
+        
+        // Delete post submissions
+        await tx.delete(postSubmissionsTable).where(eq(postSubmissionsTable.userId, userId));
+        
+        // Delete push subscriptions
+        await tx.delete(pushSubscriptionsTable).where(eq(pushSubscriptionsTable.userId, userId));
+        
+        // Remove from any salon memberships (as stylist)
+        await tx.delete(salonMembersTable).where(eq(salonMembersTable.stylistUserId, userId));
+        
+        // Delete any salons owned by this user (and their members/challenges)
+        const ownedSalons = await tx.select().from(salonsTable).where(eq(salonsTable.ownerUserId, userId));
+        for (const salon of ownedSalons) {
+          // Delete stylist challenges for this salon's challenges
+          const salonChallengesList = await tx.select().from(salonChallengesTable).where(eq(salonChallengesTable.salonId, salon.id));
+          for (const challenge of salonChallengesList) {
+            await tx.delete(stylistChallengesTable).where(eq(stylistChallengesTable.salonChallengeId, challenge.id));
+          }
+          await tx.delete(salonChallengesTable).where(eq(salonChallengesTable.salonId, salon.id));
+          await tx.delete(salonMembersTable).where(eq(salonMembersTable.salonId, salon.id));
+          await tx.delete(salonsTable).where(eq(salonsTable.id, salon.id));
+        }
+        
+        // Delete user profile
+        await tx.delete(userProfilesTable).where(eq(userProfilesTable.userId, userId));
+        
+        // Finally delete the user from the auth table
+        await tx.delete(usersTable).where(eq(usersTable.id, userId));
+      });
+      
+      res.json({ success: true, message: "User deleted" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ error: "Failed to delete user" });
     }
   });
 
