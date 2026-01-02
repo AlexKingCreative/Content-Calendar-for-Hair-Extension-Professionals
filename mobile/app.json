@@ -26,7 +26,7 @@
         "backgroundColor": "#D4A574"
       },
       "package": "com.hairpro360.contentcalendar",
-      "versionCode": 34,
+      "versionCode": 37,
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "INTERNET",
@@ -47,7 +47,10 @@
               "pathPrefix": "/mobile"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },

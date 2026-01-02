@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "722753990034",
+    "project_id": "content-calendar-for-hair-pros",
+    "storage_bucket": "content-calendar-for-hair-pros.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:722753990034:android:3833a4addfac6253b1e54b",
+        "android_client_info": {
+          "package_name": "com.hairpro360.contentcalendar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdnIavLKhzqS_bQdFux8x0Mp7stK-Hc6M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

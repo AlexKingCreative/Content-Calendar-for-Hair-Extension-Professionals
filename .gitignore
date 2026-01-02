@@ -6,5 +6,5 @@ vite.config.ts.*
 *.tar.gz
 
 # Android sensitive files
-google-services.json
-mobile/google-service-account.jsonmobile/google-service-account.json
+#google-services.json
+mobile/google-service-account.json
