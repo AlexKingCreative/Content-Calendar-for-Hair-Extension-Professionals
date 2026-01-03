@@ -35,7 +35,8 @@
     "axios": "^1.7.0",
     "date-fns": "^3.6.0",
     "expo-clipboard": "~7.0.1",
-    "expo-auth-session": "~6.0.3"
+    "expo-auth-session": "~6.0.3",
+    "expo-build-properties": "~0.13.1"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

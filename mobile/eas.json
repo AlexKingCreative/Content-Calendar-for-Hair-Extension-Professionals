@@ -24,10 +24,7 @@
       },
       "android": {
         "buildType": "app-bundle",
-        "image": "ubuntu-24.04-jdk-17-ndk-r27b",
-        "env": {
-          "EXPO_ANDROID_GRADLE_PROPERTIES": "android.targetSdkVersion=35"
-        }
+        "image": "ubuntu-24.04-jdk-17-ndk-r27b"
       }
     }
   },
