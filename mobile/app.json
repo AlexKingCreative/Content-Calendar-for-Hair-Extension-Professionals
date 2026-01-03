@@ -26,14 +26,10 @@
         "backgroundColor": "#D4A574"
       },
       "package": "com.hairpro360.contentcalendar",
-      "versionCode": 48,
+      "versionCode": 50,
       "targetSdkVersion": 35,
       "googleServicesFile": "./google-services.json",
-      "permissions": [
-        "INTERNET",
-        "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE"
-      ],
+      "permissions": ["INTERNET", "RECEIVE_BOOT_COMPLETED", "VIBRATE"],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -48,10 +44,7 @@
               "pathPrefix": "/mobile"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
