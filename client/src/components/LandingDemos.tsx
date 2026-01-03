@@ -54,7 +54,7 @@ export function CalendarDemo() {
               <div
                 key={i}
                 data-testid={`calendar-day-${i + 1}`}
-                className={`aspect-square rounded-md flex items-center justify-center text-xs relative cursor-pointer transition-colors duration-200
+                className={`aspect-square rounded-md flex items-center justify-center text-xs relative cursor-pointer
                   ${isActive ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-1" : dayData?.hasPost ? "bg-primary/20" : "hover:bg-muted"}
                 `}
               >
@@ -271,7 +271,7 @@ export function StreakDemo() {
             <div
               key={i}
               data-testid={`streak-day-${i + 1}`}
-              className={`flex-1 h-2 rounded-full transition-colors duration-300 ${
+              className={`flex-1 h-2 rounded-full ${
                 i < streak ? "bg-gradient-to-r from-orange-500 to-red-500" : "bg-muted"
               }`}
             />
@@ -285,17 +285,17 @@ export function StreakDemo() {
               <div
                 key={i}
                 data-testid={`reward-${reward.day}-day`}
-                className={`flex items-center gap-3 p-2 rounded-lg transition-colors duration-300 ${
+                className={`flex items-center gap-3 p-2 rounded-lg ${
                   unlocked ? "bg-primary/10 border border-primary/20" : "bg-muted/50"
                 }`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 ${
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                   unlocked ? "bg-primary text-primary-foreground" : "bg-muted-foreground/20"
                 }`}>
                   <reward.icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
-                  <div className={`text-sm font-medium transition-colors duration-300 ${unlocked ? "" : "text-muted-foreground"}`} data-testid={`text-reward-label-${reward.day}`}>
+                  <div className={`text-sm font-medium ${unlocked ? "" : "text-muted-foreground"}`} data-testid={`text-reward-label-${reward.day}`}>
                     {reward.label}
                   </div>
                   <div className="text-xs text-muted-foreground">{reward.day}-day streak</div>
