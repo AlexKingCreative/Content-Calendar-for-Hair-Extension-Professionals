@@ -32,7 +32,7 @@ jobs:
       - name: Build iOS app
         run: eas build --platform ios --non-interactive --no-wait
 
-        - name: Build Android app
+              - name: Build Android app
           run: eas build --platform android --non-interactive --no-wait
 
       - name: Notify build started
