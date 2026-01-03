@@ -1,40 +1,50 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient, getQueryFn } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
-import CalendarPage from "@/pages/calendar";
-import OnboardingPage from "@/pages/onboarding";
-import AdminPage from "@/pages/admin";
-import LandingPage from "@/pages/landing";
-import SettingsPage from "@/pages/settings";
-import AccountPage from "@/pages/account";
-import HelpPage from "@/pages/help";
-import TodayPage from "@/pages/today";
-import StreaksPage from "@/pages/streaks";
-import TrendsPage from "@/pages/trends";
-import PostPage from "@/pages/post";
-import TermsPage from "@/pages/terms";
-import PrivacyPage from "@/pages/privacy";
-import ContactPage from "@/pages/contact";
-import SubscribePage from "@/pages/subscribe";
-import SignupPage from "@/pages/signup";
-import WelcomePage from "@/pages/welcome";
-import SalonPricingPage from "@/pages/salon-pricing";
-import SalonSetupPage from "@/pages/salon-setup";
-import SalonDashboardPage from "@/pages/salon-dashboard";
-import JoinSalonPage from "@/pages/join-salon";
-import PricingPage from "@/pages/pricing";
-import LoginPage from "@/pages/login";
-import RegisterPage from "@/pages/register";
-import ForgotPasswordPage from "@/pages/forgot-password";
-import InstagramPage from "@/pages/instagram";
-import AboutPage from "@/pages/about";
-import SubscriptionSuccessPage from "@/pages/subscription-success";
 import { Skeleton } from "@/components/ui/skeleton";
+
+import LandingPage from "@/pages/landing";
+
+const NotFound = lazy(() => import("@/pages/not-found"));
+const CalendarPage = lazy(() => import("@/pages/calendar"));
+const OnboardingPage = lazy(() => import("@/pages/onboarding"));
+const AdminPage = lazy(() => import("@/pages/admin"));
+const SettingsPage = lazy(() => import("@/pages/settings"));
+const AccountPage = lazy(() => import("@/pages/account"));
+const HelpPage = lazy(() => import("@/pages/help"));
+const TodayPage = lazy(() => import("@/pages/today"));
+const StreaksPage = lazy(() => import("@/pages/streaks"));
+const TrendsPage = lazy(() => import("@/pages/trends"));
+const PostPage = lazy(() => import("@/pages/post"));
+const TermsPage = lazy(() => import("@/pages/terms"));
+const PrivacyPage = lazy(() => import("@/pages/privacy"));
+const ContactPage = lazy(() => import("@/pages/contact"));
+const SubscribePage = lazy(() => import("@/pages/subscribe"));
+const SignupPage = lazy(() => import("@/pages/signup"));
+const WelcomePage = lazy(() => import("@/pages/welcome"));
+const SalonPricingPage = lazy(() => import("@/pages/salon-pricing"));
+const SalonSetupPage = lazy(() => import("@/pages/salon-setup"));
+const SalonDashboardPage = lazy(() => import("@/pages/salon-dashboard"));
+const JoinSalonPage = lazy(() => import("@/pages/join-salon"));
+const PricingPage = lazy(() => import("@/pages/pricing"));
+const LoginPage = lazy(() => import("@/pages/login"));
+const RegisterPage = lazy(() => import("@/pages/register"));
+const ForgotPasswordPage = lazy(() => import("@/pages/forgot-password"));
+const InstagramPage = lazy(() => import("@/pages/instagram"));
+const AboutPage = lazy(() => import("@/pages/about"));
+const SubscriptionSuccessPage = lazy(() => import("@/pages/subscription-success"));
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <Skeleton className="h-12 w-48" />
+    </div>
+  );
+}
 
 interface UserProfile {
   id: number;
@@ -60,11 +70,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }, [userLoading, user, setLocation]);
 
   if (userLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Skeleton className="h-12 w-48" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!user) {
@@ -98,11 +104,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   }, [isUnauthorized, setLocation]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Skeleton className="h-12 w-48" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (isUnauthorized) {
@@ -139,11 +141,7 @@ function HomePage() {
   }, [isLoading, user, profile, setLocation]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Skeleton className="h-12 w-48" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (user) {
@@ -155,66 +153,68 @@ function HomePage() {
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={HomePage} />
-      <Route path="/login" component={LoginPage} />
-      <Route path="/register" component={RegisterPage} />
-      <Route path="/forgot-password" component={ForgotPasswordPage} />
-      <Route path="/welcome" component={WelcomePage} />
-      <Route path="/signup" component={SignupPage} />
-      <Route path="/calendar" component={CalendarPage} />
-      <Route path="/onboarding" component={OnboardingPage} />
-      <Route path="/admin">
-        <AdminRoute>
-          <AdminPage />
-        </AdminRoute>
-      </Route>
-      <Route path="/settings">
-        <ProtectedRoute>
-          <SettingsPage />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/account">
-        <ProtectedRoute>
-          <AccountPage />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/help" component={HelpPage} />
-      <Route path="/today" component={TodayPage} />
-      <Route path="/trends" component={TrendsPage} />
-      <Route path="/streaks" component={StreaksPage} />
-      <Route path="/post/:id" component={PostPage} />
-      <Route path="/subscribe">
-        <ProtectedRoute>
-          <SubscribePage />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/terms" component={TermsPage} />
-      <Route path="/privacy" component={PrivacyPage} />
-      <Route path="/contact" component={ContactPage} />
-      <Route path="/pricing" component={PricingPage} />
-      <Route path="/about" component={AboutPage} />
-      <Route path="/subscription/success" component={SubscriptionSuccessPage} />
-      <Route path="/subscription/cancel" component={PricingPage} />
-      <Route path="/salon-pricing" component={SalonPricingPage} />
-      <Route path="/salon-setup">
-        <ProtectedRoute>
-          <SalonSetupPage />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/salon-dashboard">
-        <ProtectedRoute>
-          <SalonDashboardPage />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/instagram">
-        <ProtectedRoute>
-          <InstagramPage />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/join-salon/:token" component={JoinSalonPage} />
-      <Route component={NotFound} />
-    </Switch>
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
+        <Route path="/" component={HomePage} />
+        <Route path="/login" component={LoginPage} />
+        <Route path="/register" component={RegisterPage} />
+        <Route path="/forgot-password" component={ForgotPasswordPage} />
+        <Route path="/welcome" component={WelcomePage} />
+        <Route path="/signup" component={SignupPage} />
+        <Route path="/calendar" component={CalendarPage} />
+        <Route path="/onboarding" component={OnboardingPage} />
+        <Route path="/admin">
+          <AdminRoute>
+            <AdminPage />
+          </AdminRoute>
+        </Route>
+        <Route path="/settings">
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/account">
+          <ProtectedRoute>
+            <AccountPage />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/help" component={HelpPage} />
+        <Route path="/today" component={TodayPage} />
+        <Route path="/trends" component={TrendsPage} />
+        <Route path="/streaks" component={StreaksPage} />
+        <Route path="/post/:id" component={PostPage} />
+        <Route path="/subscribe">
+          <ProtectedRoute>
+            <SubscribePage />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/terms" component={TermsPage} />
+        <Route path="/privacy" component={PrivacyPage} />
+        <Route path="/contact" component={ContactPage} />
+        <Route path="/pricing" component={PricingPage} />
+        <Route path="/about" component={AboutPage} />
+        <Route path="/subscription/success" component={SubscriptionSuccessPage} />
+        <Route path="/subscription/cancel" component={PricingPage} />
+        <Route path="/salon-pricing" component={SalonPricingPage} />
+        <Route path="/salon-setup">
+          <ProtectedRoute>
+            <SalonSetupPage />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/salon-dashboard">
+          <ProtectedRoute>
+            <SalonDashboardPage />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/instagram">
+          <ProtectedRoute>
+            <InstagramPage />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/join-salon/:token" component={JoinSalonPage} />
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
