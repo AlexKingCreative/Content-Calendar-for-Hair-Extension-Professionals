@@ -37,10 +37,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { LandingAnimation } from "@/components/LandingAnimation";
 import { CalendarDemo, AICaptionDemo, StreakDemo, InstagramDemo, HashtagDemo } from "@/components/LandingDemos";
-import denaePhoto from "@assets/Denae_Tafoya_1767024771840.jpg";
-import danniPhoto from "@assets/Dannielle_Vizzini_1767024800600.jpg";
-import maryPhoto from "@assets/mary_james_square_1767024880276.png";
-import ashleyPhoto from "@assets/IMG_5578_1767101743608.JPG";
+import denaePhoto from "@assets/Denae_optimized.jpg";
+import danniPhoto from "@assets/Dannielle_optimized.jpg";
+import maryPhoto from "@assets/mary_james_optimized.jpg";
+import ashleyPhoto from "@assets/IMG_5578_optimized.jpg";
 
 function AnimatedCounter({ value, duration = 2000 }: { value: number; duration?: number }) {
   const [count, setCount] = useState(0);
@@ -695,6 +695,7 @@ export default function LandingPage() {
                 <img 
                   src={ashleyPhoto} 
                   alt="Ashley Diana" 
+                  loading="lazy"
                   className="relative w-80 h-96 object-cover object-top rounded-3xl border-4 border-background shadow-2xl"
                 />
                 <div className="absolute -bottom-4 left-1/2 -translate-x-1/2">
@@ -944,6 +945,7 @@ export default function LandingPage() {
                       <img 
                         src={testimonial.photo} 
                         alt={testimonial.name}
+                        loading="lazy"
                         className="w-14 h-14 rounded-2xl object-cover flex-shrink-0"
                         data-testid={`img-testimonial-${index}`}
                       />
