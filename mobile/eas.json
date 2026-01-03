@@ -24,7 +24,10 @@
       },
       "android": {
         "buildType": "app-bundle",
-        "image": "latest"
+        "image": "ubuntu-24.04-jdk-21-ndk-27",
+        "env": {
+          "EXPO_ANDROID_GRADLE_PROPERTIES": "android.targetSdkVersion=35"
+        }
       }
     }
   },
